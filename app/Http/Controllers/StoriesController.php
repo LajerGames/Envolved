@@ -38,7 +38,11 @@ class StoriesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->validate($request, [
+            'title' => 'required'
+        ]);
+
+        return '123';
     }
 
     /**

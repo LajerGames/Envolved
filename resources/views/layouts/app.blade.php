@@ -74,8 +74,10 @@
                 </div>
             </nav>
         @endif
-
-        @yield('content')
+        <div class="container">
+            @include('include.messages');
+            @yield('content')
+        </div>
     </div>
 
     <!-- Scripts -->
