@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Story;
 
 class StoriesController extends Controller
 {
@@ -14,7 +15,8 @@ class StoriesController extends Controller
      */
     public function index()
     {
-        //
+        $stories = Story::all();
+        return view('stories.index')->width('stories', $stories);
     }
 
     /**
