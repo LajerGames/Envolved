@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Story;
+// use DB; <- for using ordinary queries
 
 class StoriesController extends Controller
 {
@@ -15,8 +16,8 @@ class StoriesController extends Controller
      */
     public function index()
     {
-        $stories = Story::all();
-        return view('stories.index')->width('stories', $stories);
+        $stories = Story::orderBy('id', 'desc')->paginate(10);
+        return view('stories.index')->with('stories', $stories);
     }
 
     /**
@@ -26,7 +27,7 @@ class StoriesController extends Controller
      */
     public function create()
     {
-        //
+        return view('stories.create');
     }
 
     /**
@@ -48,8 +49,10 @@ class StoriesController extends Controller
      */
     public function show($id)
     {
-        //
+        $story = Story::find($id);
+        return view('stories.show')->with('story', $story);
     }
+    
 
     /**
      * Show the form for editing the specified resource.
