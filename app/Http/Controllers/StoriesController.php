@@ -38,17 +38,12 @@ class StoriesController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'title' => 'required'
-        ]);
+        $this->ValidateRequest($request);
 
         $story = new Story;
-        $story->title = $request->input('title');
-        $story->short_description = $request->input('short_description');
-        $story->description = $request->input('description');
-        $story->save();
+        $this->SaveRequest($story, $request);
 
-        return redirect('/stories')->with('success', 'Story created');
+        return redirect('/stories')->with('success', 'Story updated');
     }
 
     /**
@@ -72,7 +67,8 @@ class StoriesController extends Controller
      */
     public function edit($id)
     {
-        //
+        $story = Story::find($id);
+        return view('stories.edit')->with('story', $story);
     }
 
     /**
@@ -84,7 +80,12 @@ class StoriesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $this->ValidateRequest($request);
+
+        $story = Story::find($id);
+        $this->SaveRequest($story, $request);
+
+        return redirect('/stories')->with('success', 'Story created'); 
     }
 
     /**
@@ -95,6 +96,30 @@ class StoriesController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $story = Story::find($id);
+        $story->delete();
+
+        return redirect('/stories')->with('success', $story->title .' deleted');
+    }
+
+    /**
+     * Validation for both store and update is the same, so we'll just call this method
+     */
+    public function ValidateRequest(Request $request)
+    {
+        $this->validate($request, [
+            'title' => 'required'
+        ]);
+    }
+
+    /**
+     * Once Story is instanciated or found (::find), the saving process is the same for both store and update
+     */
+    public function SaveRequest(Story $story, Request $request)
+    {
+        $story->title = $request->input('title');
+        $story->short_description = $request->input('short_description');
+        $story->description = $request->input('description');
+        $story->save();
     }
 }
