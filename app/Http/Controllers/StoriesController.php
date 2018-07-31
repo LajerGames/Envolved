@@ -16,7 +16,10 @@ class StoriesController extends Controller
      */
     public function index()
     {
-        $stories = Story::orderBy('id', 'desc')->paginate(10);
+        $user_id = auth()->user()->id;
+        $stories = Story::where('user_id', $user_id)
+            ->orderBy('id', 'desc')
+            ->paginate(10);
         return view('stories.index')->with('stories', $stories);
     }
 
@@ -117,6 +120,7 @@ class StoriesController extends Controller
      */
     public function SaveRequest(Story $story, Request $request)
     {
+        $story->user_id = auth()->user()->id;
         $story->title = $request->input('title');
         $story->short_description = $request->input('short_description');
         $story->description = $request->input('description');
