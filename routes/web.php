@@ -29,7 +29,11 @@ Route::group(['middleware' => 'auth'], function () {
  */
 
 Route::get('/', function () {
-    return view('auth/login');
+    if(Auth::guest()) {
+        return view('auth/login');
+    } else {
+        return redirect('/home');
+    }
 });
 
 Route::get('/404', function () {
@@ -38,7 +42,11 @@ Route::get('/404', function () {
 
 
 Route::get('login', function () {
-    return view('auth/login');
+    if(Auth::guest()) {
+        return view('auth/login');
+    } else {
+        return redirect('/home');
+    }
 });
 
 // Catch any other route

@@ -6,6 +6,8 @@ use App\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Registered;
 
 class RegisterController extends Controller
 {
@@ -27,7 +29,8 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    // Not in use since you can only create a user if you're logged in 
+    //protected $redirectTo = '/home';
 
     /**
      * Create a new controller instance.
@@ -36,7 +39,8 @@ class RegisterController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest');
+        // Not in use since you can only create a user if you're logged in 
+        //$this->middleware('guest');
     }
 
     /**
@@ -67,5 +71,29 @@ class RegisterController extends Controller
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
         ]);
+    }
+
+    /**
+     * Handle a registration request for the application.
+     * (This overrides the default register method with autologin attached to it, we don't want that)
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function register(Request $request)
+    {
+        if(in_array(Auth()->User()->id, config('constants.users_who_can_register'))) 
+        {
+            $this->validator($request->all())->validate();
+
+            event(new Registered($user = $this->create($request->all())));
+
+            return $this->registered($request, $user)
+                            ?: redirect($this->redirectPath());
+        }
+        else
+        {
+            return redirect('/home')->with('error', 'Access denied');
+        }
     }
 }
