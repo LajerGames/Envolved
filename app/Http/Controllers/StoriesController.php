@@ -42,7 +42,13 @@ class StoriesController extends Controller
             'title' => 'required'
         ]);
 
-        return '123';
+        $story = new Story;
+        $story->title = $request->input('title');
+        $story->short_description = $request->input('short_description');
+        $story->description = $request->input('description');
+        $story->save();
+
+        return redirect('/stories')->with('success', 'Story created');
     }
 
     /**
