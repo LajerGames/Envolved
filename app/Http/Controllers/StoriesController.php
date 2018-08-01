@@ -10,6 +10,16 @@ use App\Story;
 class StoriesController extends Controller
 {
     /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
@@ -46,7 +56,7 @@ class StoriesController extends Controller
         $story = new Story;
         $this->SaveRequest($story, $request);
 
-        return redirect('/stories')->with('success', 'Story updated');
+        return redirect('/stories')->with('success', 'Story created');
     }
 
     /**
@@ -58,6 +68,10 @@ class StoriesController extends Controller
     public function show($id)
     {
         $story = Story::find($id);
+
+        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
         return view('stories.show')->with('story', $story);
     }
     
@@ -71,6 +85,10 @@ class StoriesController extends Controller
     public function edit($id)
     {
         $story = Story::find($id);
+
+        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
         return view('stories.edit')->with('story', $story);
     }
 
@@ -86,9 +104,13 @@ class StoriesController extends Controller
         $this->ValidateRequest($request);
 
         $story = Story::find($id);
+
+        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
         $this->SaveRequest($story, $request);
 
-        return redirect('/stories')->with('success', 'Story created'); 
+        return redirect('/stories')->with('success', 'Story updated'); 
     }
 
     /**
@@ -100,6 +122,10 @@ class StoriesController extends Controller
     public function destroy($id)
     {
         $story = Story::find($id);
+
+        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
         $story->delete();
 
         return redirect('/stories')->with('success', $story->title .' deleted');
@@ -125,5 +151,17 @@ class StoriesController extends Controller
         $story->short_description = $request->input('short_description');
         $story->description = $request->input('description');
         $story->save();
+    }
+
+    /**
+     * Checks if user has access a method
+     * 
+     * @param  int  $user_id
+     * @param  int  $owner_id
+     * @return boolean
+     */
+    public function HasAccess($user_id, $owner_id)
+    {
+        return $user_id == $owner_id;
     }
 }
