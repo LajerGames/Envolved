@@ -20,3 +20,20 @@ Vue.component('example', require('./components/Example.vue'));
 const app = new Vue({
     el: '#app'
 });
+
+$(document).ready(function() {
+    
+    // Check if show sidebar button exists
+    if ( $( "#sidebarCollapse" ).length ) {
+ 
+        $("#sidebarCollapse").on("click", function() {
+
+            console.log('blabla')
+
+            $("#sidebar").toggleClass("active");
+            $(this).toggleClass("active");
+        });
+     
+    }
+
+});

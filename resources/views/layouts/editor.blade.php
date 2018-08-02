@@ -16,23 +16,25 @@
 </head>
 <body>
     <div id="app">
+
         <nav id="sidebar">
             <div class="sidebar-header">
-                <h3>Bootstrap Sidebar</h3>
+                <h3>Story Editor</h3>
             </div>
 
             <ul class="list-unstyled components">
-                <p>Dummy Heading</p>
-                <li class="active">
+                <!--p>Dummy Heading</p-->
+                <!--li class="active">
                     <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false">Home</a>
                     <ul class="collapse list-unstyled" id="homeSubmenu">
                         <li><a href="#">Home 1</a></li>
                         <li><a href="#">Home 2</a></li>
                         <li><a href="#">Home 3</a></li>
                     </ul>
-                </li>
+                </li-->
                 <li>
-                    <a href="#">Contact</a>
+                    <a href="/stories/{{request()->segment(2)}}">Main</a>
+                    <a href="/stories/{{request()->segment(2)}}/characters">Characters</a>
                 </li>
             </ul>
 
@@ -41,6 +43,11 @@
         <div id="content">
 
             @include('include.navbar')
+
+            <button type="button" id="sidebarCollapse" class="btn btn-info navbar-btn">
+                <i class="glyphicon glyphicon-align-left"></i>
+                <span>Toggle Sidebar</span>
+            </button>
 
             <div class="container">
                 @include('include.messages')

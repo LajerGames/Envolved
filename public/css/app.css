@@ -8379,6 +8379,10 @@ button.close {
   transition: all 0.3s;
 }
 
+#sidebar h3 {
+  margin-top: 30px;
+}
+
 #sidebar a,
 #sidebar a:hover,
 #sidebar a:focus {

@@ -991,7 +991,19 @@ window.Vue = __webpack_require__(35);
 Vue.component('example', __webpack_require__(38));
 
 var app = new Vue({
-  el: '#app'
+    el: '#app'
+});
+
+$(document).ready(function () {
+
+    // Check if show sidebar button exists
+    if ($("#myDiv").length) {
+
+        $("#sidebarCollapse").on("click", function () {
+            $("#sidebar").toggleClass("active");
+            $(this).toggleClass("active");
+        });
+    }
 });
 
 /***/ }),
