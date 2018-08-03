@@ -13,7 +13,7 @@ class CreateCharactersTable extends Migration
      */
     public function up()
     {
-        Schema::create('characters', function (Blueprint $table) {
+        Schema::create('story_characters', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('story_id');
             $table->string('first_names');
