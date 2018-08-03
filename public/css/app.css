@@ -8370,6 +8370,20 @@ button.close {
           align-items: stretch;
 }
 
+#sidebarCollapse {
+  position: fixed;
+  z-index: 1;
+  top: 15px;
+  left: 8px;
+  padding: 0px 4px;
+  background-color: #222;
+  border: 0;
+}
+
+#sidebarCollapse:hover {
+  background-color: #292929;
+}
+
 #sidebar {
   min-width: 250px;
   max-width: 250px;
@@ -8421,10 +8435,6 @@ button.close {
 #sidebar a[aria-expanded="true"] {
   color: #fff;
   background: #222;
-}
-
-#sidebar a[data-toggle="collapse"] {
-  position: relative;
 }
 
 #sidebar a[aria-expanded="false"]::before,
@@ -8481,18 +8491,9 @@ button.close {
   width: auto;
 }
 
-@media (max-width: 768px) {
-  #sidebar {
-    margin-left: -250px;
-  }
-
-  #sidebar.active {
-    margin-left: 0;
-  }
-
-  #sidebarCollapse span {
-    display: none;
-  }
+a.navbar-brand {
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
 }
 
 .navbar {

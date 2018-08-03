@@ -44,9 +44,8 @@
 
             @include('include.navbar')
 
-            <button type="button" id="sidebarCollapse" class="btn btn-info navbar-btn">
-                <i class="glyphicon glyphicon-align-left"></i>
-                <span>Toggle Sidebar</span>
+            <button type="button" id="sidebarCollapse" class="btn btn-default">
+                <i class="glyphicon glyphicon-menu-left"></i>
             </button>
 
             <div class="container">

@@ -997,11 +997,50 @@ var app = new Vue({
 $(document).ready(function () {
 
     // Check if show sidebar button exists
-    if ($("#myDiv").length) {
+    if ($('#sidebarCollapse').length) {
+        var toggleSidebar = function toggleSidebar(doShow) {
+            if (doShow) {
+                $('#sidebarCollapse').find('i').removeClass('glyphicon glyphicon-menu-right');
+                $('#sidebarCollapse').find('i').addClass('glyphicon glyphicon-menu-left');
+                $('a.navbar-brand').css('margin-left', '');
+                $('#sidebar').removeClass('active');
+                $('#sidebarCollapse').removeClass('active');
+            } else {
+                $('#sidebarCollapse').find('i').removeClass('glyphicon glyphicon-menu-left');
+                $('#sidebarCollapse').find('i').addClass('glyphicon glyphicon-menu-right');
+                $('a.navbar-brand').css('margin-left', '20px');
+                $('#sidebar').addClass('active');
+                $('#sidebarCollapse').addClass('active');
+            }
+        };
 
-        $("#sidebarCollapse").on("click", function () {
-            $("#sidebar").toggleClass("active");
-            $(this).toggleClass("active");
+        // Do the user actively choose to hide or show the sidebar
+        $('#sidebarCollapse').on('click', function () {
+            if ($('#sidebarCollapse').hasClass('active')) {
+                toggleSidebar(true);
+            } else {
+                toggleSidebar(false);
+            }
+        });
+
+        // Do resizing of the window force toggle the sidebar
+        var viewportInSmallMode = $(window).width() <= 768;
+        console.log(viewportInSmallMode);
+        console.log('______________________________________________________________________________________');
+        $(window).resize(function () {
+            var viewportWidth = $(window).width();
+
+            if (viewportWidth <= 768 && !viewportInSmallMode) {
+                // Viewport went from large to small mode, toggle sidebar
+                viewportInSmallMode = true;
+                toggleSidebar(false);
+            }
+
+            if (viewportWidth > 768 && viewportInSmallMode) {
+                // Viewport went from small to large mode, toggle sidebar
+                viewportInSmallMode = false;
+                toggleSidebar(true);
+            }
         });
     }
 });
