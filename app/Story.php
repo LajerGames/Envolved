@@ -10,4 +10,8 @@ class Story extends Model
     {
         return $this->belongsTo('App\User');
     }
+    public function characters()
+    {
+        return $this->hasMany('App\Character');
+    }
 }

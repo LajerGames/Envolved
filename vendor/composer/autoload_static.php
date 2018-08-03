@@ -299,12 +299,14 @@ class ComposerStaticInita1e0b67c7b9c79c6430d0d73b5639985
 
     public static $classMap = array (
         'AddUserIdToStories' => __DIR__ . '/../..' . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
+        'App\\Character' => __DIR__ . '/../..' . '/app/Character.php',
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Http\\Controllers\\Auth\\ForgotPasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ForgotPasswordController.php',
         'App\\Http\\Controllers\\Auth\\LoginController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/LoginController.php',
         'App\\Http\\Controllers\\Auth\\RegisterController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/RegisterController.php',
         'App\\Http\\Controllers\\Auth\\ResetPasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ResetPasswordController.php',
+        'App\\Http\\Controllers\\CharactersController' => __DIR__ . '/../..' . '/app/Http/Controllers/CharactersController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\HomeController' => __DIR__ . '/../..' . '/app/Http/Controllers/HomeController.php',
         'App\\Http\\Controllers\\StoriesController' => __DIR__ . '/../..' . '/app/Http/Controllers/StoriesController.php',
@@ -335,6 +337,7 @@ class ComposerStaticInita1e0b67c7b9c79c6430d0d73b5639985
         'Collective\\Html\\HtmlBuilder' => __DIR__ . '/..' . '/laravelcollective/html/src/HtmlBuilder.php',
         'Collective\\Html\\HtmlFacade' => __DIR__ . '/..' . '/laravelcollective/html/src/HtmlFacade.php',
         'Collective\\Html\\HtmlServiceProvider' => __DIR__ . '/..' . '/laravelcollective/html/src/HtmlServiceProvider.php',
+        'CreateCharactersTable' => __DIR__ . '/../..' . '/database/migrations/2018_08_03_141626_create_characters_table.php',
         'CreatePasswordResetsTable' => __DIR__ . '/../..' . '/database/migrations/2014_10_12_100000_create_password_resets_table.php',
         'CreateStoriesTable' => __DIR__ . '/../..' . '/database/migrations/2018_07_29_174106_create_stories_table.php',
         'CreateUsersTable' => __DIR__ . '/../..' . '/database/migrations/2014_10_12_000000_create_users_table.php',

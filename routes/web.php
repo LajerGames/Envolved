@@ -20,6 +20,7 @@ Route::group(['middleware' => 'auth'], function () {
     Auth::routes(); 
 
     Route::resource('stories', 'StoriesController');
+    Route::resource('stories.characters', 'CharactersController');
 
     Route::get('/home', 'StoriesController@index');
     
