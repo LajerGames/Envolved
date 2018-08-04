@@ -5,3 +5,17 @@ a.navbar-brand {
     border-radius: 0;
     border-left: 0;
 }
+th {
+    background-color: #F2F2F2;
+}
+th.divider-headline {
+    background-color: #FAFAFA;
+}
+th.icon {
+    width: 80px;
+    text-align: center;
+}
+
+table.table td {
+    line-height: 36px !important;
+}
