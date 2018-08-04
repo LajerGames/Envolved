@@ -101,38 +101,18 @@ class CharactersController extends Controller
     public function destroy($story_id, $id)
     {
         $character = Character::find($id);
-
+        
         // Check for access
-        if(!$this->HasAccess(auth()->user()->id, $character->story->user->id, $character->story->id, $character->story_id))
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $character->story->user->id)
+            || !Permission::CheckOwnership($character->story->id, $character->story_id)
+        )
+        {
             return redirect('/stories/'.$character->story->id.'/characters')->with('error', 'Access denied');
+        }
         
         $character->delete();
 
         return redirect('/stories/'.$character->story->id.'/characters')->with('success', 'Character; '.$character->first_names .' '.$character->last_name.', deleted');
-    }
-
-    /**
-     * Checks if user has access to a method
-     * Checks that the user owns the story and that the story owns the character.
-     * 
-     * @param  int  $user_id
-     * @param  int  $story_user_id
-     * @param  int  $story_id
-     * @param  int  $character_story_id
-     * @return boolean
-     */
-    public function HasAccess($user_id, $story_user_id, $story_id, $character_story_id)
-    {
-
-        print_r(func_get_args());
-        $hasAccess = false;
-        if($user_id == $story_user_id)
-        {
-            if($story_id == $character_story_id)
-            {
-                $hasAccess = true;
-            }
-        }
-        return $hasAccess;
     }
 }

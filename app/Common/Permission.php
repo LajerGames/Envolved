@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Common;
  
 class Permission {
@@ -11,7 +12,7 @@ class Permission {
      * @param  int  $owner_id
      * @return boolean
      */
-    public function CheckOwnership($id1, $id2)
+    public static function CheckOwnership($id1, $id2)
     {
         return $id1 == $id2;
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Story;
+use App\Common\Permission;
 // use DB; <- for using ordinary queries
 
 class StoriesController extends Controller
@@ -69,7 +70,7 @@ class StoriesController extends Controller
     {
         $story = Story::find($id);
 
-        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
 
         return view('stories.show')->with('story', $story);
@@ -86,7 +87,7 @@ class StoriesController extends Controller
     {
         $story = Story::find($id);
 
-        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
 
         return view('stories.edit')->with('story', $story);
@@ -105,7 +106,7 @@ class StoriesController extends Controller
 
         $story = Story::find($id);
 
-        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
 
         $this->SaveRequest($story, $request);
@@ -123,7 +124,7 @@ class StoriesController extends Controller
     {
         $story = Story::find($id);
 
-        if(!$this->HasAccess(auth()->user()->id, $story->user_id))
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
 
         $story->delete();
@@ -151,17 +152,5 @@ class StoriesController extends Controller
         $story->short_description = $request->input('short_description');
         $story->description = $request->input('description');
         $story->save();
-    }
-
-    /**
-     * Checks if user has access a method
-     * 
-     * @param  int  $user_id
-     * @param  int  $owner_id
-     * @return boolean
-     */
-    public function HasAccess($user_id, $owner_id)
-    {
-        return $user_id == $owner_id;
     }
 }
