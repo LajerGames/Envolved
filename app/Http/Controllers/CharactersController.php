@@ -39,22 +39,39 @@ class CharactersController extends Controller
     /**
      * Show the form for creating a new resource.
      *
+     * @param  int  $story_id
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create($story_id)
     {
-        //
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        return view('stories.characters.create')->with('story', $story);
     }
 
     /**
      * Store a newly created resource in storage.
      *
+     * @param  int  $story_id
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store($story_id, Request $request)
     {
-        //
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        $this->ValidateRequest($request);
+
+        $character = new Character;
+        $this->SaveRequest($character, $story_id, $request);
+
+        return redirect('/stories/'.$story_id.'/characters')->with('success', 'Story created');
     }
 
     /**
@@ -113,6 +130,29 @@ class CharactersController extends Controller
         
         $character->delete();
 
-        return redirect('/stories/'.$character->story->id.'/characters')->with('success', 'Character; '.$character->first_names .' '.$character->last_name.', deleted');
+        return redirect('/stories/'.$character->story->id.'/characters')->with('success', 'Character; '.$character->first_name .' '.$character->last_name.', deleted');
+    }
+
+    /**
+     * Validation for both store and update is the same, so we'll just call this method
+     */
+    public function ValidateRequest(Request $request)
+    {
+        $this->validate($request, [
+            'first_name' => 'required'
+        ]);
+    }
+
+    /**
+     * Once Character is instanciated or found (::find), the saving process is the same for both store and update
+     */
+    public function SaveRequest(Character $character, $story_id, Request $request)
+    {
+        $character->story_id =  $story_id;
+        $character->first_name = $request->input('first_name');
+        $character->middle_names = $request->input('middle_names');
+        $character->last_name = $request->input('last_name');
+        $character->role = $request->input('role');
+        $character->save();
     }
 }

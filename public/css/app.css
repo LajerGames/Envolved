@@ -8371,7 +8371,7 @@ button.close {
 }
 
 #sidebarCollapse {
-  position: fixed;
+  position: absolute;
   z-index: 1;
   top: 15px;
   left: 8px;
@@ -8505,16 +8505,17 @@ th {
   background-color: #F2F2F2;
 }
 
-th.divider-headline {
-  background-color: #FAFAFA;
-}
-
 th.icon {
   width: 80px;
   text-align: center;
 }
 
-table.table td {
+table.table td,
+table.table th {
   line-height: 36px !important;
+}
+
+th.divider-headline {
+  background-color: #FAFAFA;
 }
 

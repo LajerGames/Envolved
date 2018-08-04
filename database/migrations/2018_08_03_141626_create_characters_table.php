@@ -16,7 +16,8 @@ class CreateCharactersTable extends Migration
         Schema::create('story_characters', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('story_id');
-            $table->string('first_names');
+            $table->string('first_name');
+            $table->string('middle_names');
             $table->string('last_name');
             $table->enum('role', ['protagonist', 'major_character', 'minor_character']);
             $table->timestamps();
@@ -30,6 +31,6 @@ class CreateCharactersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('characters');
+        Schema::dropIfExists('story_characters');
     }
 }

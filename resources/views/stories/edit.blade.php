@@ -22,7 +22,8 @@
                         {{Form::textarea('description', $story->description, ['class' => 'form-control', 'placeholder' => 'Title', 'id' => 'article-ckeditor2'])}}
                     </div>
                     {{Form::hidden('_method', 'PUT')}}
-                    {{Form::submit('Create', ['class' => 'btn btn-primary'])}}
+                    <a href="/stories/{{$story->id}}" class="btn btn-default">Back</a>
+                    {{Form::submit('Create', ['class' => 'btn btn-primary pull-right'])}}
                 {!! Form::close() !!}
             </div>
         </div>

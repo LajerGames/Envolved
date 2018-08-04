@@ -9,9 +9,10 @@
                 <table class="table">
                     <tr>
                         <th scope="col" class="icon"></th>
-                        <th scope="col">First Names</th>
+                        <th scope="col">First name</th>
+                        <th scope="col">Middle names</th>
                         <th scope="col">Last name</th>
-                        <th scope="col" class="icon"></th>
+                        <th scope="col" class="icon text-center"><a href="/stories/{{$characters[0]->story->id}}/characters/create" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></a></th>
                     </tr>
                     @if(count($characters) > 0)
                         @php
@@ -20,7 +21,7 @@
                         @foreach($characters as $character)
                             @if($role != $character->role)
                                 <tr>
-                                    <th scope="col" colspan="4" class="text-center divider-headline">
+                                    <th scope="col" colspan="5" class="text-center divider-headline">
                                         @if($character->role == 'protagonist')
                                             {{ucfirst(str_replace('_', ' ', $character->role))}}
                                         @else
@@ -39,10 +40,11 @@
                                         'method' => 'post'
                                     ])!!}
                                         {{Form::hidden('_method', 'DELETE')}}
-                                        {{Form::submit('    Delete', ['class' => 'btn btn-danger'])}}
+                                        {{Form::submit('Delete', ['class' => 'btn btn-danger'])}}
                                     {!!Form::close()!!}
                                 </td>
-                                <td scope="col">{{$character->first_names}}</td>
+                                <td scope="col">{{$character->first_name}}</td>
+                                <td scope="col">{{$character->middle_names}}</td>
                                 <td scope="col">{{$character->last_name}}</td>
                                 <td scope="col"><a href="#" class="btn btn-primary">Edit</a></td>
                             </tr>

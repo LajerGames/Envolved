@@ -21,7 +21,8 @@
                         {{Form::label('description', 'Description')}}
                         {{Form::textarea('description', '', ['class' => 'form-control', 'placeholder' => 'Title', 'id' => 'article-ckeditor2'])}}
                     </div>
-                    {{Form::submit('Create', ['class' => 'btn btn-primary'])}}
+                    <a href="/home" class="btn btn-default">Back</a>
+                    {{Form::submit('Create', ['class' => 'btn btn-primary pull-right'])}}
                 {!! Form::close() !!}
             </div>
         </div>
