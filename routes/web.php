@@ -23,6 +23,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('stories.characters', 'CharactersController');
 
     Route::get('/home', 'StoriesController@index');
+
+    // AJAX
+    Route::post('/toggle-sidebar', 'GeneralAjaxController@ToggleSidebarSession');
     
 }); 
 /**

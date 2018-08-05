@@ -1016,17 +1016,24 @@ $(document).ready(function () {
 
         // Do the user actively choose to hide or show the sidebar
         $('#sidebarCollapse').on('click', function () {
+            var doShow = false;
             if ($('#sidebarCollapse').hasClass('active')) {
-                toggleSidebar(true);
-            } else {
-                toggleSidebar(false);
+                doShow = true;
             }
+
+            toggleSidebar(doShow);
+
+            $.post('/toggle-sidebar', {
+                _token: $('meta[name=csrf-token]').attr('content'),
+                _method: 'POST',
+                data: {
+                    show: doShow
+                }
+            }, function (response) {});
         });
 
         // Do resizing of the window force toggle the sidebar
         var viewportInSmallMode = $(window).width() <= 768;
-        console.log(viewportInSmallMode);
-        console.log('______________________________________________________________________________________');
         $(window).resize(function () {
             var viewportWidth = $(window).width();
 
