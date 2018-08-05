@@ -29,7 +29,7 @@ $(document).ready(function() {
         // Do the user actively choose to hide or show the sidebar
         $('#sidebarCollapse').on('click', function() {
             var doShow = false;
-            if($('#sidebarCollapse').hasClass('active')) {
+            if($('#sidebarCollapse').hasClass('inactive')) {
                 doShow = true;
             }
 
@@ -68,15 +68,15 @@ $(document).ready(function() {
             if(doShow) {
                 $('#sidebarCollapse').find('i').removeClass('glyphicon glyphicon-menu-right');
                 $('#sidebarCollapse').find('i').addClass('glyphicon glyphicon-menu-left');
-                $('a.navbar-brand').css('margin-left', '');
-                $('#sidebar').removeClass('active');
-                $('#sidebarCollapse').removeClass('active');
+                $('a.navbar-brand').removeClass('brand-margin-left');
+                $('#sidebar').removeClass('inactive');
+                $('#sidebarCollapse').removeClass('inactive');
             } else {
                 $('#sidebarCollapse').find('i').removeClass('glyphicon glyphicon-menu-left');
                 $('#sidebarCollapse').find('i').addClass('glyphicon glyphicon-menu-right');
-                $('a.navbar-brand').css('margin-left', '20px');
-                $('#sidebar').addClass('active');
-                $('#sidebarCollapse').addClass('active');
+                $('a.navbar-brand').addClass('brand-margin-left');
+                $('#sidebar').addClass('inactive');
+                $('#sidebarCollapse').addClass('inactive');
             }
         }
      

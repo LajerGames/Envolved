@@ -18,7 +18,18 @@
 <body>
     <div id="app">
 
-        <nav id="sidebar">
+        @php
+            $sidebarClass = '';
+            $sidebarTogglerGlyph = 'glyphicon-menu-left';
+        @endphp
+        @if(!Session::get('ShowSidebar'))
+            @php
+                $sidebarClass = 'inactive';
+                $sidebarTogglerGlyph = 'glyphicon-menu-right';
+            @endphp
+        @endif
+
+        <nav id="sidebar" class="{{$sidebarClass}}">
             <div class="sidebar-header">
                 <h3>Story Editor</h3>
             </div>
@@ -45,8 +56,8 @@
 
             @include('include.navbar')
 
-            <button type="button" id="sidebarCollapse" class="btn btn-default">
-                <i class="glyphicon glyphicon-menu-left"></i>
+            <button type="button" id="sidebarCollapse" class="btn btn-default {{$sidebarClass}}">
+                <i class="glyphicon {{$sidebarTogglerGlyph}}"></i>
             </button>
 
             <div class="container">

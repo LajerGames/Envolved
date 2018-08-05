@@ -1,4 +1,14 @@
 @if (Auth::check())
+
+    @php
+        $brandAnchorClass = '';
+    @endphp
+    @if(!Session::get('ShowSidebar'))
+        @php
+            $brandAnchorClass = 'brand-margin-left';
+        @endphp
+    @endif
+
     <nav class="navbar navbar-inverse">
         <div class="container">
             <div class="navbar-header">
@@ -12,7 +22,7 @@
                 </button>
 
                 <!-- Branding Image -->
-                <a class="navbar-brand" href="{{ url('/home') }}">
+                <a class="navbar-brand {{$brandAnchorClass}}" href="{{ url('/home') }}">
                     {{ config('app.name', 'Laravel') }}
                 </a>
             </div>

@@ -24,6 +24,9 @@ class GeneralAjaxController extends Controller
      */
     public function ToggleSidebarSession()
     {
-        session::put('ShowSidebar', (bool)$_POST['show']);
+
+        $doShow = $_POST['data']['show'] == 'true' ? true : false; // Making sure it can only be a bool, casting it made it buggy :/
+        echo $doShow;
+        \Session::put('ShowSidebar', $doShow);
     }
 }

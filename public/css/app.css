@@ -8403,7 +8403,7 @@ button.close {
   color: inherit;
 }
 
-#sidebar.active {
+#sidebar.inactive {
   margin-left: -250px;
 }
 
@@ -8431,7 +8431,7 @@ button.close {
   background: #393939;
 }
 
-#sidebar ul li.active > a,
+#sidebar ul li.inactive > a,
 #sidebar a[aria-expanded="true"] {
   color: #fff;
   background: #222;
@@ -8499,6 +8499,10 @@ a.navbar-brand {
 .navbar {
   border-radius: 0;
   border-left: 0;
+}
+
+.brand-margin-left {
+  margin-left: 20px !important;
 }
 
 th {

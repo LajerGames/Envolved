@@ -35,7 +35,7 @@
   color: inherit;
 }
 
-#sidebar.active {
+#sidebar.inactive {
   margin-left: -250px;
 }
 
@@ -63,7 +63,7 @@
   background: #393939;
 }
 
-#sidebar ul li.active > a,
+#sidebar ul li.inactive > a,
 #sidebar a[aria-expanded="true"] {
   color: #fff;
   background: #222;
