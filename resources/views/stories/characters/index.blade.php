@@ -55,7 +55,7 @@
                         @endforeach
                         {{$characters->links()}}
                     @else
-                        <p>No stories found</p>
+                        <p>No Characters</p>
                     @endif
                 </table>
             </div>
