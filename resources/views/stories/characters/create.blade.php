@@ -8,7 +8,7 @@
             
             <div class="panel-body">
                 
-                {!! Form::open(['action' => ['CharactersController@store', $story->id], 'method' => 'post']) !!}
+                {!! Form::open(['action' => ['CharactersController@store', $story->id], 'method' => 'post', 'enctype' => 'multipart/form-data']) !!}
                     <div class="form-group">
                         {{Form::label('first_name', 'First name')}}
                         {{Form::text('first_name', '', ['class' => 'form-control', 'placeholder' => 'First name'])}}
@@ -27,6 +27,10 @@
                     <div class="form-group">
                         {{Form::label('role', 'Role')}}
                         {{Form::select('role', config('constants.character_roles'), null, ['class' => 'form-control'])}}
+                    </div>
+
+                    <div class="form-group">
+                        {{Form::file('avatar')}}
                     </div>
                     
                     <a href="/stories/{{$story->id}}/characters" class="btn btn-default">Back</a>

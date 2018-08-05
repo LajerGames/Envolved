@@ -298,6 +298,7 @@ class ComposerStaticInita1e0b67c7b9c79c6430d0d73b5639985
     );
 
     public static $classMap = array (
+        'AddAvatarImageToCharacters' => __DIR__ . '/../..' . '/database/migrations/2018_08_05_164228_add_avatar_image_to_characters.php',
         'AddUserIdToStories' => __DIR__ . '/../..' . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
         'App\\Character' => __DIR__ . '/../..' . '/app/Character.php',
         'App\\Common\\Permission' => __DIR__ . '/../..' . '/app/Common/Permission.php',
@@ -309,6 +310,7 @@ class ComposerStaticInita1e0b67c7b9c79c6430d0d73b5639985
         'App\\Http\\Controllers\\Auth\\ResetPasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ResetPasswordController.php',
         'App\\Http\\Controllers\\CharactersController' => __DIR__ . '/../..' . '/app/Http/Controllers/CharactersController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
+        'App\\Http\\Controllers\\GeneralAjaxController' => __DIR__ . '/../..' . '/app/Http/Controllers/GeneralAjaxController.php',
         'App\\Http\\Controllers\\HomeController' => __DIR__ . '/../..' . '/app/Http/Controllers/HomeController.php',
         'App\\Http\\Controllers\\StoriesController' => __DIR__ . '/../..' . '/app/Http/Controllers/StoriesController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',

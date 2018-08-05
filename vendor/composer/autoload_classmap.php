@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'AddAvatarImageToCharacters' => $baseDir . '/database/migrations/2018_08_05_164228_add_avatar_image_to_characters.php',
     'AddUserIdToStories' => $baseDir . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
     'App\\Character' => $baseDir . '/app/Character.php',
     'App\\Common\\Permission' => $baseDir . '/app/Common/Permission.php',
@@ -17,6 +18,7 @@ return array(
     'App\\Http\\Controllers\\Auth\\ResetPasswordController' => $baseDir . '/app/Http/Controllers/Auth/ResetPasswordController.php',
     'App\\Http\\Controllers\\CharactersController' => $baseDir . '/app/Http/Controllers/CharactersController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
+    'App\\Http\\Controllers\\GeneralAjaxController' => $baseDir . '/app/Http/Controllers/GeneralAjaxController.php',
     'App\\Http\\Controllers\\HomeController' => $baseDir . '/app/Http/Controllers/HomeController.php',
     'App\\Http\\Controllers\\StoriesController' => $baseDir . '/app/Http/Controllers/StoriesController.php',
     'App\\Http\\Kernel' => $baseDir . '/app/Http/Kernel.php',

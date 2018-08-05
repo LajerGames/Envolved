@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Story;
 use App\Character;
 use App\Common\Permission;
+use App\Common\HandleImages;
 
 class CharactersController extends Controller
 {
@@ -28,12 +29,14 @@ class CharactersController extends Controller
      */
     public function index($story_id)
     {
-        
+        /*
         $characters = Character::where('story_id', $story_id)
             ->orderByRaw("FIELD(role , 'protagonist') DESC")
             ->paginate(10);
+*/
+        $story = Story::find($story_id);
 
-            return view('stories.characters.index')->with('characters', $characters);
+        return view('stories.characters.index')->with('story', $story);
     }
 
     /**
@@ -68,8 +71,15 @@ class CharactersController extends Controller
 
         $this->ValidateRequest($request);
 
+        // Upload image
+        $imageName = HandleImages::UploadImage(
+            $request,
+            'avatar',
+            'public/stories/'.$story_id.'/characters/'
+        );          
+
         $character = new Character;
-        $this->SaveRequest($character, $story_id, $request);
+        $this->SaveRequest($character, $story_id, $imageName, $request);
 
         return redirect('/stories/'.$story_id.'/characters')->with('success', 'Story created');
     }
@@ -139,20 +149,23 @@ class CharactersController extends Controller
     public function ValidateRequest(Request $request)
     {
         $this->validate($request, [
-            'first_name' => 'required'
+            'first_name' => 'required',
+            'avatar' => 'image|nullable|max:2000'
         ]);
     }
 
     /**
      * Once Character is instanciated or found (::find), the saving process is the same for both store and update
      */
-    public function SaveRequest(Character $character, $story_id, Request $request)
+    public function SaveRequest(Character $character, $story_id, $imageName, Request $request)
     {
         $character->story_id =  $story_id;
-        $character->first_name = $request->input('first_name');
-        $character->middle_names = $request->input('middle_names');
-        $character->last_name = $request->input('last_name');
-        $character->role = $request->input('role');
+        $character->first_name = "{$request->input('first_name')}";
+        $character->middle_names = "{$request->input('middle_names')}";
+        $character->last_name = "{$request->input('last_name')}";
+        $character->role = "{$request->input('role')}";
+        if(!empty($imageName))
+            $character->avatar_url = $imageName;
         $character->save();
     }
 }
