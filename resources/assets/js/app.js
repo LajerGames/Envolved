@@ -42,8 +42,8 @@ $(document).ready(function() {
                     _method : 'POST',
                     data : {
                         show: doShow
-                    }
-                });
+                }
+            });
         });
 
         // Do resizing of the window force toggle the sidebar
@@ -83,4 +83,12 @@ $(document).ready(function() {
     }
     // End region
 
+    // Submit form outside <form> tags
+    $('.submit-form').on('click', function() {
+        var submitFormWithID = $(this).data('submit');
+
+        if(submitFormWithID.length > 0) {
+            $('#'+submitFormWithID).submit();
+        }
+    });
 });

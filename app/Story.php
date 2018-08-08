@@ -12,6 +12,6 @@ class Story extends Model
     }
     public function characters()
     {
-        return $this->hasMany('App\Character');
+        return $this->hasMany('App\Character')->orderBy('role', 'asc');
     }
 }

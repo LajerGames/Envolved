@@ -3,6 +3,7 @@
 namespace App\Common;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
  
 class HandleImages {
 
@@ -37,9 +38,25 @@ class HandleImages {
         return $imageName;
     }
 
-    public static function DeleteImage()
+    /**
+     * Delete an image
+     *
+     * @param string $deleteImagePath
+     * @param object $resourceObj
+     * @param string $imgField
+     * @return void
+     */
+    public static function DeleteImage($deleteImagePath, $resourceObj, $imgField)
     {
-        
+        if($resourceObj->{$imgField} != '')
+        {
+            $resourceObj->{$imgField} = '';
+            $resourceObj->save();
+
+            Storage::delete($deleteImagePath);
+        }
+
+        return;
     }
  
 }

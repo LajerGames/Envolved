@@ -1050,6 +1050,16 @@ $(document).ready(function () {
             }
         });
     }
+    // End region
+
+    // Submit form outside <form> tags
+    $('.submit-form').on('click', function () {
+        var submitFormWithID = $(this).data('submit');
+
+        if (submitFormWithID.length > 0) {
+            $('#' + submitFormWithID).submit();
+        }
+    });
 });
 
 /***/ }),

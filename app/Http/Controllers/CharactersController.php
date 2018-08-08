@@ -29,11 +29,6 @@ class CharactersController extends Controller
      */
     public function index($story_id)
     {
-        /*
-        $characters = Character::where('story_id', $story_id)
-            ->orderByRaw("FIELD(role , 'protagonist') DESC")
-            ->paginate(10);
-*/
         $story = Story::find($story_id);
 
         return view('stories.characters.index')->with('story', $story);
@@ -81,29 +76,35 @@ class CharactersController extends Controller
         $character = new Character;
         $this->SaveRequest($character, $story_id, $imageName, $request);
 
-        return redirect('/stories/'.$story_id.'/characters')->with('success', 'Story created');
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
+        return redirect('/stories/'.$story_id.'/characters')->with('success', 'Character created');
     }
 
     /**
      * Show the form for editing the specified resource.
      *
+     * @param  int  $story_id
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($story_id, $id)
     {
-        //
+        $story = Story::find($story_id);
+
+        // Check for access
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user->id)
+            || !Permission::CheckOwnership($story_id, $story->id)
+        )
+        {
+            return redirect('/stories/'.$story->id.'/characters')->with('error', 'Access denied');
+        }
+
+        $info = [
+            'id'    => $id,
+            'story' => $story
+        ];
+
+        return view('stories.characters.edit')->with('info', $info);
     }
 
     /**
@@ -111,11 +112,35 @@ class CharactersController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
+     * @param  int  $story_id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, $story_id)
     {
-        //
+        $story = Story::find($story_id);
+
+        // Check for access
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user->id)
+            || !Permission::CheckOwnership($story_id, $story->id)
+        )
+        {
+            return redirect('/stories/'.$story->id.'/characters')->with('error', 'Access denied');
+        }
+
+        $this->ValidateRequest($request);
+
+        // Upload image
+        $imageName = HandleImages::UploadImage(
+            $request,
+            'avatar',
+            'public/stories/'.$story_id.'/characters/'
+        );          
+
+        $character = $story->characters->find($id);
+        $this->SaveRequest($character, $story_id, $imageName, $request);
+
+        return redirect('/stories/'.$story_id.'/characters')->with('success', $character->first_name.' '.$character->last_name.' updated');
     }
 
     /**
@@ -137,10 +162,23 @@ class CharactersController extends Controller
         {
             return redirect('/stories/'.$character->story->id.'/characters')->with('error', 'Access denied');
         }
-        
-        $character->delete();
 
-        return redirect('/stories/'.$character->story->id.'/characters')->with('success', 'Character; '.$character->first_name .' '.$character->last_name.', deleted');
+        // Delete the image first if there is any
+        HandleImages::DeleteImage(
+            'public/stories/'.$character->story->id.'/characters/'.$character->avatar_url,
+            $character,
+            'avatar_url'
+        );
+        
+        if(!$_GET['deleteImageOnly'])
+        {
+            $character->delete();
+            return redirect('/stories/'.$character->story->id.'/characters')->with('success', 'Character; '.$character->first_name .' '.$character->last_name.', deleted');
+        }
+        else
+        {
+            return redirect('/stories/'.$character->story->id.'/characters/'.$id.'/edit')->with('success', 'Image deleted');
+        }
     }
 
     /**

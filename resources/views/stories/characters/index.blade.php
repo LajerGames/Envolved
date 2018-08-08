@@ -39,7 +39,7 @@
                             <tr>
                                 <td scope="col">
                                     {!!Form::open([
-                                        'action' => ['CharactersController@destroy', $story->id, $character->id],
+                                        'action' => ['CharactersController@destroy', $story->id, $character->id, 'deleteImageOnly=false'],
                                         'method' => 'post'
                                     ])!!}
                                         {{Form::hidden('_method', 'DELETE')}}
