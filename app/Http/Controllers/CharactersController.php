@@ -130,14 +130,17 @@ class CharactersController extends Controller
 
         $this->ValidateRequest($request);
 
-        // Upload image
-        $imageName = HandleImages::UploadImage(
+        $character = $story->characters->find($id);
+
+        // Delete old and upload new image
+        $imageName = HandleImages::DeleteThenUpload(
             $request,
+            $character,
+            'avatar_url',
             'avatar',
             'public/stories/'.$story_id.'/characters/'
         );          
 
-        $character = $story->characters->find($id);
         $this->SaveRequest($character, $story_id, $imageName, $request);
 
         return redirect('/stories/'.$story_id.'/characters')->with('success', $character->first_name.' '.$character->last_name.' updated');

@@ -8,6 +8,28 @@ use Illuminate\Support\Facades\Storage;
 class HandleImages {
 
     /**
+     * Checks if there is an image saved in the field already, if there is, then delete it. Afterwards, save the new image
+     *
+     * @param \Illuminate\Http\Request  $request
+     * @param string $model
+     * @param string $imageTableField
+     * @param string $requestImageName
+     * @param string $imagePath
+     * @return string $imageName
+     */
+    public static function DeleteThenUpload(Request $request, $model, $imageTableField, $requestImageName, $imagePath)
+    {
+        // Do we have an image already?
+        if(!empty($model->{$imageTableField}))
+        {
+            self::DeleteImage($imagePath.$model->{$imageTableField}, $model, $imageTableField);
+        }
+
+        // Upload image
+        return self::UploadImage($request, $requestImageName, $imagePath);
+    }
+
+    /**
      * Store an image
      *
      * @param \Illuminate\Http\Request  $request
