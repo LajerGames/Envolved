@@ -7,6 +7,15 @@
             <div class="panel-heading">Create Character</div>
             
             <div class="panel-body">
+                @php
+                    $protagonist = $story->characters->where('role', 'protagonist')->first();
+                    $strRoles = config('constants.character_roles');
+                @endphp
+                @if(!empty($protagonist))
+                    @php
+                        $strRoles = config('constants.character_roles_wo_protagonist');
+                    @endphp
+                @endif
                 
                 {!! Form::open(['action' => ['CharactersController@store', $story->id], 'method' => 'post', 'enctype' => 'multipart/form-data']) !!}
                     <div class="form-group">
@@ -26,7 +35,7 @@
 
                     <div class="form-group">
                         {{Form::label('role', 'Role')}}
-                        {{Form::select('role', config('constants.character_roles'), null, ['class' => 'form-control'])}}
+                        {{Form::select('role', $strRoles, null, ['class' => 'form-control'])}}
                     </div>
 
                     <div class="form-group">

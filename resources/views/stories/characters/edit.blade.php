@@ -12,7 +12,16 @@
                     $story = $info['story'];
                     $characterID = $info['id'];
                     $character = $story->characters->find($characterID);
+                    $protagonist = $story->characters->where('role', 'protagonist')->first();
+                    $strRoles = config('constants.character_roles');
                 @endphp
+                @if(!empty($protagonist))
+                    @if($protagonist->id != $characterID)
+                        @php
+                            $strRoles = config('constants.character_roles_wo_protagonist');
+                        @endphp
+                    @endif
+                @endif
                 {!! Form::open([
                         'action'    => ['CharactersController@update', $characterID, $story->id],
                         'method'    => 'post',

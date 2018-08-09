@@ -66,6 +66,11 @@ class CharactersController extends Controller
 
         $this->ValidateRequest($request);
 
+        if($this->AlreadyHasProtagonist($story))
+            return redirect('/stories/'.$story->id.'/characters')->with('error', 'You can only have one protagonist');
+
+        return;
+
         // Upload image
         $imageName = HandleImages::UploadImage(
             $request,
@@ -129,6 +134,9 @@ class CharactersController extends Controller
         }
 
         $this->ValidateRequest($request);
+
+        if($this->AlreadyHasProtagonist($story, $id))
+            return redirect('/stories/'.$story->id.'/characters')->with('error', 'You can only have one protagonist');
 
         $character = $story->characters->find($id);
 
@@ -208,5 +216,13 @@ class CharactersController extends Controller
         if(!empty($imageName))
             $character->avatar_url = $imageName;
         $character->save();
+    }
+
+    public function AlreadyHasProtagonist(Story $story, $updateID = 0)
+    {
+        $protagonist = $story->characters->where('role', 'protagonist')->first();
+        $protagonistID = !empty($protagonist) ? intval($protagonist->id) : 0; 
+
+        return $protagonistID > 0 && $protagonistID != $updateID;
     }
 }
