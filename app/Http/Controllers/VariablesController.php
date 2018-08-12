@@ -23,7 +23,7 @@ class VariablesController extends Controller
         if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
 
-            return view('stories.variables.index')->with('story', $story);
+        return view('stories.variables.index')->with('story', $story);
     }
 
     /**

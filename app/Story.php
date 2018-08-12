@@ -16,6 +16,10 @@ class Story extends Model
     }
     public function variables()
     {
-        return $this->hasMany('App\Variable')->orderBy('type', 'asc');;
+        return $this->hasMany('App\Variable')->orderBy('type', 'asc');
+    }
+    public function phonenumber()
+    {
+        return $this->hasMany('App\PhoneNumber');
     }
 }

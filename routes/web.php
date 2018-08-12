@@ -25,6 +25,9 @@ Route::group(['middleware' => 'auth'], function () {
     # Characters
     Route::resource('stories.characters', 'CharactersController');
 
+    # Phone numbers
+    Route::resource('stories.phone_numbers', 'PhoneNumbersController');
+
     # Variables
     Route::resource('stories.variables', 'VariablesController');
 
