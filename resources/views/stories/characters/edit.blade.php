@@ -45,7 +45,7 @@
 
                     <div class="form-group">
                         {{Form::label('role', 'Role')}}
-                        {{Form::select('role', config('constants.character_roles'), $character->role, ['class' => 'form-control'])}}
+                        {{Form::select('role', $strRoles , $character->role, ['class' => 'form-control'])}}
                     </div>
 
                     <div class="form-group">
@@ -63,7 +63,7 @@
                                 'method'    => 'post'
                             ])!!}
                                 {{Form::hidden('_method', 'DELETE')}}
-                                {{Form::submit('Delete image', ['class' => 'btn btn-danger'])}}
+                                {{Form::submit('Delete image', ['class' => 'btn btn-danger  btn-delete'])}}
                                 &nbsp;&nbsp;</a><a href="/storage/stories/{{$story->id}}/characters/{{$character->avatar_url}}" target="_blank">{{$character->avatar_url}}</a>
                             {!!Form::close()!!}
                         </div>

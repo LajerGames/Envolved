@@ -8491,6 +8491,11 @@ button.close {
   width: auto;
 }
 
+#sidebar .components p {
+  border-bottom: #999 1px solid;
+  text-align: center;
+}
+
 a.navbar-brand {
   -webkit-transition: all 0.3s;
   transition: all 0.3s;

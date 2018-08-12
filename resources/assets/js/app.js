@@ -91,4 +91,18 @@ $(document).ready(function() {
             $('#'+submitFormWithID).submit();
         }
     });
+
+    var canDelete = false;
+    $('.btn-delete').closest('form').on('submit', function(e) {
+        if(!canDelete) {
+            e.preventDefault();
+            if(confirm('Delete this?')) {
+                canDelete = true;
+                $(this).submit();
+            }
+            return false;
+        } else {
+            canDelete = false;
+        }
+    });
 });

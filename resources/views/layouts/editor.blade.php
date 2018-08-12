@@ -35,7 +35,7 @@
             </div>
 
             <ul class="list-unstyled components">
-                <!--p>Dummy Heading</p-->
+                
                 <!--li class="active">
                     <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false">Home</a>
                     <ul class="collapse list-unstyled" id="homeSubmenu">
@@ -44,10 +44,11 @@
                         <li><a href="#">Home 3</a></li>
                     </ul>
                 </li-->
-                <li>
-                    <a href="/stories/{{request()->segment(2)}}">Main</a>
-                    <a href="/stories/{{request()->segment(2)}}/characters">Characters</a>
-                </li>
+                <p>Main</p>
+                <li><a href="/stories/{{request()->segment(2)}}">Main</a></li>
+                <li><a href="/stories/{{request()->segment(2)}}/characters">Characters</a></li>
+                <p>More</p>
+                <li><a href="/stories/{{request()->segment(2)}}/variables">Variables</a></li>
             </ul>
 
         </nav>

@@ -25,6 +25,9 @@ Route::group(['middleware' => 'auth'], function () {
     # Characters
     Route::resource('stories.characters', 'CharactersController');
 
+    # Variables
+    Route::resource('stories.variables', 'VariablesController');
+
     Route::get('/home', 'StoriesController@index');
 
     // AJAX

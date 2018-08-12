@@ -31,6 +31,9 @@ class CharactersController extends Controller
     {
         $story = Story::find($story_id);
 
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
         return view('stories.characters.index')->with('story', $story);
     }
 
@@ -66,20 +69,18 @@ class CharactersController extends Controller
 
         $this->ValidateRequest($request);
 
-        if($this->AlreadyHasProtagonist($story))
+        if($this->AlreadyHasProtagonist($story, $request->role))
             return redirect('/stories/'.$story->id.'/characters')->with('error', 'You can only have one protagonist');
-
-        return;
 
         // Upload image
         $imageName = HandleImages::UploadImage(
             $request,
             'avatar',
             'public/stories/'.$story_id.'/characters/'
-        );          
+        );
 
         $character = new Character;
-        $this->SaveRequest($character, $story_id, $imageName, $request);
+        $this->SaveRequest($character, $story_id, $imageName, $request, true);
 
         return redirect('/stories/'.$story_id.'/characters')->with('success', 'Character created');
     }
@@ -135,7 +136,7 @@ class CharactersController extends Controller
 
         $this->ValidateRequest($request);
 
-        if($this->AlreadyHasProtagonist($story, $id))
+        if($this->AlreadyHasProtagonist($story, $request->role, $id))
             return redirect('/stories/'.$story->id.'/characters')->with('error', 'You can only have one protagonist');
 
         $character = $story->characters->find($id);
@@ -180,8 +181,8 @@ class CharactersController extends Controller
             $character,
             'avatar_url'
         );
-        
-        if(!$_GET['deleteImageOnly'])
+
+        if($_GET['deleteImageOnly'] == 'false')
         {
             $character->delete();
             return redirect('/stories/'.$character->story->id.'/characters')->with('success', 'Character; '.$character->first_name .' '.$character->last_name.', deleted');
@@ -206,23 +207,23 @@ class CharactersController extends Controller
     /**
      * Once Character is instanciated or found (::find), the saving process is the same for both store and update
      */
-    public function SaveRequest(Character $character, $story_id, $imageName, Request $request)
+    public function SaveRequest(Character $character, $story_id, $imageName, Request $request, $isInsert = false)
     {
         $character->story_id =  $story_id;
         $character->first_name = "{$request->input('first_name')}";
         $character->middle_names = "{$request->input('middle_names')}";
         $character->last_name = "{$request->input('last_name')}";
         $character->role = "{$request->input('role')}";
-        if(!empty($imageName))
-            $character->avatar_url = $imageName;
+        if(!empty($imageName) || $isInsert)
+            $character->avatar_url = "{$imageName}";
         $character->save();
     }
 
-    public function AlreadyHasProtagonist(Story $story, $updateID = 0)
+    public function AlreadyHasProtagonist(Story $story, $roleName, $updateID = 0)
     {
         $protagonist = $story->characters->where('role', 'protagonist')->first();
         $protagonistID = !empty($protagonist) ? intval($protagonist->id) : 0; 
 
-        return $protagonistID > 0 && $protagonistID != $updateID;
+        return $roleName == 'protagonist' && $protagonistID > 0 && $protagonistID != $updateID;
     }
 }

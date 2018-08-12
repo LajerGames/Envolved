@@ -43,7 +43,7 @@
                                         'method' => 'post'
                                     ])!!}
                                         {{Form::hidden('_method', 'DELETE')}}
-                                        {{Form::submit('Delete', ['class' => 'btn btn-danger'])}}
+                                        {{Form::submit('Delete', ['class' => 'btn btn-danger btn-delete'])}}
                                     {!!Form::close()!!}
                                 </td>
                                 <td scope="col">{{$character->first_name}}</td>

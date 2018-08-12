@@ -13,7 +13,7 @@ class CreateVariablesTable extends Migration
      */
     public function up()
     {
-        Schema::create('variables', function (Blueprint $table) {
+        Schema::create('story_variables', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('story_id');
             $table->enum('type', ['text', 'number', 'float']);
@@ -30,6 +30,6 @@ class CreateVariablesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('variables');
+        Schema::dropIfExists('story_variables');
     }
 }

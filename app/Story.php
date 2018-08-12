@@ -14,4 +14,8 @@ class Story extends Model
     {
         return $this->hasMany('App\Character')->orderBy('role', 'asc');
     }
+    public function variables()
+    {
+        return $this->hasMany('App\Variable')->orderBy('type', 'asc');;
+    }
 }

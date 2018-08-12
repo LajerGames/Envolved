@@ -112,10 +112,15 @@
 }
 
 #content {
-    width: 100%;
-    min-height: 100vh;
-    transition: all 0.3s;
+  width: 100%;
+  min-height: 100vh;
+  transition: all 0.3s;
 }
 .container {
-    width: auto;
+  width: auto;
+}
+
+#sidebar .components p {
+  border-bottom: #999 1px solid;
+  text-align: center;
 }

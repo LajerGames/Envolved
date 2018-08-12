@@ -19,14 +19,18 @@ class HandleImages {
      */
     public static function DeleteThenUpload(Request $request, $model, $imageTableField, $requestImageName, $imagePath)
     {
-        // Do we have an image already?
-        if(!empty($model->{$imageTableField}))
+        // Only do anything if we're uploading a new picture
+        if($request->hasFile($requestImageName))
         {
-            self::DeleteImage($imagePath.$model->{$imageTableField}, $model, $imageTableField);
-        }
+            // Do we have an image already?
+            if(!empty($model->{$imageTableField}))
+            {
+                self::DeleteImage($imagePath.$model->{$imageTableField}, $model, $imageTableField);
+            }
 
-        // Upload image
-        return self::UploadImage($request, $requestImageName, $imagePath);
+            // Upload image
+            return self::UploadImage($request, $requestImageName, $imagePath);
+        }
     }
 
     /**
