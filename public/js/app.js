@@ -1074,6 +1074,11 @@ $(document).ready(function () {
             canDelete = false;
         }
     });
+
+    $('select.overwrite-field-onchange').on('change', function () {
+        var chosenName = $(this).val() == 0 ? '' : $(this).find(':selected').text();
+        $('#' + $(this).data('field-to-overwrite')).val(chosenName);
+    });
 });
 
 /***/ }),

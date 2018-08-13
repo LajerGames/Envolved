@@ -11,4 +11,8 @@ class PhoneNumber extends Model
     {
         return $this->belongsTo('App\Story');
     }
+    public function character()
+    {
+        return $this->hasOne('App\Character');
+    }
 }

@@ -11,4 +11,8 @@ class Character extends Model
     {
         return $this->belongsTo('App\Story');
     }
+    public function phonenumber()
+    {
+        return $this->hasOne('App\PhoneNumber');
+    }
 }

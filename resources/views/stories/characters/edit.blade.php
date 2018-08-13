@@ -28,6 +28,7 @@
                         'enctype'   => 'multipart/form-data',
                         'id'        => 'character-form'
                 ])!!}
+                
                     <div class="form-group">
                         {{Form::label('first_name', 'First name')}}
                         {{Form::text('first_name', $character->first_name, ['class' => 'form-control', 'placeholder' => 'First name'])}}
@@ -42,11 +43,23 @@
                         {{Form::label('last_name', 'Last name')}}
                         {{Form::text('last_name', $character->last_name, ['class' => 'form-control', 'placeholder' => 'Last name'])}}
                     </div>
+                    
+                    <div class="form-group">
+                        {{Form::label('gender', 'Gender')}}
+                        {{Form::select('gender', config('constants.genders'), $character->gender, ['class' => 'form-control'])}}
+                    </div>
 
                     <div class="form-group">
                         {{Form::label('role', 'Role')}}
                         {{Form::select('role', $strRoles , $character->role, ['class' => 'form-control'])}}
                     </div>
+
+                    @if(!empty($character->phonenumber))
+                    <div class="form-group">
+                        Attached phone number:<br />
+                        {{$character->phonenumber->number}} - <a href="/stories/{{$story->id}}/phone_numbers/{{$character->phonenumber->id}}/edit">Edit</a>
+                    </div>
+                    @endif
 
                     <div class="form-group">
                         {{Form::file('avatar')}}

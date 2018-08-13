@@ -200,6 +200,7 @@ class CharactersController extends Controller
     {
         $this->validate($request, [
             'first_name' => 'required',
+            'gender' => 'required',
             'avatar' => 'image|nullable|max:2000'
         ]);
     }
@@ -213,6 +214,7 @@ class CharactersController extends Controller
         $character->first_name = "{$request->input('first_name')}";
         $character->middle_names = "{$request->input('middle_names')}";
         $character->last_name = "{$request->input('last_name')}";
+        $character->gender = "{$request->input('gender')}";
         $character->role = "{$request->input('role')}";
         if(!empty($imageName) || $isInsert)
             $character->avatar_url = "{$imageName}";

@@ -11,6 +11,7 @@
                         <th scope="col" class="icon"></th>
                         <th scope="col">Phone number</th>
                         <th scope="col">Name (Just for Editor)</th>
+                        <th scope="col">Character conn.</th>
                         <th scope="col" class="icon text-center"><a href="/stories/{{$story->id}}/phone_numbers/create" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></a></th>
                     </tr>
                     
@@ -32,6 +33,7 @@
                                 </td>
                                 <td scope="col">{{$phoneNumber->number}}</td>
                                 <td scope="col">{{$phoneNumber->name}}</td>
+                                <td scope="col">{{($phoneNumber->character_id > 0 ? 'Yes' : 'No')}}</td>
                                 <td scope="col"><a href="/stories/{{$story->id}}/phone_numbers/{{$phoneNumber->id}}/edit" class="btn btn-primary">Edit</a></td>
                             </tr>
                         @endforeach

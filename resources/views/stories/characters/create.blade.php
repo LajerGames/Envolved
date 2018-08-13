@@ -34,6 +34,11 @@
                     </div>
 
                     <div class="form-group">
+                        {{Form::label('gender', 'Gender')}}
+                        {{Form::select('gender', config('constants.genders'), null, ['class' => 'form-control'])}}
+                    </div>
+
+                    <div class="form-group">
                         {{Form::label('role', 'Role')}}
                         {{Form::select('role', $strRoles, null, ['class' => 'form-control'])}}
                     </div>

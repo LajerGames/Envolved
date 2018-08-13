@@ -29,22 +29,44 @@ class PhoneNumbersController extends Controller
     /**
      * Show the form for creating a new resource.
      *
+     * @param  int  $story_id
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create($story_id)
     {
-        //
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        $info = [
+            'story' => $story,
+            'characters_list' => $this->GenerateCharactersList($story, true)
+        ];
+
+        return view('stories.phone_numbers.create')->with('info', $info);
     }
 
     /**
      * Store a newly created resource in storage.
      *
+     * @param  int  $story_id
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store($story_id, Request $request)
     {
-        //
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        $this->ValidateRequest($request);
+
+        $phoneNumber = new PhoneNumber;
+        $this->SaveRequest($phoneNumber, $story_id, $request);
+
+        return redirect('/stories/'.$story_id.'/phone_numbers')->with('success', 'Phone number created');
     }
 
     /**
@@ -61,12 +83,30 @@ class PhoneNumbersController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
+     * @param  int  $story_id
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($story_id, $id)
     {
-        //
+        $story = Story::find($story_id);
+
+        // Check for access
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user->id)
+            || !Permission::CheckOwnership($story_id, $story->id)
+        )
+        {
+            return redirect('/stories/'.$story->id.'/phone_numbers')->with('error', 'Access denied');
+        }
+
+        $info = [
+            'id'    => $id,
+            'story' => $story,
+            'characters_list' => $this->GenerateCharactersList($story, true)
+        ];
+
+        return view('stories.phone_numbers.edit')->with('info', $info);
     }
 
     /**
@@ -74,11 +114,29 @@ class PhoneNumbersController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
+     * @param  int  $story_id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, $story_id)
     {
-        //
+        $story = Story::find($story_id);
+
+        // Check for access
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user->id)
+            || !Permission::CheckOwnership($story_id, $story->id)
+        )
+        {
+            return redirect('/stories/'.$story->id.'/phone_numbers')->with('error', 'Access denied');
+        }
+
+        $this->ValidateRequest($request);
+
+        $phoneNumber = $story->phonenumber->find($id);
+
+        $this->SaveRequest($phoneNumber, $story_id, $request);
+
+        return redirect('/stories/'.$story_id.'/phone_numbers')->with('success', 'Number for; '.$phoneNumber->name.' updated');
     }
 
     /**
@@ -103,5 +161,44 @@ class PhoneNumbersController extends Controller
 
         $phoneNumber->delete();
         return redirect('/stories/'.$phoneNumber->story->id.'/phone_numbers')->with('success', 'Number; '.$phoneNumber->name.', deleted');
+    }
+
+    /**
+     * Generating a characters array for selectbox
+     */
+    public function GenerateCharactersList($story, $addNone = false)
+    {
+        $characters = [];
+        if($addNone)
+            $characters[0] = ' -- None -- ';
+        foreach($story->characters as $character)
+        {
+            $characters[$character->id] = $character->first_name.(empty($character->middle_names) ? '' : ' '.$character->middle_names).' '.$character->last_name;
+        }
+
+        return $characters;
+    }
+
+    /**
+     * Validation for both store and update is the same, so we'll just call this method
+     */
+    public function ValidateRequest(Request $request)
+    {
+        $this->validate($request, [
+            'number' => 'required',
+            'name' => 'required'
+        ]);
+    }
+
+    /**
+     * Once Variable is instanciated or found (::find), the saving process is the same for both store and update
+     */
+    public function SaveRequest(PhoneNumber $phoneNumber, $story_id, Request $request)
+    {
+        $phoneNumber->story_id =  $story_id;
+        $phoneNumber->character_id = "{$request->input('character_id')}";
+        $phoneNumber->number = "{$request->input('number')}";
+        $phoneNumber->name = "{$request->input('name')}";
+        $phoneNumber->save();
     }
 }

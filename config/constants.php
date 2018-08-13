@@ -15,5 +15,9 @@ return [
         'text' => 'Text',
         'number' => 'Number (integer)',
         'float' => 'Float (decimal)'
+    ],
+    'genders' => [
+        'male' => 'Male',
+        'female' => 'Female'
     ]
 ];

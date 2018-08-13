@@ -12,6 +12,7 @@
                         <th scope="col">First name</th>
                         <th scope="col">Middle names</th>
                         <th scope="col">Last name</th>
+                        <th scope="col">Gender</th>
                         <th scope="col" class="icon text-center"><a href="/stories/{{$story->id}}/characters/create" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></a></th>
                     </tr>
                     
@@ -49,6 +50,7 @@
                                 <td scope="col">{{$character->first_name}}</td>
                                 <td scope="col">{{$character->middle_names}}</td>
                                 <td scope="col">{{$character->last_name}}</td>
+                                <td scope="col">{{ucfirst($character->gender)}}</td>
                                 <td scope="col"><a href="/stories/{{$story->id}}/characters/{{$character->id}}/edit" class="btn btn-primary">Edit</a></td>
                             </tr>
                             <!--a href="/stories/{{$character->id}}" class="show well">
