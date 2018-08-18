@@ -15,4 +15,8 @@ class PhoneNumber extends Model
     {
         return $this->hasOne('App\Character');
     }
+    public function texts()
+    {
+        return $this->hasMany('App\Text');
+    }
 }

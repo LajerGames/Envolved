@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Story;
 use App\Character;
 use App\Common\Permission;
-use App\Common\HandleImages;
+use App\Common\HandleFiles;
 
 class CharactersController extends Controller
 {
@@ -73,7 +73,7 @@ class CharactersController extends Controller
             return redirect('/stories/'.$story->id.'/characters')->with('error', 'You can only have one protagonist');
 
         // Upload image
-        $imageName = HandleImages::UploadImage(
+        $imageName = HandleFiles::UploadFile(
             $request,
             'avatar',
             'public/stories/'.$story_id.'/characters/'
@@ -142,7 +142,7 @@ class CharactersController extends Controller
         $character = $story->characters->find($id);
 
         // Delete old and upload new image
-        $imageName = HandleImages::DeleteThenUpload(
+        $imageName = HandleFiles::DeleteThenUpload(
             $request,
             $character,
             'avatar_url',
@@ -176,7 +176,7 @@ class CharactersController extends Controller
         }
 
         // Delete the image first if there is any
-        HandleImages::DeleteImage(
+        HandleFiles::DeleteFile(
             'public/stories/'.$character->story->id.'/characters/'.$character->avatar_url,
             $character,
             'avatar_url'

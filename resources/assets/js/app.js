@@ -106,8 +106,16 @@ $(document).ready(function() {
         }
     });
 
+    // Ability to overwrite a field onchange in a specific selectbox (req. data-field-to-overwrite on select)
     $('select.overwrite-field-onchange').on('change', function() {
         var chosenName = $(this).val() == 0 ? '' : $(this).find(':selected').text();
         $('#'+$(this).data('field-to-overwrite')).val(chosenName);
     });
+
+    // Any element that has class onload-anchor will be scrolled to onload
+    if($(".onload-anchor").length) {
+        $([document.documentElement, document.body]).animate({
+            scrollTop: $(".onload-anchor").offset().top
+        }, 500);
+    }
 });

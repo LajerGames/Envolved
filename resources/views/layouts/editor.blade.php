@@ -48,6 +48,8 @@
                 <li><a href="/stories/{{request()->segment(2)}}">Main</a></li>
                 <li><a href="/stories/{{request()->segment(2)}}/characters">Characters</a></li>
                 <li><a href="/stories/{{request()->segment(2)}}/phone_numbers">Phone Numbers</a></li>
+                <p>Pre-story data</p>
+                <li><a href="/stories/{{request()->segment(2)}}/texts">Texts</a></li>
                 <p>More</p>
                 <li><a href="/stories/{{request()->segment(2)}}/variables">Variables</a></li>
             </ul>

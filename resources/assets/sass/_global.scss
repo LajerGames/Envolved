@@ -28,3 +28,38 @@ div.image-line {
     line-height: 30px;
     margin: 10px 0;
 }
+
+/* text messages */
+.text-message {
+    padding: 10px;
+    color: white;
+    border-radius: 12px;
+    width: 45%;
+    margin-bottom: 10px;
+}
+.text-from-number {
+    background-color: #00BB00;
+    clear: right;
+}
+.text-from-protagonist {
+    background-color: #BBB;
+    float: right;
+    margin-left: 20%;
+}
+.text-image {
+    width: 100%;
+    border-radius: 6px;
+}
+
+/* text messages write message */
+.message-text-clear {
+    clear: right;
+    padding-top: 15px;
+}
+.texts-form {
+    border-top: #999 1px solid;
+    padding-top: 20px;
+}
+.text-textarea {
+    height: 100px;
+}
