@@ -164,6 +164,7 @@ class TextsController extends Controller
     {
         $text->phone_number_id =  $phone_number_id;
         $text->is_seen = 1;
+        $text->seen_on = "{$request->input('sent_on')}"; // Using sent on when creating historical texts
         $text->sender = "{$request->input('sender')}";
 
         // If we have an image or a file we will ignore the text
@@ -181,10 +182,7 @@ class TextsController extends Controller
             $text->filetype = '';
             $text->filemime = '';
         }
-        /*
-        if(!empty($imageName) || $isInsert)
-            $character->avatar_url = "{$imageName}";
-        */
+        $text->sent_on = "{$request->input('sent_on')}";
         $text->save();
     }
 }

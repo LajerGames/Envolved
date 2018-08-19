@@ -10,6 +10,7 @@ return array(
     'AddFilemimeToTexts' => $baseDir . '/database/migrations/2018_08_19_155843_add_filemime_to_texts.php',
     'AddFiletypeToTexts' => $baseDir . '/database/migrations/2018_08_19_154508_add_filetype_to_texts.php',
     'AddGenderToCharacters' => $baseDir . '/database/migrations/2018_08_13_204857_add_gender_to_characters.php',
+    'AddSentOnAndSeenOn' => $baseDir . '/database/migrations/2018_08_19_172243_add_sent_on_and_seen_on.php',
     'AddUserIdToStories' => $baseDir . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
     'App\\Character' => $baseDir . '/app/Character.php',
     'App\\Common\\HandleFiles' => $baseDir . '/app/Common/HandleFiles.php',

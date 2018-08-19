@@ -8496,6 +8496,10 @@ button.close {
   text-align: center;
 }
 
+.clear-both {
+  clear: both;
+}
+
 a.navbar-brand {
   -webkit-transition: all 0.3s;
   transition: all 0.3s;

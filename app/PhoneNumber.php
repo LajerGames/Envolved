@@ -17,6 +17,6 @@ class PhoneNumber extends Model
     }
     public function texts()
     {
-        return $this->hasMany('App\Text');
+        return $this->hasMany('App\Text')->orderBy('sent_on', 'asc');
     }
 }

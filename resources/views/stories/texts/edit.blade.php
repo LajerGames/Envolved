@@ -11,6 +11,18 @@
                     $phoneNumberID = $info['id'];
                     $phoneNumber = $story->phonenumber->find($phoneNumberID);
                     $texts = $phoneNumber->texts;
+
+                    // Sorry, shouldn't belong here, but it's here... !
+                    $sentOnNewest = now();
+                    $iNewestID = 0;
+                    foreach($texts as $text) {
+                        if($text->id > $iNewestID) {
+                            $sentOnNewest = $text->seen_on;
+                            $iNewestID = $text->id;
+                        }
+                    }
+                    $sentOnNewest = new DateTime($sentOnNewest);
+                    $sentOnNewest->add(new DateInterval('PT2M'));
                 @endphp
                 @if(count($texts) > 0)
                     @foreach($texts as $text)
@@ -18,19 +30,23 @@
                         <div class="
                             text-message
                             {{($text->sender == 'protagonist' ? 'text-from-protagonist' : 'text-from-number')}}
-                            {{(!empty($text->filename) ? 'text-center' : '')}}
                         ">
+                            <div class="pull-right">{{$text->sent_on}}</div>
                             @if(!empty($text->filename))
-                                @if($text->filetype == 'video')
-                                <video width="100%" controls>
-                                    <source src="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" type="{{$text->filemime}}">
-                                    Your browser does not support the video tag.
+                                <div class="text-center clear-both">
+                                    @if($text->filetype == 'video')
+                                    <video width="100%" controls>
+                                        <source src="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" type="{{$text->filemime}}">
+                                        Your browser does not support the video tag.
                                     </video>
-                                @elseif($text->filetype == 'image')
-                                    <a href="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" target="_blank"><img src="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" class="text-image" alt="" /></a>
-                                @endif
+                                    @elseif($text->filetype == 'image')
+                                        <a href="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" target="_blank"><img src="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" class="text-image" alt="" /></a>
+                                    @endif
+                                </div>
                             @else
-                                {{$text->text}}
+                                <div class="clear-both">
+                                    {{$text->text}}
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -46,6 +62,11 @@
                         <div class="form-group">
                             {{Form::label('sender', 'Sender')}}
                             {{Form::select('sender', ['protagonist' => 'Protagonist', 'number' => 'Number'], '', ['class' => 'form-control'])}}
+                        </div>
+
+                        <div class="form-group">
+                            {{Form::label('sent_on', 'Sent on')}}
+                            {{Form::dateTimeLocal('sent_on', $sentOnNewest->format('Y-m-d\TH:i'), ['class' => 'form-control'])}}
                         </div>
 
                         <div class="form-group">

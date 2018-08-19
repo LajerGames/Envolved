@@ -324,6 +324,7 @@ class ComposerStaticInita1e0b67c7b9c79c6430d0d73b5639985
         'AddFilemimeToTexts' => __DIR__ . '/../..' . '/database/migrations/2018_08_19_155843_add_filemime_to_texts.php',
         'AddFiletypeToTexts' => __DIR__ . '/../..' . '/database/migrations/2018_08_19_154508_add_filetype_to_texts.php',
         'AddGenderToCharacters' => __DIR__ . '/../..' . '/database/migrations/2018_08_13_204857_add_gender_to_characters.php',
+        'AddSentOnAndSeenOn' => __DIR__ . '/../..' . '/database/migrations/2018_08_19_172243_add_sent_on_and_seen_on.php',
         'AddUserIdToStories' => __DIR__ . '/../..' . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
         'App\\Character' => __DIR__ . '/../..' . '/app/Character.php',
         'App\\Common\\HandleFiles' => __DIR__ . '/../..' . '/app/Common/HandleFiles.php',
