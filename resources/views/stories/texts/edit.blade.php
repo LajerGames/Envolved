@@ -5,7 +5,6 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">Edit pre-story texts</div>
-            
             <div class="panel-body">
                 @php
                     $story = $info['story'];
@@ -22,7 +21,14 @@
                             {{(!empty($text->filename) ? 'text-center' : '')}}
                         ">
                             @if(!empty($text->filename))
-                                <a href="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" target="_blank"><img src="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" class="text-image" alt="" /></a>
+                                @if($text->filetype == 'video')
+                                <video width="100%" controls>
+                                    <source src="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" type="{{$text->filemime}}">
+                                    Your browser does not support the video tag.
+                                    </video>
+                                @elseif($text->filetype == 'image')
+                                    <a href="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" target="_blank"><img src="/storage/stories/{{$story->id}}/texts/{{$text->filename}}" class="text-image" alt="" /></a>
+                                @endif
                             @else
                                 {{$text->text}}
                             @endif

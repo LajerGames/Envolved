@@ -9,6 +9,7 @@ use App\PhoneNumber;
 use App\Text;
 use App\Common\Permission;
 use App\Common\HandleFiles;
+use App\Rules\ValidFile;
 
 class TextsController extends Controller
 {
@@ -152,7 +153,7 @@ class TextsController extends Controller
     {
         $this->validate($request, [
             'sender' => 'required',
-            'filename' => 'image|nullable|max:2000'
+            'mms' => [new ValidFile()]
         ]);
     }
 
@@ -170,11 +171,15 @@ class TextsController extends Controller
         {
             $text->text = "";
             $text->filename = $fileName;
+            $text->filetype = explode('/', $request->file('mms')->getMimeType())[0];
+            $text->filemime = $request->file('mms')->getMimeType();
         }
         else
         {
             $text->text = "{$request->input('text')}";
-            $text->filename = "";
+            $text->filename = '';
+            $text->filetype = '';
+            $text->filemime = '';
         }
         /*
         if(!empty($imageName) || $isInsert)
