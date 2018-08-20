@@ -8,6 +8,7 @@ use App\Story;
 use App\Character;
 use App\Common\Permission;
 use App\Common\HandleFiles;
+use App\Rules\ValidFile;
 
 class CharactersController extends Controller
 {
@@ -201,7 +202,7 @@ class CharactersController extends Controller
         $this->validate($request, [
             'first_name' => 'required',
             'gender' => 'required',
-            'avatar' => 'image|nullable|max:2000'
+            'avatar' => [new ValidFile(true, false)]
         ]);
     }
 

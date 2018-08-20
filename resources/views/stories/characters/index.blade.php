@@ -25,7 +25,7 @@
                         
                             @if($role != $character->role)
                                 <tr>
-                                    <th scope="col" colspan="5" class="text-center divider-headline">
+                                    <th scope="col" colspan="6" class="text-center divider-headline">
                                         @if($character->role == 'protagonist')
                                             {{ucfirst(str_replace('_', ' ', $character->role))}}
                                         @else

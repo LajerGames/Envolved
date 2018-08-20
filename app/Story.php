@@ -22,4 +22,9 @@ class Story extends Model
     {
         return $this->hasMany('App\PhoneNumber');
     }
+    
+    public function photos()
+    {
+        return $this->hasMany('App\Photos');
+    }
 }

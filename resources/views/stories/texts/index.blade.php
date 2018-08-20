@@ -10,7 +10,7 @@
                     <tr>
                         <th scope="col">Phone number</th>
                         <th scope="col">Name</th>
-                        <th scope="col">texts</th>
+                        <th scope="col">Texts</th>
                         <th scope="col" class="icon"></th>
                     </tr>
                     
@@ -20,9 +20,15 @@
                     @if(count($phoneNumbers) > 0)
                         @foreach($phoneNumbers as $phoneNumber)
                             <tr>
-                                <td scope="col">{{$phoneNumber->number}}</td>
-                                <td scope="col">{{$phoneNumber->name}}</td>
-                                <td scope="col">0</td>
+                                <td scope="col"><a href="/stories/{{$phoneNumber->story_id}}/phone_numbers/{{$phoneNumber->id}}/edit">{{$phoneNumber->number}}</a></td>
+                                <td scope="col">
+                                    @if($phoneNumber->character_id > 0)
+                                        <a href="/stories/{{$phoneNumber->story_id}}/characters/{{$phoneNumber->character_id}}/edit">{{$phoneNumber->name}}</a></td> 
+                                    @else
+                                        {{$phoneNumber->name}}
+                                    @endif
+                                </td>
+                                <td scope="col">{{count($phoneNumber->texts)}}</td>
                                 <td scope="col"><a href="/stories/{{$story->id}}/texts/{{$phoneNumber->id}}/edit" class="btn btn-primary">Edit texts</a></td>
                             </tr>
                         @endforeach

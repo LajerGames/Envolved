@@ -56,6 +56,8 @@
                         </div>
                     </div>
                     @endforeach
+                @else
+                    <p>No texts added</p>
                 @endif
                 <div class="message-text-clear">
                     

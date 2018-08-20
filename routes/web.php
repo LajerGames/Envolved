@@ -32,6 +32,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('stories.texts', 'TextsController');
     Route::get('stories/{story}/texts/{phone_number}/edit/{text}', 'TextsController@edit');
 
+    # Photos
+    Route::resource('stories.photos', 'PhotosController');
+
     # Variables
     Route::resource('stories.variables', 'VariablesController');
 

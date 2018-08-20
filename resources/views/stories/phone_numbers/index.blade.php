@@ -32,7 +32,13 @@
                                     {!!Form::close()!!}
                                 </td>
                                 <td scope="col">{{$phoneNumber->number}}</td>
-                                <td scope="col">{{$phoneNumber->name}}</td>
+                                <td scope="col">
+                                    @if($phoneNumber->character_id > 0)
+                                        <a href="/stories/{{$phoneNumber->story_id}}/characters/{{$phoneNumber->character_id}}/edit">{{$phoneNumber->name}}</a></td> 
+                                    @else
+                                        {{$phoneNumber->name}}
+                                    @endif
+                                </td>
                                 <td scope="col">{{($phoneNumber->character_id > 0 ? 'Yes' : 'No')}}</td>
                                 <td scope="col"><a href="/stories/{{$story->id}}/phone_numbers/{{$phoneNumber->id}}/edit" class="btn btn-primary">Edit</a></td>
                             </tr>
