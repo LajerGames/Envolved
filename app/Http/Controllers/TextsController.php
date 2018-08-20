@@ -119,9 +119,40 @@ class TextsController extends Controller
             return redirect('/stories/'.$story->id.'/texts')->with('error', 'Access denied');
         }
 
+        // Find relevant variables
+        $phoneNumber = $story->phonenumber->find($phone_number_id);
+        $text = ''; // The text we're currently editing if we're editing
+        $texts = $phoneNumber->texts; // All the texts
+        $presetSentOnDate = now(); // If now messages is found, this will be the default
+
+        // If we're adding a new text, select the newest ID and add two minutes and set as default sent on
+        if($id == 0) {
+            $iNewestID = 0;
+            foreach($texts as $textLoop) {
+                if($textLoop->id > $iNewestID) {
+                    $presetSentOnDate = $textLoop->seen_on;
+                    $iNewestID = $textLoop->id;
+                }
+            }
+            // Make sent on into a dateobject
+            $presetSentOnDate = new \DateTime($presetSentOnDate);
+            $presetSentOnDate->add(new \DateInterval('PT2M'));
+        }
+        // If we're editing, just set the sent on date as the one belonging to the text we're editing
+        else {
+            $text = $phoneNumber->texts->find($id);
+            $presetSentOnDate = $text->sent_on;
+            // Make sent on into a dateobject
+            $presetSentOnDate = new \DateTime($presetSentOnDate);
+        }
+
         $info = [
             'phone_number_id'   => $phone_number_id,
             'story'             => $story,
+            'phone_number'      => $phoneNumber,
+            'texts'             => $texts,
+            'text'              => $text,
+            'sent_on_date'      => $presetSentOnDate,
             'edit_id'           => $id
         ];
 
@@ -132,12 +163,49 @@ class TextsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  int  $story_id
+     * @param  int  $phone_number_id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $story_id, $phone_number_id)
     {
-        //
+        // Text id to edit
+        $id = intval($_GET['id']);
+        
+        $story = Story::find($story_id);
+        $phoneNumber = $story->phonenumber->find($phone_number_id);
+        $text = $phoneNumber->texts->find($id);
+
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user_id)
+            || !Permission::CheckOwnership($story_id, $story->id)
+            || !Permission::CheckOwnership($phoneNumber->story_id, $story_id)
+            || !Permission::CheckOwnership($text->phone_number_id, $phoneNumber->id)
+        )
+            return redirect('/stories/'.$story->id.'/texts/'.$phoneNumber->id.'/edit')->with('error', 'Access denied');
+
+        $this->ValidateRequest($request);
+
+        // Delete, then upload image or video
+        $fileName = HandleFiles::DeleteThenUpload(
+            $request,
+            $text,
+            'filename',
+            'mms',
+            'public/stories/'.$story_id.'/texts/'
+        );
+
+        // On an update we can only update a file or a text, so which is it?
+        if(!empty($request->input('text')))
+        {
+            $this->SaveRequest($text, $phone_number_id, '', $request);
+        }
+        elseif(!empty($fileName) || !empty($text->filename))
+        {
+            $this->SaveRequest($text, $phone_number_id, $fileName, $request);
+        }
+
+        return redirect('/stories/'.$story_id.'/texts/'.$phone_number_id.'/edit')->with('success', 'Text message updated');
     }
 
     /**
@@ -195,12 +263,36 @@ class TextsController extends Controller
         $text->sender = "{$request->input('sender')}";
 
         // If we have an image or a file we will ignore the text
-        if(!empty($fileName))
+        if(!empty($fileName) || !empty($text->filename))
         {
-            $text->text = "";
-            $text->filename = $fileName;
-            $text->filetype = explode('/', $request->file('mms')->getMimeType())[0];
-            $text->filemime = $request->file('mms')->getMimeType();
+            /**
+             * One of two things could happen in here.
+             * Either we have a file in $request->file or we don't
+             * IF WE DO HAVE A FILE (REF 1)
+             * That means that we're either updating or inserting a file into a text,
+             * IF WE DON'T HAVE A FILE (REF 1)
+             * That means that the user is updating a text with a file in it, but the user has not
+             * uploaded a new file. Since we need to update whatever else we're asked to update
+             * then just reinsert the old data
+             * NOTICE: There might be a better way of doing this, but for now, if I don't insert all fields
+             * then it will fail. If you can be asked at some point, then please find out how just to set a
+             * few fields and all of this nonsense could be avoided.
+             * HINT: I think it has to do with validation and nullable - but that's just a guess
+             */
+
+             if(!empty($fileName)) {
+                // Read REF 1 above
+                $text->text = "";
+                $text->filename = $fileName;
+                $text->filetype = explode('/', $request->file('mms')->getMimeType())[0];
+                $text->filemime = $request->file('mms')->getMimeType();
+             } else {
+                // Read REF 2 above
+                $text->text = "";
+                $text->filename = $text->filename;
+                $text->filetype = $text->filetype;
+                $text->filemime = $text->filemime;
+             }
         }
         else
         {

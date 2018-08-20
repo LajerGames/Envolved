@@ -9,20 +9,11 @@
                 @php
                     $story = $info['story'];
                     $phoneNumberID = $info['phone_number_id'];
-                    $phoneNumber = $story->phonenumber->find($phoneNumberID);
-                    $texts = $phoneNumber->texts;
+                    $phoneNumber = $info['phone_number'];
+                    $texts = $info['texts'];
+                    $textEdit = $info['text'];
+                    $sentOnDate = $info['sent_on_date'];
 
-                    // Sorry, shouldn't belong here, but it's here... !
-                    $sentOnNewest = now();
-                    $iNewestID = 0;
-                    foreach($texts as $text) {
-                        if($text->id > $iNewestID) {
-                            $sentOnNewest = $text->seen_on;
-                            $iNewestID = $text->id;
-                        }
-                    }
-                    $sentOnNewest = new DateTime($sentOnNewest);
-                    $sentOnNewest->add(new DateInterval('PT2M'));
                 @endphp
                 @if(count($texts) > 0)
                     @foreach($texts as $text)
@@ -59,7 +50,7 @@
                                 </div>
                             @else
                                 <div class="clear-both">
-                                    {{$text->text}}
+                                    {!!nl2br($text->text)!!}
                                 </div>
                             @endif
                         </div>
@@ -67,26 +58,13 @@
                     @endforeach
                 @endif
                 <div class="message-text-clear">
-                    {!! Form::open([
-                        'action' => ['TextsController@store', $story->id, 'phone_number_id='.$phoneNumberID],
-                        'method' => 'post',
-                        'enctype'   => 'multipart/form-data',
-                        'class' => 'texts-form onload-anchor'
-                    ]) !!}
+                    
                         
                         @if(intval($info['edit_id']) == 0)
-                            @include('stories.texts.include.form', ['sent_on' => $sentOnNewest->format('Y-m-d\TH:i')])
+                            @include('stories.texts.include.form', ['text' => '', 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => false])
                         @else
-                            @php
-                                $text = $phoneNumber->texts->find($info['edit_id']);
-                            @endphp
-
-                            @include('stories.texts.include.form', ['text' => $text])
+                            @include('stories.texts.include.form', ['text' => $textEdit, 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => true])
                         @endif
-                        
-                        <a href="/stories/{{$info['story']->id}}/texts" class="btn btn-default">Back</a>
-                        {{Form::submit('save', ['class' => 'btn btn-primary pull-right'])}}
-                    {!! Form::close() !!}
                 </div>
             </div>
         </div>
