@@ -97,12 +97,16 @@ class TextsController extends Controller
 
     /**
      * Show the form for editing the specified resource.
+     * This is a little gay! You can enter this method two ways.
+     * 1. When looking texts for a phone number
+     * 2. When trying to edit a specific text, that will provide a third argument
      *
      * @param  int  $story_id
+     * @param  int  $phone_number_id
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($story_id, $id)
+    public function edit($story_id, $phone_number_id, $id = 0)
     {
         $story = Story::find($story_id);
 
@@ -116,8 +120,9 @@ class TextsController extends Controller
         }
 
         $info = [
-            'id'    => $id,
-            'story' => $story
+            'phone_number_id'   => $phone_number_id,
+            'story'             => $story,
+            'edit_id'           => $id
         ];
 
         return view('stories.texts.edit')->with('info', $info);
@@ -138,12 +143,34 @@ class TextsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  int  $story_id
+     * @param  int  $phone_number_id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($story_id, $phone_number_id)
     {
-        //
+        $id = intval($_GET['textID']);
+
+        $story = Story::find($story_id);
+        $phoneNumber = $story->phonenumber->find($phone_number_id);
+        $text = $phoneNumber->texts->find($id);
+
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user_id)
+            || !Permission::CheckOwnership($story_id, $story->id)
+            || !Permission::CheckOwnership($phoneNumber->story_id, $story_id)
+            || !Permission::CheckOwnership($text->phone_number_id, $phoneNumber->id)
+        )
+            return redirect('/stories/'.$story->id.'/texts/'.$phoneNumber->id.'/edit')->with('error', 'Access denied');
+
+            HandleFiles::DeleteFile(
+                'public/stories/'.$story_id.'/texts/'.$text->filename,
+                $text,
+                'filename'
+            );
+
+            $text->delete();
+            return redirect('/stories/'.$story->id.'/texts/'.$phoneNumber->id.'/edit')->with('success', 'Text deleted');
     }
 
     /**

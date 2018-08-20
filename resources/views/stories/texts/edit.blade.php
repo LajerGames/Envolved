@@ -8,7 +8,7 @@
             <div class="panel-body">
                 @php
                     $story = $info['story'];
-                    $phoneNumberID = $info['id'];
+                    $phoneNumberID = $info['phone_number_id'];
                     $phoneNumber = $story->phonenumber->find($phoneNumberID);
                     $texts = $phoneNumber->texts;
 
@@ -31,6 +31,20 @@
                             text-message
                             {{($text->sender == 'protagonist' ? 'text-from-protagonist' : 'text-from-number')}}
                         ">
+                        <div class="control-buttons">
+                            <div>
+                                <a href="/stories/{{$info['story']->id}}/texts/{{$phoneNumberID}}/edit/{{$text->id}}" class="btn btn-default">Edit</a>
+                            </div>
+                            <div>
+                                {!!Form::open([
+                                    'action' => ['TextsController@destroy', $story->id, $phoneNumberID, 'textID='.$text->id],
+                                    'method' => 'post'
+                                ])!!}
+                                    {{Form::hidden('_method', 'DELETE')}}
+                                    {{Form::submit('Delete', ['class' => 'btn btn-danger btn-delete'])}}
+                                {!!Form::close()!!}
+                            </div>
+                        </div>
                             <div class="pull-right">{{$text->sent_on}}</div>
                             @if(!empty($text->filename))
                                 <div class="text-center clear-both">
@@ -59,24 +73,16 @@
                         'enctype'   => 'multipart/form-data',
                         'class' => 'texts-form onload-anchor'
                     ]) !!}
-                        <div class="form-group">
-                            {{Form::label('sender', 'Sender')}}
-                            {{Form::select('sender', ['protagonist' => 'Protagonist', 'number' => 'Number'], '', ['class' => 'form-control'])}}
-                        </div>
+                        
+                        @if(intval($info['edit_id']) == 0)
+                            @include('stories.texts.include.form', ['sent_on' => $sentOnNewest->format('Y-m-d\TH:i')])
+                        @else
+                            @php
+                                $text = $phoneNumber->texts->find($info['edit_id']);
+                            @endphp
 
-                        <div class="form-group">
-                            {{Form::label('sent_on', 'Sent on')}}
-                            {{Form::dateTimeLocal('sent_on', $sentOnNewest->format('Y-m-d\TH:i'), ['class' => 'form-control'])}}
-                        </div>
-
-                        <div class="form-group">
-                            {{Form::label('text', 'Message')}}
-                            {{Form::textArea('text', '', ['class' => 'form-control text-textarea'])}}
-                        </div>
-
-                        <div class="form-group">
-                            {{Form::file('mms')}}
-                        </div>
+                            @include('stories.texts.include.form', ['text' => $text])
+                        @endif
                         
                         <a href="/stories/{{$info['story']->id}}/texts" class="btn btn-default">Back</a>
                         {{Form::submit('save', ['class' => 'btn btn-primary pull-right'])}}

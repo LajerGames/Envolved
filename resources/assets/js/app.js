@@ -118,4 +118,13 @@ $(document).ready(function() {
             scrollTop: $(".onload-anchor").offset().top
         }, 500);
     }
+
+    // Text messages
+    $('div.text-message').on('mouseenter', function() {
+        $(this).find('.control-buttons').show(100);
+    });
+    $('div.text-message').on('mouseleave', function() {
+        $(this).find('.control-buttons').hide(100);
+    });
+    // End region
 });

@@ -8545,6 +8545,7 @@ div.image-line {
   border-radius: 12px;
   width: 45%;
   margin-bottom: 10px;
+  position: relative;
 }
 
 .text-from-number {
@@ -8561,6 +8562,21 @@ div.image-line {
 .text-image {
   width: 100%;
   border-radius: 6px;
+}
+
+.control-buttons {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: none;
+}
+
+.control-buttons > div:nth-child(1) {
+  padding-right: 10px;
+}
+
+.control-buttons > div {
+  float: left;
 }
 
 /* text messages write message */
