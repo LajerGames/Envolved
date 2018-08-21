@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Story;
 use App\Photo;
 use App\Common\Permission;
+use App\Common\HandleFiles;
+use App\Rules\ValidFile;
 
 class PhotosController extends Controller
 {
@@ -39,12 +41,30 @@ class PhotosController extends Controller
     /**
      * Store a newly created resource in storage.
      *
+     * @param  int  $story_id
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store($story_id, Request $request)
     {
-        //
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        $this->ValidateRequest($request);
+
+        // Upload image
+        $imageName = HandleFiles::UploadFile(
+            $request,
+            'photo',
+            'public/stories/'.$story_id.'/photos/'
+        );
+
+        $photo = new Photo;
+        $this->SaveRequest($photo, $story_id, $imageName, $request);
+
+        return redirect('/stories/'.$story_id.'/photos')->with('success', 'Photo inserted');
     }
 
     /**
@@ -84,11 +104,51 @@ class PhotosController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  int  $story_id
+     * @param  int  $photo_id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($story_id, $photo_id)
     {
-        //
+        $story = Story::find($story_id);
+        $photo = $story->photos->find($photo_id);
+
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user_id)
+            || !Permission::CheckOwnership($story_id, $story->id)
+            || !Permission::CheckOwnership($photo->story_id, $story->id)
+        )
+            return redirect('/stories/'.$story->id.'/photos')->with('error', 'Access denied');
+        
+            HandleFiles::DeleteFile(
+                'public/stories/'.$story_id.'/photos/'.$photo->image_name,
+                $photo,
+                'image_name'
+            );
+
+            $photo->delete();
+            return redirect('/stories/'.$story->id.'/photos')->with('success', 'Photo deleted');
+    }
+
+    /**
+     * Validation for both store and update is the same, so we'll just call this method
+     */
+    public function ValidateRequest(Request $request)
+    {
+        $this->validate($request, [
+            'taken_on' => 'required',
+            'photo' => ['required', new ValidFile(true, false)]
+        ]);
+    }
+    
+    /**
+     * Save request for Photos
+     */
+    public function SaveRequest(Photo $photo, $story_id, $imageName, Request $request)
+    {
+        $photo->story_id =  $story_id;
+        $photo->taken_on = "{$request->input('taken_on')}";
+        $photo->image_name = "{$imageName}";
+        $photo->save();
     }
 }

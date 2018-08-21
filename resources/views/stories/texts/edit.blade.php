@@ -20,6 +20,7 @@
                     <div>
                         <div class="
                             text-message
+                            control-buttons-parent
                             {{($text->sender == 'protagonist' ? 'text-from-protagonist' : 'text-from-number')}}
                         ">
                         <div class="control-buttons">
@@ -59,14 +60,12 @@
                 @else
                     <p>No texts added</p>
                 @endif
-                <div class="message-text-clear">
-                    
-                        
-                        @if(intval($info['edit_id']) == 0)
-                            @include('stories.texts.include.form', ['text' => '', 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => false])
-                        @else
-                            @include('stories.texts.include.form', ['text' => $textEdit, 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => true])
-                        @endif
+                <div class="spacer">  
+                    @if(intval($info['edit_id']) == 0)
+                        @include('stories.texts.include.form', ['text' => '', 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => false])
+                    @else
+                        @include('stories.texts.include.form', ['text' => $textEdit, 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => true])
+                    @endif
                 </div>
             </div>
         </div>

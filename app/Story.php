@@ -22,9 +22,8 @@ class Story extends Model
     {
         return $this->hasMany('App\PhoneNumber');
     }
-    
     public function photos()
     {
-        return $this->hasMany('App\Photos');
+        return $this->hasMany('App\Photo')->orderBy('taken_on', 'asc');
     }
 }

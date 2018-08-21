@@ -26,10 +26,24 @@ table.table td, table.table th {
 th.divider-headline {
     background-color: #FAFAFA;
 }
+div.divider-headline {
+    border-top: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+    line-height: 50px;
+    background-color: #FAFAFA;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #636b6F;
+}
 
 div.image-line {
     line-height: 30px;
     margin: 10px 0;
+}
+.spacer {
+    clear: right;
+    padding-top: 15px;
 }
 
 /* text messages */
@@ -66,12 +80,12 @@ div.image-line {
 .control-buttons > div {
     float:left;
 }
+.texts-form, .photos-form {
+    border-top: #999 1px solid;
+    padding-top: 20px;
+}
 
 /* text messages write message */
-.message-text-clear {
-    clear: right;
-    padding-top: 15px;
-}
 .texts-form {
     border-top: #999 1px solid;
     padding-top: 20px;
@@ -81,4 +95,24 @@ div.image-line {
 }
 .new-text {
     margin-right: 10px;
+}
+
+/* Photos */
+.photos-image-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: inline-block;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center; 
+}
+.more-button {
+    margin-top: 7px;
+}
+.image-time-container {
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.4);
+    color: #000;
+    padding: 3px;
 }
