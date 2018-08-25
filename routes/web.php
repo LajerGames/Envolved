@@ -35,6 +35,9 @@ Route::group(['middleware' => 'auth'], function () {
     # Photos
     Route::resource('stories.photos', 'PhotosController');
 
+    # Phone log
+    Route::resource('stories.phonelogs', 'PhoneLogsController');
+
     # Variables
     Route::resource('stories.variables', 'VariablesController');
 

@@ -24,6 +24,10 @@ class Story extends Model
     }
     public function photos()
     {
-        return $this->hasMany('App\Photo')->orderBy('taken_on', 'asc');
+        return $this->hasMany('App\Photo')->orderBy('days_ago', 'DESC')->orderBy('time', 'ASC');
+    }
+    public function phonelogs()
+    {
+        return $this->hasMany('App\PhoneLogs')->orderBy('start', 'desc');
     }
 }

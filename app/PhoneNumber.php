@@ -17,6 +17,10 @@ class PhoneNumber extends Model
     }
     public function texts()
     {
-        return $this->hasMany('App\Text')->orderBy('sent_on', 'asc');
+        return $this->hasMany('App\Text')->orderBy('days_ago', 'DESC')->orderBy('time', 'ASC');
+    }
+    public function phonelogs()
+    {
+        return $this->hasMany('App\PhoneLogs');
     }
 }

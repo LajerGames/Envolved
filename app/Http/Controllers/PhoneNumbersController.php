@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Story;
 use App\PhoneNumber;
 use App\Common\Permission;
+use App\Common\BuildSelectOptions;
 
 class PhoneNumbersController extends Controller
 {
@@ -103,7 +104,7 @@ class PhoneNumbersController extends Controller
         $info = [
             'id'    => $id,
             'story' => $story,
-            'characters_list' => $this->GenerateCharactersList($story, true)
+            'characters_list' => BuildSelectOptions::Build($story->characters, 'id', ['first_name', 'middle_names', 'last_name'], ' ', 'None')
         ];
 
         return view('stories.phone_numbers.edit')->with('info', $info);

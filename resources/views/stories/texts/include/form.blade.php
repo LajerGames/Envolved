@@ -10,7 +10,7 @@
     'class' => 'texts-form onload-anchor'
 ]) !!}
 
-@include('stories.texts.include.inputs', ['text' => $text, 'sent_on' => $sent_on, 'isEdit' => $isEdit])
+@include('stories.texts.include.inputs', ['text' => $text, 'days_ago' => $days_ago, 'time' => $time, 'isEdit' => $isEdit])
 
 <a href="/stories/{{$story->id}}/texts" class="btn btn-default">Back</a>
 {{Form::submit(($isEdit ? 'Update' : 'Save'), ['class' => 'btn btn-primary pull-right'])}}

@@ -4,8 +4,13 @@
 </div>
 
 <div class="form-group">
-    {{Form::label('sent_on', 'Sent on')}}
-    {{Form::dateTimeLocal('sent_on', $sent_on, ['class' => 'form-control'])}}
+    {{Form::label('days_ago', 'Days ago')}}
+    {{Form::number('days ago', ($isEdit ? $text->days_ago : $days_ago), ['class' => 'form-control', 'min'=> '0'])}}
+</div>
+
+<div class="form-group">
+    {{Form::label('time', 'Time')}}
+    {{Form::time('time', ($isEdit ? $text->time : $time), ['class' => 'form-control'])}}
 </div>
 
 <div class="form-group">

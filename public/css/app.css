@@ -8596,7 +8596,8 @@ div.image-line {
 }
 
 .texts-form,
-.photos-form {
+.photos-form,
+.phonelog-form {
   border-top: #999 1px solid;
   padding-top: 20px;
 }

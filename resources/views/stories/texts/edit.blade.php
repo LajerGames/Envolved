@@ -11,8 +11,9 @@
                     $phoneNumberID = $info['phone_number_id'];
                     $phoneNumber = $info['phone_number'];
                     $texts = $info['texts'];
+                    $time = $info['time'];
+                    $daysAgo = $info['days_ago'];
                     $textEdit = $info['text'];
-                    $sentOnDate = $info['sent_on_date'];
 
                 @endphp
                 @if(count($texts) > 0)
@@ -62,9 +63,9 @@
                 @endif
                 <div class="spacer">  
                     @if(intval($info['edit_id']) == 0)
-                        @include('stories.texts.include.form', ['text' => '', 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => false])
+                        @include('stories.texts.include.form', ['text' => '', 'phone_number' => $phoneNumber, 'days_ago' => $daysAgo, 'time' => $time->format('H:i'), 'isEdit' => false])
                     @else
-                        @include('stories.texts.include.form', ['text' => $textEdit, 'phone_number' => $phoneNumber, 'sent_on' => $sentOnDate->format('Y-m-d\TH:i'), 'isEdit' => true])
+                        @include('stories.texts.include.form', ['text' => $textEdit, 'phone_number' => $phoneNumber, 'days_ago' => $daysAgo, 'time' => $time->format('H:i'), 'isEdit' => true])                        
                     @endif
                 </div>
             </div>

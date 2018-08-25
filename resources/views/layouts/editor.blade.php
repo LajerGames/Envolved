@@ -51,6 +51,7 @@
                 <p>Pre-story data</p>
                 <li><a href="/stories/{{request()->segment(2)}}/texts">Texts</a></li>
                 <li><a href="/stories/{{request()->segment(2)}}/photos">Photos</a></li>
+                <li><a href="/stories/{{request()->segment(2)}}/phonelogs">Phone log</a></li>
                 <p>More</p>
                 <li><a href="/stories/{{request()->segment(2)}}/variables">Variables</a></li>
             </ul>

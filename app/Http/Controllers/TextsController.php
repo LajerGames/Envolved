@@ -62,14 +62,14 @@ class TextsController extends Controller
 
         $this->ValidateRequest($request);
 
-        // Upload image or video
+        // Upload image/* or video*/
         $fileName = HandleFiles::UploadFile(
             $request,
             'mms',
             'public/stories/'.$story_id.'/texts/'
         );
 
-        // If we have a image or a videoit will be saved as two texts text first image/video after
+        // If we have a image /*or a video*/ it will be saved as two texts text first image/video after
         if(!empty($request->input('text')))
         {
             $text2 = new Text;
@@ -121,30 +121,31 @@ class TextsController extends Controller
 
         // Find relevant variables
         $phoneNumber = $story->phonenumber->find($phone_number_id);
-        $text = ''; // The text we're currently editing if we're editing
         $texts = $phoneNumber->texts; // All the texts
-        $presetSentOnDate = now(); // If now messages is found, this will be the default
+        $text = $id > 0 ? $texts->find($id) : ''; // The text we're currently editing if we're editing
 
-        // If we're adding a new text, select the newest ID and add two minutes and set as default sent on
-        if($id == 0) {
-            $iNewestID = 0;
+        // Let's find the latest ID and take the time from that - that'll be our starting point to prefill the field
+        $time = now(); // Let's save the now time in order we don't find any texts for this phone number
+        $DaysAgo = 0;
+        if(count($texts) > 0) {
+            $highestID = 0;
             foreach($texts as $textLoop) {
-                if($textLoop->id > $iNewestID) {
-                    $presetSentOnDate = $textLoop->seen_on;
-                    $iNewestID = $textLoop->id;
+                // If this ID is higher that the highest one we found thus far, then we'll use this text's time as a starting point
+                if($highestID < $textLoop->id) {
+                    $time = $textLoop->time;
+                    $DaysAgo = $textLoop->days_ago;
+                    $highestID = $textLoop->id;
                 }
             }
-            // Make sent on into a dateobject
-            $presetSentOnDate = new \DateTime($presetSentOnDate);
+        }
+
+        $time = new \DateTime($time);
+        $time->add(new \DateInterval('PT2M'));
+
+        /*
+        $presetSentOnDate = new \DateTime($presetSentOnDate);
             $presetSentOnDate->add(new \DateInterval('PT2M'));
-        }
-        // If we're editing, just set the sent on date as the one belonging to the text we're editing
-        else {
-            $text = $phoneNumber->texts->find($id);
-            $presetSentOnDate = $text->sent_on;
-            // Make sent on into a dateobject
-            $presetSentOnDate = new \DateTime($presetSentOnDate);
-        }
+            */
 
         $info = [
             'phone_number_id'   => $phone_number_id,
@@ -152,7 +153,8 @@ class TextsController extends Controller
             'phone_number'      => $phoneNumber,
             'texts'             => $texts,
             'text'              => $text,
-            'sent_on_date'      => $presetSentOnDate,
+            'time'              => $time,
+            'days_ago'          => $DaysAgo,
             'edit_id'           => $id
         ];
 
@@ -186,7 +188,7 @@ class TextsController extends Controller
 
         $this->ValidateRequest($request);
 
-        // Delete, then upload image or video
+        // Delete, then upload image/* or video*/
         $fileName = HandleFiles::DeleteThenUpload(
             $request,
             $text,
@@ -248,7 +250,8 @@ class TextsController extends Controller
     {
         $this->validate($request, [
             'sender' => 'required',
-            'mms' => [new ValidFile()]
+            'mms' => [new ValidFile(true, false)],
+            'time' => 'required'
         ]);
     }
 
@@ -259,7 +262,6 @@ class TextsController extends Controller
     {
         $text->phone_number_id =  $phone_number_id;
         $text->is_seen = 1;
-        $text->seen_on = "{$request->input('sent_on')}"; // Using sent on when creating historical texts
         $text->sender = "{$request->input('sender')}";
 
         // If we have an image or a file we will ignore the text
@@ -301,7 +303,8 @@ class TextsController extends Controller
             $text->filetype = '';
             $text->filemime = '';
         }
-        $text->sent_on = "{$request->input('sent_on')}";
+        $text->days_ago = intval($request->input('days_ago'));
+        $text->time = "{$request->input('time')}";
         $text->save();
     }
 }

@@ -24,8 +24,39 @@ class PhotosController extends Controller
 
         if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
+        
+        $photos = $story->photos;
 
-        return view('stories.photos.index')->with('story', $story);
+        // We need to prefill the time field, let's say that now is the default time
+        $time = !isset($_GET['pre-time']) ? now() : $_GET['pre-time'];
+        // Also we need to prefill days ago with something. Let's just say that default is 0
+        $daysAgo = !isset($_GET['days_ago']) ? 0 : $_GET['days_ago'];
+
+        // Loop through all photos and find the newest ID, the time and days ago on that will be what we prefill with, unless we've received otherwise from GET
+        $newestID = 0; // Use this variable to check which ID is the newer one.
+        
+        if(count($photos) > 0 && !isset($_GET['pre-time'])) {
+            foreach($photos as $photo) {
+                if($photo->id > $newestID) {
+                    $time = $photo->time;
+                    $daysAgo = $photo->days_ago;
+                    $newestID = $photo->id;
+                }
+            }
+        }
+
+        $time = new \DateTime($time);
+        $time->add(new \DateInterval('PT10M')); // Add 10 minutes so all pictures isn't taken at the same time!
+
+        // Prepare an array to send to the view
+        $info = [
+            'story' => $story,
+            'photos' => $photos,
+            'days_ago' => $daysAgo,
+            'time' => $time
+        ];
+
+        return view('stories.photos.index')->with('info', $info);
     }
 
     /**
@@ -136,7 +167,8 @@ class PhotosController extends Controller
     public function ValidateRequest(Request $request)
     {
         $this->validate($request, [
-            'taken_on' => 'required',
+            'days_ago' => 'required',
+            'time' => 'required',
             'photo' => ['required', new ValidFile(true, false)]
         ]);
     }
@@ -147,7 +179,8 @@ class PhotosController extends Controller
     public function SaveRequest(Photo $photo, $story_id, $imageName, Request $request)
     {
         $photo->story_id =  $story_id;
-        $photo->taken_on = "{$request->input('taken_on')}";
+        $photo->days_ago = "{$request->input('days_ago')}";
+        $photo->time = "{$request->input('time')}";
         $photo->image_name = "{$imageName}";
         $photo->save();
     }
