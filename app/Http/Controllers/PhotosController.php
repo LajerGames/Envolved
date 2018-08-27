@@ -8,6 +8,7 @@ use App\Story;
 use App\Photo;
 use App\Common\Permission;
 use App\Common\HandleFiles;
+use App\Common\GetNewestValues;
 use App\Rules\ValidFile;
 
 class PhotosController extends Controller
@@ -32,17 +33,13 @@ class PhotosController extends Controller
         // Also we need to prefill days ago with something. Let's just say that default is 0
         $daysAgo = !isset($_GET['days_ago']) ? 0 : $_GET['days_ago'];
 
-        // Loop through all photos and find the newest ID, the time and days ago on that will be what we prefill with, unless we've received otherwise from GET
-        $newestID = 0; // Use this variable to check which ID is the newer one.
-        
-        if(count($photos) > 0 && !isset($_GET['pre-time'])) {
-            foreach($photos as $photo) {
-                if($photo->id > $newestID) {
-                    $time = $photo->time;
-                    $daysAgo = $photo->days_ago;
-                    $newestID = $photo->id;
-                }
-            }
+        // Look through the data and find the data entered in the most recent entry of the phoneLogs model. That's what we'll use to prefill unless we're told otherwise
+        $mostRecentData = GetNewestValues::Build($photos, ['days_ago', 'time']);
+
+        // Did we find anything?
+        if(strlen($mostRecentData['days_ago']) > 0 && !isset($_GET['pre-time'])) {
+            $daysAgo = $mostRecentData['days_ago'];
+            $time = $mostRecentData['time'];
         }
 
         $time = new \DateTime($time);

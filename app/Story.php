@@ -28,6 +28,6 @@ class Story extends Model
     }
     public function phonelogs()
     {
-        return $this->hasMany('App\PhoneLogs')->orderBy('start', 'desc');
+        return $this->hasMany('App\PhoneLog')->orderBy('days_ago', 'DESC')->orderBy('start_time', 'ASC');
     }
 }

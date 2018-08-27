@@ -9,6 +9,7 @@ use App\PhoneNumber;
 use App\Text;
 use App\Common\Permission;
 use App\Common\HandleFiles;
+use App\Common\GetNewestValues;
 use App\Rules\ValidFile;
 
 class TextsController extends Controller
@@ -123,20 +124,16 @@ class TextsController extends Controller
         $phoneNumber = $story->phonenumber->find($phone_number_id);
         $texts = $phoneNumber->texts; // All the texts
         $text = $id > 0 ? $texts->find($id) : ''; // The text we're currently editing if we're editing
+        $daysAgo = 0;
+        $time = now();
 
-        // Let's find the latest ID and take the time from that - that'll be our starting point to prefill the field
-        $time = now(); // Let's save the now time in order we don't find any texts for this phone number
-        $DaysAgo = 0;
-        if(count($texts) > 0) {
-            $highestID = 0;
-            foreach($texts as $textLoop) {
-                // If this ID is higher that the highest one we found thus far, then we'll use this text's time as a starting point
-                if($highestID < $textLoop->id) {
-                    $time = $textLoop->time;
-                    $DaysAgo = $textLoop->days_ago;
-                    $highestID = $textLoop->id;
-                }
-            }
+        // Look through the data and find the data entered in the most recent entry of the phoneLogs model. That's what we'll use to prefill unless we're told otherwise
+        $mostRecentData = GetNewestValues::Build($texts, ['days_ago', 'time']);
+
+        // Did we find anything?
+        if(strlen($mostRecentData['days_ago']) > 0) {
+            $daysAgo = $mostRecentData['days_ago'];
+            $time = $mostRecentData['time'];
         }
 
         $time = new \DateTime($time);
@@ -154,7 +151,7 @@ class TextsController extends Controller
             'texts'             => $texts,
             'text'              => $text,
             'time'              => $time,
-            'days_ago'          => $DaysAgo,
+            'days_ago'          => $daysAgo,
             'edit_id'           => $id
         ];
 
