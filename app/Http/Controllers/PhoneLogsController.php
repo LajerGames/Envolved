@@ -10,7 +10,7 @@ use App\Common\Permission;
 use App\Common\HandleFiles;
 use App\Common\BuildSelectOptions;
 use App\Common\GetNewestValues;
-use App\Rules\ValidFile;
+use App\Rules\DoubleLog;
 
 class PhoneLogsController extends Controller
 {
@@ -95,6 +95,48 @@ class PhoneLogsController extends Controller
 
         $this->ValidateRequest($request);
 
+        // Let's give the phone log we're saving right now a datetime from and to
+        $toAndFrom = $this->CreateToAndFrom($request->input('time'), $request->input('minutes'));
+        
+        // Get all phonelogs from the particular day we're saving a new log to, to make sure we have no "double talk" :)
+        $phoneLogs = PhoneLog::where('days_ago', intval($request->input('days_ago')))->get();
+        $interferenceInfo = [];
+        foreach($phoneLogs as $phoneLog) {
+            
+            // Convert to datetime objects
+            $checkToAndFrom = $this->CreateToAndFrom($phoneLog->start_time, $phoneLog->minutes);
+
+            if($toAndFrom['from'] > $checkToAndFrom['from'] && $toAndFrom['from'] < $checkToAndFrom['to']) {
+                $interferenceInfo = $this->CreateInterferenceInfo($phoneLog, $checkToAndFrom, $toAndFrom);
+                break;
+            } elseif($toAndFrom['to'] > $checkToAndFrom['from'] && $toAndFrom['to'] < $checkToAndFrom['to']) {
+                $interferenceInfo = $this->CreateInterferenceInfo($phoneLog, $checkToAndFrom, $toAndFrom);
+                break;
+            } elseif($checkToAndFrom['from'] > $toAndFrom['from'] && $checkToAndFrom['from'] < $toAndFrom['to']) {
+                $interferenceInfo = $this->CreateInterferenceInfo($phoneLog, $checkToAndFrom, $toAndFrom);
+                break;
+            } elseif($checkToAndFrom['to'] > $toAndFrom['from'] && $checkToAndFrom['to'] < $toAndFrom['to']) {
+                $interferenceInfo = $this->CreateInterferenceInfo($phoneLog, $checkToAndFrom, $toAndFrom);
+                break;
+            }
+        }
+
+        if(count($interferenceInfo) > 0) {
+ 
+            // let's create an empty validator, assuming that we have no any errors yet
+            $validator = \Validator::make([], []);
+            $validator->getMessageBag()->add('time', '
+                <strong>Error:</strong><br />
+                Your saved time interferes with another log.<br />
+                You\'re trying save a log from <strong>'.$interferenceInfo['days_ago'].'</strong> days ago<br />
+                <span class="indent-20">from: <strong>'.$interferenceInfo['chosen_start_time'].'</strong> to <strong>'.$interferenceInfo['chosen_end_time'].'</strong>.</span><br />
+                It appears that the following phone log, also from <strong>'.$interferenceInfo['days_ago'].'</strong> days ago is interfering<br />
+                <span class="indent-20">from: <strong>'.$interferenceInfo['interference_start_time'].'</strong> to <strong>'.$interferenceInfo['interference_end_time'].'</strong>.</span><br />
+            ');
+            return \Redirect::back()->withErrors($validator)->withInput();
+
+        }
+
         $phoneLog = new PhoneLog;
         $this->SaveRequest($story_id, $phoneLog, $request);
 
@@ -138,12 +180,47 @@ class PhoneLogsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
+     * @param  int  $story_id
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($story_id, $id)
     {
-        //
+        $phoneLog = PhoneLog::find($id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $phoneLog->story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+            $phoneLog->delete();
+        return redirect('/stories/'.$phoneLog->story->id.'/phonelogs')->with('success', 'phonelog deleted');
+    }
+
+    /**
+     * Creates two date objects (From and to) based on time, and minutes (duration)
+     */
+    private function CreateToAndFrom($time, $minutes)
+    {
+        $from = new \DateTime(date('Y-m-d '.$time));
+        $to = clone $from;
+        $to->add(new \DateInterval('PT'.$minutes.'M'));
+
+        return [
+            'from' => $from,
+            'to' => $to
+        ];
+    }
+
+    /**
+     * Returns an array with relevant info about the item that interfered with what we're trying to save
+     */
+    private function CreateInterferenceInfo(PhoneLog $phoneLog, array $interferenceDateTimes, array $chosenDateTimes) {
+        return [
+            'days_ago' => $phoneLog->days_ago,
+            'interference_start_time' => $interferenceDateTimes['from']->format('H:i'),
+            'interference_end_time' => $interferenceDateTimes['to']->format('H:i'),
+            'chosen_start_time' => $chosenDateTimes['from']->format('H:i'),
+            'chosen_end_time' => $chosenDateTimes['to']->format('H:i')
+        ];
     }
 
     /**
@@ -152,7 +229,7 @@ class PhoneLogsController extends Controller
     public function ValidateRequest(Request $request)
     {
         $this->validate($request, [
-            'phone_number_id' => 'required',
+            'phone_number_id' => 'required|not_in:0',
             'days_ago' => 'required',
             'time' => 'required',
             'minutes' => 'required',

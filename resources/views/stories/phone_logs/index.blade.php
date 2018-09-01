@@ -28,7 +28,10 @@
                             @if($currentDaysAgo != $phoneLog->days_ago)
 
                                 <tr>
-                                    <th class="text-center divider-headline" colspan="5">{{$phoneLog->days_ago}} days ago</th>
+                                    <th class="text-center divider-headline" colspan="5">
+                                        <a href="/stories/{{$phoneLog->story_id}}/phonelogs/?days_ago={{$phoneLog->days_ago}}&time=12:00" class="pull-right btn btn-success"><span class="glyphicon glyphicon-plus"></span></a>
+                                        {{$phoneLog->days_ago}} days ago
+                                    </th>
                                 </tr>
 
                                 @php
@@ -76,6 +79,7 @@
 
                         <div class="form-group">
                             {{Form::label('time', 'Time')}}
+                            <!-- Read and understand: If you're wondering why the heck the time below might differ from what's in the variable, then it's because I've exploited the way Form:: works. Nomatter what is provided in the variable, if there is something in the querystring with the same name as the given input, then the value from the querystring will determine the value of the field! -->
                             {{Form::time('time', $info['time']->format('H:i'), ['class' => 'form-control'])}}
                         </div>
 
