@@ -38,6 +38,9 @@ Route::group(['middleware' => 'auth'], function () {
     # Phone log
     Route::resource('stories.phonelogs', 'PhoneLogsController');
 
+    # Module: News
+    Route::resource('stories/{story}/modules/news', 'NewsController');
+
     # Variables
     Route::resource('stories.variables', 'VariablesController');
 

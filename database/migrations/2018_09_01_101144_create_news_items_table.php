@@ -13,8 +13,15 @@ class CreateNewsItemsTable extends Migration
      */
     public function up()
     {
-        Schema::create('news_items', function (Blueprint $table) {
+        Schema::create('story_module_news', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('story_id');
+            $table->string('headline');
+            $table->string('image');
+            $table->string('teaser_text');
+            $table->text('article_json');
+            $table->tinyInteger('days_ago');
+            $table->time('time');
             $table->timestamps();
         });
     }
@@ -26,6 +33,6 @@ class CreateNewsItemsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('news_items');
+        Schema::dropIfExists('story_module_news');
     }
 }
