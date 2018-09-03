@@ -42,7 +42,7 @@ class PhoneNumbersController extends Controller
 
         $info = [
             'story' => $story,
-            'characters_list' => $this->GenerateCharactersList($story, true)
+            'characters_list' => BuildSelectOptions::Build($story->characters, 'id', ['first_name', 'middle_names', 'last_name'], ' ', 'None')
         ];
 
         return view('stories.phone_numbers.create')->with('info', $info);
@@ -162,22 +162,6 @@ class PhoneNumbersController extends Controller
 
         $phoneNumber->delete();
         return redirect('/stories/'.$phoneNumber->story->id.'/phone_numbers')->with('success', 'Number; '.$phoneNumber->name.', deleted');
-    }
-
-    /**
-     * Generating a characters array for selectbox
-     */
-    public function GenerateCharactersList($story, $addNone = false)
-    {
-        $characters = [];
-        if($addNone)
-            $characters[0] = ' -- None -- ';
-        foreach($story->characters as $character)
-        {
-            $characters[$character->id] = $character->first_name.(empty($character->middle_names) ? '' : ' '.$character->middle_names).' '.$character->last_name;
-        }
-
-        return $characters;
     }
 
     /**

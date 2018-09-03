@@ -45,6 +45,15 @@ div.image-line {
     clear: right;
     padding-top: 15px;
 }
+.section {
+    border-top: #999 1px solid;
+    padding-top: 20px;
+    margin-top:15px;
+}
+.tiny-section {
+    border-bottom: #999 1px dotted;
+    padding-bottom: 15px;
+}
 .indent-20 {
     margin-left: 20px;
 }
@@ -118,4 +127,22 @@ div.image-line {
     background-color: rgba(255, 255, 255, 0.4);
     color: #000;
     padding: 3px;
+}
+
+/** News */
+.add-section-select {
+    width: 85%;
+    display: inline-block;
+}
+.add-section-button {
+    width: 12%;
+    margin-left: 2%
+}
+#article-parts > div:hover {
+    background-color: #EEE;
+    cursor:move;
+}
+.remove-link {
+    float: right;
+    color: #900;
 }

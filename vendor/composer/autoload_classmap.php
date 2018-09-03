@@ -7,9 +7,11 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'AddAvatarImageToCharacters' => $baseDir . '/database/migrations/2018_08_05_164228_add_avatar_image_to_characters.php',
+    'AddCharacterIdToNews' => $baseDir . '/database/migrations/2018_09_01_185251_add_character_id_to_news.php',
     'AddFilemimeToTexts' => $baseDir . '/database/migrations/2018_08_19_155843_add_filemime_to_texts.php',
     'AddFiletypeToTexts' => $baseDir . '/database/migrations/2018_08_19_154508_add_filetype_to_texts.php',
     'AddGenderToCharacters' => $baseDir . '/database/migrations/2018_08_13_204857_add_gender_to_characters.php',
+    'AddJournalistToCharactersRole' => $baseDir . '/database/migrations/2018_09_01_173433_add_journalist_to_characters_role.php',
     'AddSentOnAndSeenOn' => $baseDir . '/database/migrations/2018_08_19_172243_add_sent_on_and_seen_on.php',
     'AddUserIdToStories' => $baseDir . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
     'App\\Character' => $baseDir . '/app/Character.php',

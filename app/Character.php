@@ -15,4 +15,8 @@ class Character extends Model
     {
         return $this->hasOne('App\PhoneNumber');
     }
+    public function news()
+    {
+        return $this->hasMany('App\NewsItem');
+    }
 }

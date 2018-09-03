@@ -42,6 +42,9 @@ $(document).ready(function() {
                     _method : 'POST',
                     data : {
                         show: doShow
+                },
+                function ($rtrn) {
+                    console.log($rtrn);
                 }
             });
         });
@@ -116,8 +119,14 @@ $(document).ready(function() {
     if($(".onload-anchor").length) {
         $([document.documentElement, document.body]).animate({
             scrollTop: $(".onload-anchor").offset().top
-        }, 500);
+        }, 200);
     }
+
+    // Make elements sortable
+    $( function() {
+        $( ".sortable" ).sortable();
+        $( ".sortable" ).disableSelection();
+    } );
 
     // Text messages
     $('div.control-buttons-parent').on('mouseenter', function() {
@@ -127,4 +136,33 @@ $(document).ready(function() {
         $(this).find('.control-buttons').hide(100);
     });
     // End region
+
+    // News
+
+    // Enable adding of sections for articles
+    $('div.tiny-section a.add-section-button').on('click', function() {
+    
+        var type = $('div.tiny-section select.add-section-select option:selected').val();
+        $.post(
+            '/add-news-section',
+            { 
+                _token: $('meta[name=csrf-token]').attr('content'),
+                _method : 'POST',
+                data : {
+                    type: type
+                }
+            },
+            function (data) {
+                $('#article-parts').append(data);
+            }
+        );
+
+    });
+
+    // Make sure we can remove added sections in the News module
+    $('div.section').on('click', 'a.remove-link', function() {
+        if(confirm('Remove section?')) {
+            $(this).closest('div.form-group').remove();
+        }
+    });
 });

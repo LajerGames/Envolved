@@ -48,6 +48,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     // AJAX
     Route::post('/toggle-sidebar', 'GeneralAjaxController@ToggleSidebarSession');
+    Route::post('/add-news-section', 'GeneralAjaxController@AddNewsSection');
     
 }); 
 /**
