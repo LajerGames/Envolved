@@ -78,9 +78,9 @@ class HandleFiles {
         {
             $resourceObj->{$fileField} = '';
             $resourceObj->save();
-
-            Storage::delete($deleteFilePath);
         }
+
+        Storage::delete($deleteFilePath);
 
         return;
     }

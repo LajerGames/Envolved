@@ -66,9 +66,27 @@
                 @endif
                 <div class="spacer">  
                     @if(intval($info['edit_id']) == 0)
-                        @include('stories.texts.include.form', ['text' => '', 'phone_number' => $phoneNumber, 'days_ago' => $daysAgo, 'time' => $time->format('H:i'), 'isEdit' => false])
+                        @include(
+                            'stories.texts.include.form',
+                            [
+                                'text' => '',
+                                'phone_number' => $phoneNumber,
+                                'days_ago' => $daysAgo,
+                                'time' => $time->format('H:i'),
+                                'isEdit' => false
+                            ]
+                        )
                     @else
-                        @include('stories.texts.include.form', ['text' => $textEdit, 'phone_number' => $phoneNumber, 'days_ago' => $daysAgo, 'time' => $time->format('H:i'), 'isEdit' => true])                        
+                        @include(
+                            'stories.texts.include.form',
+                            [
+                                'text' => $textEdit,
+                                'phone_number' => $phoneNumber,
+                                'days_ago' => $daysAgo,
+                                'time' => $time->format('H:i'),
+                                'isEdit' => true
+                            ]
+                        )                        
                     @endif
                 </div>
             </div>

@@ -8568,6 +8568,10 @@ div.image-line {
   margin-left: 20px;
 }
 
+.greyd {
+  color: #999;
+}
+
 /* text messages */
 
 .text-message {

@@ -1127,6 +1127,8 @@ $(document).ready(function () {
     $('div.section').on('click', 'a.remove-link', function () {
         if (confirm('Remove section?')) {
             $(this).closest('div.form-group').remove();
+
+            // TODO: Delete image if this is an image-container.
         }
     });
 });

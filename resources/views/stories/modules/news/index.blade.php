@@ -21,6 +21,10 @@
                     @endphp
                     @if(count($news) > 0)
                         @foreach($news as $newsItem)
+
+                            @php
+                                $time = new \DateTime($newsItem->time);
+                            @endphp
                         
                             <tr>
                                 <td scope="col">
@@ -34,7 +38,7 @@
                                 </td>
                                 <td scope="col">{{$newsItem->headline}}</td>
                                 <td scope="col">{{$newsItem->days_ago}}</td>
-                                <td scope="col">{{$newsItem->time}}</td>
+                                <td scope="col">{{$time->format('H:i')}}</td>
                                 <td scope="col"><a href="/stories/{{$story->id}}/modules/news/{{$newsItem->id}}/edit" class="btn btn-primary">Edit</a></td>
                             </tr>
                             
