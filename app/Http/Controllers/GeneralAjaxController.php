@@ -35,4 +35,12 @@ class GeneralAjaxController extends Controller
         echo $newsItem->MakeNewsSection($_POST['data']['type']);
 
     }
+
+    public function AddTab() {
+        
+        $settingsEditor = new SettingsEditorsController();
+
+        echo $settingsEditor->MakeTabHtml();
+
+    }
 }

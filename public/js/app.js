@@ -1131,6 +1131,30 @@ $(document).ready(function () {
             // TODO: Delete image if this is an image-container.
         }
     });
+
+    // End region
+
+    // Settings
+
+    $('form#editor-settings a.add-tab').on('click', function () {
+
+        $.post('/add-tab', {
+            _token: $('meta[name=csrf-token]').attr('content'),
+            _method: 'POST'
+        }, function (data) {
+            $('div.tabs-container').append(data);
+        });
+    });
+
+    $('form#editor-settings').on('click', 'a.remove-link', function () {
+        if (confirm('Remove section?')) {
+            //$(this).closest('div.form-group').remove();
+            alert('check if this is removable by checking if the tab is');
+            // TODO: Delete image if this is an image-container.
+        }
+    });
+
+    // End region
 });
 
 /***/ }),

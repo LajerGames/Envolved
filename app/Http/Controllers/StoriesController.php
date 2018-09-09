@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Story;
+use App\Settings;
 use App\Common\Permission;
+use App\Common\HandleSettings;
 // use DB; <- for using ordinary queries
 
 class StoriesController extends Controller
@@ -55,7 +57,8 @@ class StoriesController extends Controller
         $this->ValidateRequest($request);
 
         $story = new Story;
-        $this->SaveRequest($story, $request);
+        $settings = new Settings;
+        $this->SaveRequest($story, $request, $settings);
 
         return redirect('/stories')->with('success', 'Story created');
     }
@@ -145,12 +148,24 @@ class StoriesController extends Controller
     /**
      * Once Story is instanciated or found (::find), the saving process is the same for both store and update
      */
-    public function SaveRequest(Story $story, Request $request)
+    public function SaveRequest(Story $story, Request $request, $settings = '')
     {
         $story->user_id = auth()->user()->id;
         $story->title = $request->input('title');
         $story->short_description = $request->input('short_description');
         $story->description = $request->input('description');
         $story->save();
+
+        if($settings instanceof Settings) {
+
+            // Get default settings
+            $handleSettings = new HandleSettings();
+
+            $settings->story_id = $story->id;
+            $settings->story_settings = json_encode($handleSettings->GenerateDefaultSettings('story'));
+            $settings->editor_settings = json_encode($handleSettings->GenerateDefaultSettings('editor'));
+            $settings->save();
+
+        }
     }
 }

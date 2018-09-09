@@ -8395,6 +8395,8 @@ button.close {
 
 #sidebar h3 {
   margin-top: 30px;
+  font-weight: normal;
+  border: none;
 }
 
 #sidebar a,
@@ -8494,6 +8496,13 @@ button.close {
 #sidebar .components p {
   border-bottom: #999 1px solid;
   text-align: center;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: bold;
+  display: block;
+  border-bottom: #888 1px solid;
 }
 
 .clear-both {
@@ -8636,6 +8645,10 @@ div.image-line {
   margin-right: 10px;
 }
 
+.block-elem {
+  display: block;
+}
+
 /* Photos */
 
 .photos-image-container {
@@ -8676,8 +8689,37 @@ div.image-line {
   cursor: move;
 }
 
+#article-parts label:hover {
+  cursor: move;
+}
+
 .remove-link {
   float: right;
   color: #900;
+}
+
+.tabs-container {
+  margin-top: 10px;
+}
+
+.tabs-container > div {
+  padding: 5px;
+}
+
+.tabs-container > div:hover {
+  background-color: #EEE;
+  cursor: move;
+}
+
+.tabs-container label:hover {
+  cursor: move;
+}
+
+.tabs-name {
+  width: 20%;
+}
+
+.tabs-description {
+  width: 79%;
 }
 

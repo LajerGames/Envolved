@@ -9,6 +9,7 @@ use App\Photo;
 use App\Common\Permission;
 use App\Common\HandleFiles;
 use App\Common\GetNewestValues;
+use App\Common\HandleSettings;
 use App\Rules\ValidFile;
 
 class PhotosController extends Controller
@@ -28,6 +29,10 @@ class PhotosController extends Controller
         
         $photos = $story->photos;
 
+        // Get settings
+        $handleSettings = new HandleSettings();
+        $settings = $handleSettings->GetSettings($story, 'editor');
+
         // We need to prefill the time field, let's say that now is the default time
         $time = !isset($_GET['pre-time']) ? now() : $_GET['pre-time'];
         // Also we need to prefill days ago with something. Let's just say that default is 0
@@ -43,7 +48,7 @@ class PhotosController extends Controller
         }
 
         $time = new \DateTime($time);
-        $time->add(new \DateInterval('PT10M')); // Add 10 minutes so all pictures isn't taken at the same time!
+        $time->add(new \DateInterval('PT'.$settings->photos_time_between_photos.'M')); // Add 10 minutes so all pictures isn't taken at the same time!
 
         // Prepare an array to send to the view
         $info = [

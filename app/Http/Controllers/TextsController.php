@@ -10,6 +10,7 @@ use App\Text;
 use App\Common\Permission;
 use App\Common\HandleFiles;
 use App\Common\GetNewestValues;
+use App\Common\HandleSettings;
 use App\Rules\ValidFile;
 
 class TextsController extends Controller
@@ -120,6 +121,10 @@ class TextsController extends Controller
             return redirect('/stories/'.$story->id.'/texts')->with('error', 'Access denied');
         }
 
+        // Get settings
+        $handleSettings = new HandleSettings();
+        $settings = $handleSettings->GetSettings($story, 'editor');
+
         // Find relevant variables
         $phoneNumber = $story->phonenumber->find($phone_number_id);
         $texts = $phoneNumber->texts; // All the texts
@@ -137,7 +142,7 @@ class TextsController extends Controller
         }
 
         $time = new \DateTime($time);
-        $time->add(new \DateInterval('PT2M'));
+        $time->add(new \DateInterval('PT'.$settings->text_time_between_texts_prestory.'M'));
 
         /*
         $presetSentOnDate = new \DateTime($presetSentOnDate);

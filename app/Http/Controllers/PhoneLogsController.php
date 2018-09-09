@@ -10,6 +10,7 @@ use App\Common\Permission;
 use App\Common\HandleFiles;
 use App\Common\BuildSelectOptions;
 use App\Common\GetNewestValues;
+use App\Common\HandleSettings;
 use App\Rules\DoubleLog;
 
 class PhoneLogsController extends Controller
@@ -29,6 +30,10 @@ class PhoneLogsController extends Controller
         )
             return redirect('/stories')->with('error', 'Access denied');
 
+        // Get settings
+        $handleSettings = new HandleSettings();
+        $settings = $handleSettings->GetSettings($story, 'editor');
+
         // Get Phone Logs
         $phoneLogs = $story->phonelogs;
 
@@ -41,7 +46,7 @@ class PhoneLogsController extends Controller
         // We need to prefill the days ago and the time with some default data
         $daysAgo = 0;
         $time = now();
-        $minutesToAdd = 2; // We might need to add a certain amount of minutes to the time for the next entry, remember, we're building a prefill to make data entry easier. Let's start off with adding 2 minutes, might be more!
+        $minutesToAdd = $settings->phone_time_between_call_logs_pregame; // We might need to add a certain amount of minutes to the time for the next entry, remember, we're building a prefill to make data entry easier.
 
         // Look through the data and find the data entered in the most recent entry of the phoneLogs model. That's what we'll use to prefill unless we're told otherwise
         $mostRecentData = GetNewestValues::Build($phoneLogs, ['days_ago', 'start_time', 'minutes']);

@@ -44,11 +44,16 @@ Route::group(['middleware' => 'auth'], function () {
     # Variables
     Route::resource('stories.variables', 'VariablesController');
 
+    # Settings
+    Route::get('stories/{story}/editor_settings/edit', 'SettingsEditorsController@edit');
+    Route::put('stories/{story}/editor_settings/edit', 'SettingsEditorsController@update');
+
     Route::get('/home', 'StoriesController@index');
 
     // AJAX
     Route::post('/toggle-sidebar', 'GeneralAjaxController@ToggleSidebarSession');
     Route::post('/add-news-section', 'GeneralAjaxController@AddNewsSection');
+    Route::post('/add-tab', 'GeneralAjaxController@AddTab');
     
 }); 
 /**

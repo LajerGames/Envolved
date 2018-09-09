@@ -32,7 +32,7 @@
 
         <nav id="sidebar" class="{{$sidebarClass}}">
             <div class="sidebar-header">
-                <h3>Story Editor</h3>
+                <h3 class="editor-headline">Story Editor</h3>
             </div>
 
             <ul class="list-unstyled components">
@@ -57,6 +57,9 @@
                 <li><a href="/stories/{{request()->segment(2)}}/modules/news">News</a></li>
                 <p>More</p>
                 <li><a href="/stories/{{request()->segment(2)}}/variables">Variables</a></li>
+                <p>Settings</p>
+                <li><a href="/stories/{{request()->segment(2)}}/story_settings/edit">Story</a></li>
+                <li><a href="/stories/{{request()->segment(2)}}/editor_settings/edit">Editor</a></li>
             </ul>
 
         </nav>
