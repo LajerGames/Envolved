@@ -22,6 +22,12 @@ Route::group(['middleware' => 'auth'], function () {
     # Story
     Route::resource('stories', 'StoriesController');
 
+    # Builder
+    Route::get('stories/{story}/builder/{tabID}', 'BuilderController@index');
+
+    # Builder - arch "crud"
+    Route::post('stories/{story}/builder/{tabID}', 'StoryArchesController@store');
+
     # Characters
     Route::resource('stories.characters', 'CharactersController');
 

@@ -38,4 +38,8 @@ class Story extends Model
     {
         return $this->hasOne('App\Settings');
     }
+    public function storyarchs()
+    {
+        return $this->hasMany('App\StoryArch');
+    }
 }

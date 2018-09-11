@@ -66,6 +66,19 @@ div.image-line {
 .greyd {
     color: #999;
 }
+.nav-tabs {
+    margin-bottom: 10px;
+}
+li.add-item {
+    background-color: #0D0;
+    border-radius: 4px 4px 0 0;
+}
+li.add-item:hover {
+    background-color: transparent;
+}
+li.add-item a {
+    color: #FFF;
+}
 
 /* text messages */
 .text-message {
@@ -181,4 +194,137 @@ div.image-line {
 }
 .tabs-description {
     width: 79%;
+}
+
+// Builder
+// Overwrite a bit of bootstrap
+.nav-tabs > li > a {
+    color: #555;
+}
+.nav-tabs > li.active > a {
+    color: #111;
+    font-weight: bold;
+}
+.nav-tabs > li.add-item > a {
+    color: #FFF;
+}
+.arch-container {
+    width: 300px;
+    background-color: #0D0;
+    color: #FFF;
+    padding: 15px;
+    border-radius: 8px;
+    float: left;
+    position: relative;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    display: none;
+    cursor: pointer;
+}
+.arch-container:hover {
+    background-color: #0C0;
+}
+.arch-container .arch-options-menu {
+    position: absolute;
+    right: 0px;
+    font-size: 24px;
+    top: 0px;
+    color: #FFF;
+    padding: 14px 15px 14px 15px;
+}
+.arch-container .arch-options-menu:hover {
+    color: #CCC;
+    text-decoration: none;
+}
+.id-number {
+    display: inline-block;
+    width: 25px;
+    line-height: 25px;
+    text-align: center;
+    background-color: purple;
+    border-radius: 15px;
+    position: absolute;
+    top: -12px;
+}
+
+.wrapper {
+    position:relative;
+    margin:0 auto;
+    overflow:hidden;
+	padding:5px;
+  	height:50px;
+}
+.list {
+    position:absolute;
+    left:0px;
+    top:0px;
+  	min-width:3000px;
+  	margin-left:12px;
+    margin-top:0px;
+}
+.list li{
+	display:table-cell;
+    position:relative;
+    text-align:center;
+    cursor:grab;
+    cursor:-webkit-grab;
+    color:#efefef;
+    vertical-align:middle;
+}
+.scroller {
+  text-align:center;
+  cursor:pointer;
+  display:block;
+  padding:7px;
+  padding-top:11px;
+  white-space:no-wrap;
+  vertical-align:middle;
+  background-color:#fff;
+}
+
+.scroller-right{
+  float:right;
+  visibility: hidden;
+}
+
+.scroller-left {
+  float:right;
+  visibility: hidden;
+}
+
+#speechbubble {
+    background: rgba(255, 255, 255, 0.9);
+    width: 150px;
+    padding: 10px;
+    box-sizing: border-box;
+    position: absolute;
+    display: none;
+    z-index: 2;
+}
+
+#speechbubble.arrowleft:before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 10px;
+    /*calc(50% - 5px) if want it to be centered vertically - 5px is half its height of 10*/
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-right: 10px solid rgba(255, 255, 255, 0.9);
+    border-bottom: 5px solid transparent;
+}
+
+#speechbubble.arrowright:after {
+    content: "";
+    position: absolute;
+    right: -10px;
+    top: 10px;
+    /*calc(50% - 5px) - as above*/
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-left: 10px solid rgba(255, 255, 255, 0.9);
+    border-bottom: 5px solid transparent;
 }

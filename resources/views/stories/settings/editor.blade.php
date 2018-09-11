@@ -66,7 +66,7 @@
                     </div>
 
                     <a href="javascript:void(0);" class="btn btn-success pull-right add-tab"><span class="glyphicon glyphicon-plus"></span></a>
-                    <h2>Editor tabs</h2>
+                    <h2>Builder tabs</h2>
 
                     <div id="tabs-container" class="sortable tabs-container">{!!$info['tabs']!!}</div>
 

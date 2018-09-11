@@ -88,12 +88,7 @@ class StoriesController extends Controller
      */
     public function edit($id)
     {
-        $story = Story::find($id);
-
-        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
-            return redirect('/stories')->with('error', 'Access denied');
-
-        return view('stories.edit')->with('story', $story);
+        return redirect('/stories/'.$id.'/builder');
     }
 
     /**

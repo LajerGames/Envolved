@@ -19,6 +19,8 @@
 <body>
     <div id="app">
 
+        <div id="speechbubble"></div>
+
         @php
             $sidebarClass = '';
             $sidebarTogglerGlyph = 'glyphicon-menu-left';
@@ -46,7 +48,7 @@
                     </ul>
                 </li-->
                 <p>Main</p>
-                <li><a href="/stories/{{request()->segment(2)}}">Main</a></li>
+                <li><a href="/stories/{{request()->segment(2)}}/builder/0">Builder</a></li>
                 <li><a href="/stories/{{request()->segment(2)}}/characters">Characters</a></li>
                 <li><a href="/stories/{{request()->segment(2)}}/phone_numbers">Phone Numbers</a></li>
                 <p>Pre-story data</p>

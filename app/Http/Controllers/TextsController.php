@@ -144,11 +144,6 @@ class TextsController extends Controller
         $time = new \DateTime($time);
         $time->add(new \DateInterval('PT'.$settings->text_time_between_texts_prestory.'M'));
 
-        /*
-        $presetSentOnDate = new \DateTime($presetSentOnDate);
-            $presetSentOnDate->add(new \DateInterval('PT2M'));
-            */
-
         $info = [
             'phone_number_id'   => $phone_number_id,
             'story'             => $story,
