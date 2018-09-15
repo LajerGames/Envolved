@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Story;
 use App\Common\Permission;
 use App\Common\HandleSettings;
+use App\Common\GetNewestValues;
 
 class BuilderController extends Controller
 {
@@ -31,13 +32,34 @@ class BuilderController extends Controller
 
         $storyArchs = $story->storyarchs->where('tab_id', $tab_id);
 
+        // If we have an edit arch, find the info
+        $editArch = '';
+        $editID = 0;
+        if(isset($_GET['id']) && intval($_GET['id']) > 0) {
+            $editArch = $story->storyarchs->find(intval($_GET['id']));
+            $editID = intval($_GET['id']);
+        }
+        
+        $highestArchNumber = GetNewestValues::Build($story->storyarchs, ['number'], 'number');
+        $nextArchNumber = intval($highestArchNumber['number'])+1;
+
+        // highlight a story arch
+        $highlightArchID = 0;
+        if(isset($_GET['highlight']) && intval($_GET['highlight']) > 0) {
+            $highlightArchID = intval($_GET['highlight']);
+        }
+
         $info = [
             'story' => $story,
             'story_archs' => $storyArchs,
             'settings' => $settings,
-            'show' => ($tab_id == 'add' ? 'add' : $tab_id)
+            'show' => ($tab_id == 'handle' ? 'handle' : $tab_id),
+            'highlight_arch_id' => $highlightArchID,
+            'edit_id' => $editID,
+            'edit_arch' => $editArch,
+            'next_number' => $nextArchNumber
         ];
-
+        
         return view('stories.builder.index')->with('info', $info);
     }
 

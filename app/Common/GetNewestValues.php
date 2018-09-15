@@ -12,23 +12,24 @@ class GetNewestValues {
      *
      * @param model $model
      * @param array $keys
+     * @param string $highestWhat (Must ne numberic! What do we need the highest of? default is id)
      * 
      * @return array
      */
-    public static function Build($model, $keys)
+    public static function Build($model, $keys, $highestWhat = 'id')
     {
         // Let's initiate a highest ID that'll be used to figure out which data to save.
-        $highestID = 0;
+        $highestNO = 0;
 
         // Beneath, initiated the array that'll contain the data we'll return.
         $array = self::saveData('', $keys);
 
         foreach($model as $entry) {
 
-            if($highestID < $entry->id) {
+            if($highestNO < $entry->{$highestWhat}) {
 
                 // This entry is newer, use it.
-                $highestID = $entry->id;
+                $highestNO = $entry->{$highestWhat};
 
                 $array = self::saveData($entry, $keys);
 

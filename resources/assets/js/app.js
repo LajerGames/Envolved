@@ -7,20 +7,6 @@
 
 require('./bootstrap');
 
-window.Vue = require('vue');
-
-/**
- * Next, we will create a fresh Vue application instance and attach it to
- * the page. Then, you may begin adding components to this application
- * or customize the JavaScript scaffolding to fit your unique needs.
- */
-
-Vue.component('example', require('./components/Example.vue'));
-
-const app = new Vue({
-    el: '#app'
-});
-
 $(document).ready(function() {
     
     // Check if show sidebar button exists
@@ -138,6 +124,14 @@ $(document).ready(function() {
     });
     // End region
 
+    // Click anywhere to close .popup-menu
+    // TODO: make sure it does not close when we click inside it!
+    $(document).click (function (e) {
+        if(!$(e.target.closest('div')).hasClass('popup-menu')) {
+            $('.popup-menu').hide();
+        }
+    });
+
     // Speech bubble
     var $speech = $('#speechbubble');
     var tipContent;
@@ -164,7 +158,7 @@ $(document).ready(function() {
         });
     }
 
-    $('.hastip').hover(showTip, hideTip);
+    $('.hastip').hover(showTip, hideTip).children();
 
     var showSpeech = '';
     function showTip() {
@@ -280,9 +274,10 @@ $(document).ready(function() {
     function removeRightMargin(everyNthChild) {
 
         var margin = 40;
-
+        
         if(everyNthChild < 2) {
             $('#story-arch-container > .arch-container').css('margin-right', margin+'px');
+            $('#story-arch-container > .arch-container').show(100);
             return;
         }
 
@@ -291,8 +286,12 @@ $(document).ready(function() {
         $('#story-arch-container > .arch-container:nth-child('+everyNthChild+'n)').css('margin-right', '0px');
         $('#story-arch-container > .arch-container').show(100);
 
-
     }
+
+    $('.arch-options-menu').on('click', function(e) {
+        $(this).siblings('.arch-options-container').show();
+        e.stopPropagation();
+    });
 
     /** OVERFLOW ON SCROLLBAR */
 

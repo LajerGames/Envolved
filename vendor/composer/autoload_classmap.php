@@ -12,6 +12,7 @@ return array(
     'AddFiletypeToTexts' => $baseDir . '/database/migrations/2018_08_19_154508_add_filetype_to_texts.php',
     'AddGenderToCharacters' => $baseDir . '/database/migrations/2018_08_13_204857_add_gender_to_characters.php',
     'AddJournalistToCharactersRole' => $baseDir . '/database/migrations/2018_09_01_173433_add_journalist_to_characters_role.php',
+    'AddNumberToStoryStoryArchs' => $baseDir . '/database/migrations/2018_09_12_142905_add_number_to_story_story_archs.php',
     'AddSentOnAndSeenOn' => $baseDir . '/database/migrations/2018_08_19_172243_add_sent_on_and_seen_on.php',
     'AddUserIdToStories' => $baseDir . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
     'App\\Character' => $baseDir . '/app/Character.php',

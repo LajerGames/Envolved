@@ -208,6 +208,14 @@ li.add-item a {
 .nav-tabs > li.add-item > a {
     color: #FFF;
 }
+#story-arch-container {
+    position: relative;
+}
+#story-arch-container .glyphicon.glyphicon-question-sign {
+    position: absolute;
+    right: -15px;
+    top: -2px;
+}
 .arch-container {
     width: 300px;
     background-color: #0D0;
@@ -225,6 +233,14 @@ li.add-item a {
 .arch-container:hover {
     background-color: #0C0;
 }
+.arch-container .arch-enter {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80%;
+    line-height: 52px;
+    padding-left: 20px;
+}
 .arch-container .arch-options-menu {
     position: absolute;
     right: 0px;
@@ -237,15 +253,69 @@ li.add-item a {
     color: #CCC;
     text-decoration: none;
 }
+.arch-container .arch-options-container {
+    position: absolute;
+    background-color: #FFF;
+    border-radius: 5px;
+    width: 100px;
+    right: -105px;
+    z-index: 1;
+    top: 5px;
+    border: #999 1px solid;
+    display: none;
+}
+.arch-container .arch-options-container a {
+    display: block;
+    padding: 5px;
+    border-radius: 0;
+}
+.arch-container .arch-options-container a:first-child {
+    border-radius: 5px 5px 0 0;
+}
+.arch-container .arch-options-container a:last-child {
+    border-radius: 0 0 5px 5px;
+}
+.arch-container .arch-options-container a:not(:last-child) {
+    border-bottom: #999 1px solid;
+}
+.arch-container .arch-options-container a:hover {
+    background-color: #EEE;
+}
 .id-number {
     display: inline-block;
     width: 25px;
     line-height: 25px;
     text-align: center;
-    background-color: purple;
+    background-color: #0D0;
     border-radius: 15px;
     position: absolute;
     top: -12px;
+    left: 137.5px;
+    :hover > & {
+        background-color: #0C0;
+    }
+}
+
+
+.highlighted-arch {
+    background-color: rgb(148, 13, 148);
+}
+.highlighted-arch:hover {
+    background-color: rgb(90, 9, 90);
+}
+.highlighted-id-number {
+    display: inline-block;
+    width: 25px;
+    line-height: 25px;
+    text-align: center;
+    background-color: rgb(148, 13, 148);;
+    border-radius: 15px;
+    position: absolute;
+    top: -12px;
+    left: 137.5px;
+    :hover > & {
+        background-color: rgb(90, 9, 90);
+    }
 }
 
 .wrapper {

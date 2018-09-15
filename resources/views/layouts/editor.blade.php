@@ -18,7 +18,6 @@
 </head>
 <body>
     <div id="app">
-
         <div id="speechbubble"></div>
 
         @php
@@ -80,9 +79,13 @@
             </div>
         </div>
     </div>
-
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
+    @if(is_array($js))
+        @foreach($js as $script)
+            <script src="{{ asset('js/'.$script) }}"></script>
+        @endforeach
+    @endif
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
 </body>
 </html>

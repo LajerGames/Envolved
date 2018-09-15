@@ -27,6 +27,8 @@ Route::group(['middleware' => 'auth'], function () {
 
     # Builder - arch "crud"
     Route::post('stories/{story}/builder/{tabID}', 'StoryArchesController@store');
+    Route::put('stories/{story}/builder/{tabID}', 'StoryArchesController@update');
+    Route::delete('stories/{story}/builder/{tabID}', 'StoryArchesController@destroy');
 
     # Characters
     Route::resource('stories.characters', 'CharactersController');
