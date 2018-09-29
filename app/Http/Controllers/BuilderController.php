@@ -87,14 +87,27 @@ class BuilderController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int  $story_id
+     * @param  string  $arch_id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($story_id, $arch_id)
     {
-        //
-    }
+        $story = Story::find($story_id);
 
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user_id)
+        )
+            return redirect('/stories')->with('error', 'Access denied');
+
+        $info = [
+            'story' => $story,
+            'story_arch' => $story->storyarchs->find($arch_id)
+        ];
+
+        return view('stories.builder.arch.index')->with('info', $info);
+    }
+    
     /**
      * Show the form for editing the specified resource.
      *

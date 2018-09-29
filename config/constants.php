@@ -21,5 +21,15 @@ return [
     'genders' => [
         'male' => 'Male',
         'female' => 'Female'
+    ],
+    'story_points' => [
+        'change_variable' => ['Change Variable', 'orange'],
+        'wait' => ['Wait', 'grey'],
+        'condition' => ['Condition', 'purple'],
+        'change_master_data' => ['Change Master Data', 'pink'],
+        'text_incomming' => ['Text, Incomming', 'lightgreen'],
+        'text_outgoing' => ['Text, Outgoing', 'green'],
+        'phone_call_incomming' => ['Phone Call, Incomming', 'lightblue'],
+        'phone_call_outgoing' => ['Phone Call, Outgoing', 'blue']
     ]
 ];

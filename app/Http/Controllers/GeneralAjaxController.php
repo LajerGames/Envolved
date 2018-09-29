@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Story;
 
 class GeneralAjaxController extends Controller
 {
@@ -42,5 +43,16 @@ class GeneralAjaxController extends Controller
 
         echo $settingsEditor->MakeTabHtml();
 
+    }
+
+    public function GetStoryInfo() {
+
+        $storyID = intval($_POST['data']['story_id']);
+
+        $story = Story::find($storyID);
+        
+        echo json_encode([
+            'title' => $story->title
+        ]);
     }
 }

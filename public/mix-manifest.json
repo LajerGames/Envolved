@@ -2,5 +2,7 @@
     "/js/app.js": "/js/app.js",
     "/css/app.css": "/css/app.css",
     "/css/404.css": "/css/404.css",
-    "/js/builder.js": "/js/builder.js"
+    "/js/editor.js": "/js/editor.js",
+    "/js/builder-story-point.js": "/js/builder-story-point.js",
+    "/js/builder-arch.js": "/js/builder-arch.js"
 }

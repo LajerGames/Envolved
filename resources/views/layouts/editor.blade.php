@@ -61,6 +61,8 @@
                 <p>Settings</p>
                 <li><a href="/stories/{{request()->segment(2)}}/story_settings/edit">Story</a></li>
                 <li><a href="/stories/{{request()->segment(2)}}/editor_settings/edit">Editor</a></li>
+                <p>Export</p>
+                <li><a href="javascript:void(0);" class="hastip" id="export-to-sqlite-link" data-moretext="Shortcut: Press <b>ctrl</b> + <b>shift</b> + <b>s</b>">Export to SQLite</a></li>
             </ul>
 
         </nav>
@@ -79,9 +81,29 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="export-to-sqlite" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalLabel">Export to SQLite</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="text" name="save_as" id="save_as" value="" class="form-control" placeholder="Save As" data-story-id="{{request()->segment(2)}}" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-story-id="{{request()->segment(2)}}" data-dismiss="modal">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
-    @if(is_array($js))
+    <script src="{{ asset('js/editor.js') }}"></script>
+    @if(isset($js) && is_array($js) && count($js) > 0)
         @foreach($js as $script)
             <script src="{{ asset('js/'.$script) }}"></script>
         @endforeach

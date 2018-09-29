@@ -12,6 +12,8 @@ let mix = require('laravel-mix');
  */
 
 mix.js('resources/assets/js/app.js', 'public/js')
-   .js('resources/assets/js/builder.js', 'public/js')
+    .js('resources/assets/js/editor.js', 'public/js')
+   .js('resources/assets/js/builder-arch.js', 'public/js')
+   .js('resources/assets/js/builder-story-point.js', 'public/js')
    .sass('resources/assets/sass/app.scss', 'public/css')
    .sass('resources/assets/sass/404.scss', 'public/css');

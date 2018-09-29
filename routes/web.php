@@ -22,13 +22,22 @@ Route::group(['middleware' => 'auth'], function () {
     # Story
     Route::resource('stories', 'StoriesController');
 
+    # Export
+    Route::post('stories/{story}/export', 'ExportController@exportSQLite');
+
     # Builder
     Route::get('stories/{story}/builder/{tabID}', 'BuilderController@index');
+    Route::get('stories/{story}/builder/arch/{archID}', 'BuilderController@show');
 
     # Builder - arch "crud"
     Route::post('stories/{story}/builder/{tabID}', 'StoryArchesController@store');
     Route::put('stories/{story}/builder/{tabID}', 'StoryArchesController@update');
     Route::delete('stories/{story}/builder/{tabID}', 'StoryArchesController@destroy');
+
+    # Builder - story point "crud"
+    Route::post('stories/{story}/builder/arch/{archID}/handle', 'StoryPointsController@create');
+    Route::put('stories/{story}/builder/arch/{archID}/handle', 'StoryPointsController@update');
+    Route::delete('stories/{story}/builder/arch/{archID}/handle', 'StoryPointsController@destroy');
 
     # Characters
     Route::resource('stories.characters', 'CharactersController');
@@ -62,6 +71,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/toggle-sidebar', 'GeneralAjaxController@ToggleSidebarSession');
     Route::post('/add-news-section', 'GeneralAjaxController@AddNewsSection');
     Route::post('/add-tab', 'GeneralAjaxController@AddTab');
+    Route::post('/get-story-info', 'GeneralAjaxController@GetStoryInfo');
     
 }); 
 /**

@@ -1,4 +1,4 @@
-@extends('layouts.editor', ['js' => ['builder.js']])
+@extends('layouts.editor', ['js' => ['builder-arch.js']])
 
 @section('content')
 <div class="row">
@@ -32,7 +32,7 @@
                                 <div class="arch-container {{($storyArch->id == $info['highlight_arch_id'] ? 'highlighted-arch' : '')}}">
                                     &nbsp;
                                     <span class="{{($storyArch->id == $info['highlight_arch_id'] ? 'highlighted-id-number' : 'id-number')}}">{{$storyArch->number}}</span>
-                                    <div class="arch-enter hastip" data-moretext="{{$storyArch->description}}">{{$storyArch->name}}</div>
+                                    <div class="arch-enter hastip" data-moretext="{{$storyArch->description}}" data-story-id="{{$storyArch->story_id}}" data-id="{{$storyArch->id}}">{{$storyArch->name}}</div>
                                     <a href="javascript:void(0);" class="arch-options-menu glyphicon glyphicon-option-vertical"></a>
                                     <div class="arch-options-container popup-menu">
                                         <a href="/stories/{{$info['story']->id}}/builder/handle?id={{$storyArch->id}}">Edit</a>
