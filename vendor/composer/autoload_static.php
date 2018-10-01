@@ -342,6 +342,7 @@ class ComposerStaticInita1e0b67c7b9c79c6430d0d73b5639985
         'AddJournalistToCharactersRole' => __DIR__ . '/../..' . '/database/migrations/2018_09_01_173433_add_journalist_to_characters_role.php',
         'AddNumberToStoryStoryArchs' => __DIR__ . '/../..' . '/database/migrations/2018_09_12_142905_add_number_to_story_story_archs.php',
         'AddSentOnAndSeenOn' => __DIR__ . '/../..' . '/database/migrations/2018_08_19_172243_add_sent_on_and_seen_on.php',
+        'AddStoryIdToTexts' => __DIR__ . '/../..' . '/database/migrations/2018_09_29_140026_add_story_id_to_texts.php',
         'AddUserIdToStories' => __DIR__ . '/../..' . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
         'App\\Character' => __DIR__ . '/../..' . '/app/Character.php',
         'App\\Common\\BuildSelectOptions' => __DIR__ . '/../..' . '/app/Common/BuildSelectOptions.php',
