@@ -54,6 +54,11 @@
                         {{Form::select('role', $strRoles , $character->role, ['class' => 'form-control'])}}
                     </div>
 
+                    <div class="form-group">
+                        {{Form::label('in_contacts', 'In contacts')}}
+                        {{Form::select('in_contacts', [0 => 'No', 1 => 'Yes'], $character->in_contacts, ['class' => 'form-control'])}}
+                    </div>
+
                     @if(!empty($character->phonenumber))
                     <div class="form-group">
                         Attached phone number:<br />

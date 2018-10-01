@@ -44,6 +44,11 @@
                     </div>
 
                     <div class="form-group">
+                        {{Form::label('in_contacts', 'In contacts')}}
+                        {{Form::select('in_contacts', [0 => 'No', 1 => 'Yes'], '', ['class' => 'form-control'])}}
+                    </div>
+
+                    <div class="form-group">
                         {{Form::file('avatar')}}
                     </div>
                     

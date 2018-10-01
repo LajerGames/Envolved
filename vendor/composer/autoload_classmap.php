@@ -15,6 +15,7 @@ return array(
     'AddJournalistToCharactersRole' => $baseDir . '/database/migrations/2018_09_01_173433_add_journalist_to_characters_role.php',
     'AddNumberToStoryStoryArchs' => $baseDir . '/database/migrations/2018_09_12_142905_add_number_to_story_story_archs.php',
     'AddSentOnAndSeenOn' => $baseDir . '/database/migrations/2018_08_19_172243_add_sent_on_and_seen_on.php',
+    'AddShowInContactsToCharacters' => $baseDir . '/database/migrations/2018_10_01_151613_add_show_in_contacts_to_characters.php',
     'AddStoryIdToTexts' => $baseDir . '/database/migrations/2018_09_29_140026_add_story_id_to_texts.php',
     'AddUserIdToStories' => $baseDir . '/database/migrations/2018_07_31_131627_add_user_id_to_stories.php',
     'App\\Character' => $baseDir . '/app/Character.php',

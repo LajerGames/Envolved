@@ -212,6 +212,7 @@ class CharactersController extends Controller
     public function SaveRequest(Character $character, $story_id, $imageName, Request $request, $isInsert = false)
     {
         $character->story_id =  $story_id;
+        $character->in_contacts =  "{$request->input('in_contacts')}";
         $character->first_name = "{$request->input('first_name')}";
         $character->middle_names = "{$request->input('middle_names')}";
         $character->last_name = "{$request->input('last_name')}";

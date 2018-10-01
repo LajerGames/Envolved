@@ -55,21 +55,19 @@ class ExportController extends Controller
                 // Create and insert
                 $this->createTableAndInsertData($model, $tableName, $instructions['cell_exceptions']);
             }
-return;
 
-            # Story
-            //$this->createTableAndInsertData($story, 'stories', ['user_id', 'created_at', 'updated_at']);
-            //$this->createTableAndInsertData($story->characters, 'story_characters', ['story_id', 'created_at', 'updated_at']);
+            // Lastly copy all images related to this story into this folder into this folder.
+            $storyImagesFolder = new \DirectoryIterator(public_path().'/storage/stories/'.$story_id);
+            foreach ($storyImagesFolder as $fileinfo) {
+            if (!$fileinfo->isDot()) {
 
-            /*
-            $this->SQLiteDB->exec("
-                CREATE TABLE IF NOT EXISTS Requests
-                (
-                    ID INTEGER PRIMARY KEY AUTOINCREMENT, 
-                    bla11 VARCHAR( 225 ), 
-                    bla21 VARCHAR( 225 )
-                )
-            ");*/
+                $this->xcopy(
+                    public_path().'/storage/stories/'.$story_id.'/'.$fileinfo->getFilename(),
+                    public_path().'/storage/story_drafts/'.$story_id.'/'.$this->newDBName.'/'.$fileinfo->getFilename()
+                );
+
+            }
+}
 
        }
 
@@ -304,4 +302,48 @@ return;
         return $extraTranslation;
     }
     /** END SECTION */
+
+    /**
+     * Copy a file, or recursively copy a folder and its contents
+     * @author      Aidan Lister <aidan@php.net>
+     * @version     1.0.1
+     * @link        http://aidanlister.com/2004/04/recursively-copying-directories-in-php/
+     * @param       string   $source    Source path
+     * @param       string   $dest      Destination path
+     * @param       int      $permissions New folder creation permissions
+     * @return      bool     Returns true on success, false on failure
+     */
+    private function xcopy($source, $dest, $permissions = 0755)
+    {
+        // Check for symlinks
+        if (is_link($source)) {
+            return symlink(readlink($source), $dest);
+        }
+
+        // Simple copy for a file
+        if (is_file($source)) {
+            return copy($source, $dest);
+        }
+
+        // Make destination directory
+        if (!is_dir($dest)) {
+            mkdir($dest, $permissions);
+        }
+
+        // Loop through the folder
+        $dir = dir($source);
+        while (false !== $entry = $dir->read()) {
+            // Skip pointers
+            if ($entry == '.' || $entry == '..') {
+                continue;
+            }
+
+            // Deep copy directories
+            $this->xcopy("$source/$entry", "$dest/$entry", $permissions);
+        }
+
+        // Clean up
+        $dir->close();
+        return true;
+    }
 }

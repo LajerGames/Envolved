@@ -13,7 +13,9 @@ class AddShowInContactsToCharacters extends Migration
      */
     public function up()
     {
-        //
+        Schema::table('story_characters', function($table) {
+            $table->tinyInteger('in_contacts')->after('story_id');
+        });
     }
 
     /**
@@ -23,6 +25,8 @@ class AddShowInContactsToCharacters extends Migration
      */
     public function down()
     {
-        //
+        Schema::table('story_characters', function($table) {
+            $table->dtopColumn('in_contacts');
+        });
     }
 }
