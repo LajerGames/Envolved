@@ -253,6 +253,7 @@ class PhoneLogsController extends Controller
         $phoneLog->start_time = "{$request->input('time')}";
         $phoneLog->minutes = "{$request->input('minutes')}";
         $phoneLog->direction = "{$request->input('direction')}";
+        $phoneLog->answered = "{$request->input('answered')}";
         $phoneLog->save();
     }
 }

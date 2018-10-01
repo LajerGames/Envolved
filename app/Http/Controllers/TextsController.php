@@ -75,12 +75,12 @@ class TextsController extends Controller
         if(!empty($request->input('text')))
         {
             $text2 = new Text;
-            $this->SaveRequest($text2, $phone_number_id, '', $request);
+            $this->SaveRequest($text2, $phone_number_id, $story_id, '', $request);
         }
         if(!empty($fileName))
         {
             $text1 = new Text;
-            $this->SaveRequest($text1, $phone_number_id, $fileName, $request);
+            $this->SaveRequest($text1, $phone_number_id, $story_id, $fileName, $request);
         }
         
         return redirect('/stories/'.$story_id.'/texts/'.$phone_number_id.'/edit')->with('success', 'Text message created');
@@ -197,11 +197,11 @@ class TextsController extends Controller
         // On an update we can only update a file or a text, so which is it?
         if(!empty($request->input('text')))
         {
-            $this->SaveRequest($text, $phone_number_id, '', $request);
+            $this->SaveRequest($text, $phone_number_id, $story_id, '', $request);
         }
         elseif(!empty($fileName) || !empty($text->filename))
         {
-            $this->SaveRequest($text, $phone_number_id, $fileName, $request);
+            $this->SaveRequest($text, $phone_number_id, $story_id, $fileName, $request);
         }
 
         return redirect('/stories/'.$story_id.'/texts/'.$phone_number_id.'/edit')->with('success', 'Text message updated');
@@ -255,8 +255,9 @@ class TextsController extends Controller
     /**
      * Once Text is instanciated or found (::find), the saving process is the same for both store and update
      */
-    public function SaveRequest(Text $text, $phone_number_id, $fileName, Request $request)
+    public function SaveRequest(Text $text, $phone_number_id, $story_id, $fileName, Request $request)
     {
+        $text->story_id =  $story_id;
         $text->phone_number_id =  $phone_number_id;
         $text->is_seen = 1;
         $text->sender = "{$request->input('sender')}";

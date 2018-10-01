@@ -18,6 +18,7 @@
                         <th scope="col">Start time</th>
                         <th scope="col" class="text-right">Duration (min.)</th>
                         <th scope="col" class="text-right">Direction</th>
+                        <th scope="col" class="text-right">Answered</th>
                     </tr>
                     @if(count($phoneLogs))
                         @foreach($phoneLogs as $phoneLog)
@@ -28,7 +29,7 @@
                             @if($currentDaysAgo != $phoneLog->days_ago)
 
                                 <tr>
-                                    <th class="text-center divider-headline" colspan="5">
+                                    <th class="text-center divider-headline" colspan="6">
                                         <a href="/stories/{{$phoneLog->story_id}}/phonelogs/?days_ago={{$phoneLog->days_ago}}&time=12:00" class="pull-right btn btn-success"><span class="glyphicon glyphicon-plus"></span></a>
                                         {{$phoneLog->days_ago}} days ago
                                     </th>
@@ -54,6 +55,7 @@
                                 <td>{{$time->format('H:i')}}</td>
                                 <td class="text-right">{{$phoneLog->minutes}}</td>
                                 <td class="text-right">{{(ucfirst($phoneLog->direction))}}</td>
+                                <td class="text-right">{{(($phoneLog->answered == 1 ? 'Yes' : 'No'))}}</td>
                             </tr>
                         @endforeach
                     @endif
@@ -91,6 +93,11 @@
                         <div class="form-group">
                             {{Form::label('direction', 'Direction')}}
                             {{Form::select('direction', ['in' => 'In', 'out' => 'Out'], '', ['class' => 'form-control'])}}
+                        </div>
+
+                        <div class="form-group">
+                            {{Form::label('answered', 'Answered')}}
+                            {{Form::select('answered', [0 => 'No', 1 => 'Yes'], '', ['class' => 'form-control'])}}
                         </div>
 
                         <a href="/stories/{{$info['story']->id}}/texts" class="btn btn-default">Back</a>
