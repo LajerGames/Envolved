@@ -151,6 +151,16 @@ class NewsController extends Controller
 
         $this->ValidateRequest($request);
 
+        // If there are images to delete, then do it!
+        if($request->input('remove_images') !== null && is_array($request->input('remove_images'))) {
+            foreach($request->input('remove_images') as $imageName) {
+                
+                // Delete images
+                HandleFiles::DeleteFile('public/stories/'.$story_id.'/news/'.$imageName);
+
+            }
+        }
+
         // Find news item
         $newsItem = $story->news->find($id);
 
@@ -283,7 +293,7 @@ class NewsController extends Controller
                 $image = '';
                 if(isset($content)) {
                     $image = '
-                        <a href="/storage/stories/'.$story_id.'/news/'.$content.'" target="_blank">'.$content.'</a>
+                        <a href="/storage/stories/'.$story_id.'/news/'.$content.'" class="image-anchor" target="_blank" data-image-name="'.$content.'">'.$content.'</a>
                         <input type="hidden" name="article['.$uniqueID.'][saved]" value="'.$content.'" />
                     ';
                 }
@@ -318,7 +328,7 @@ class NewsController extends Controller
         $sections = [];
 
         // Loop through all sections in the article and create a
-        if(!empty($article) && count($article['article']) > 0) {
+        if(isset($article) && !empty($article) && is_array($article['article']) && count($article['article']) > 0) {
 
             foreach($article['article'] as $uniqueID => $section) {
                 

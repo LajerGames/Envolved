@@ -28,6 +28,10 @@ class StoryArchesController extends Controller
 
         $this->ValidateRequest($request);
 
+        if(!$this->checkNumberAvailability($story, intval($request->input('number')))) {
+            return redirect('/stories/'.$story_id.'/builder/handle')->withErrors('Please pick a number that does not already exist')->withInput();
+        }
+
         $storyArch = new StoryArch;
         $this->SaveRequest($storyArch, $story_id, $request);
 
@@ -51,10 +55,14 @@ class StoryArchesController extends Controller
 
         $this->ValidateRequest($request);
 
+        if(!$this->checkNumberAvailability($story, intval($request->input('number')), $id)) {
+            return redirect('/stories/'.$story_id.'/builder/handle?id='.$id)->withErrors('Please pick a number that does not already exist')->withInput();
+        }
+
         $storyArch = $story->storyarchs->find($id);
         $this->SaveRequest($storyArch, $story_id, $request);
 
-        return redirect('/stories/'.$story_id.'/builder/'.$request->input('tab'))->with('success', 'Story arch; '.$request->input('name').' created');
+        return redirect('/stories/'.$story_id.'/builder/'.$request->input('tab'))->with('success', 'Story arch; '.$request->input('name').' updated');
     }
 
     /**
@@ -98,5 +106,36 @@ class StoryArchesController extends Controller
         $storyArch->name = "{$request->input('name')}";
         $storyArch->description = "{$request->input('description')}";
         $storyArch->save();
+    }
+
+    /**
+     * Checks if the chosen number is available
+     */
+    private function checkNumberAvailability($story, $number, $archID = 0) {
+        
+        $existingArch = $story->storyarchs->where('number', $number);
+
+        /**
+         * Check if we found an storyArch with the chosen number
+         * AND
+         * If we're inserting and not updating that'll be enough, we know the number is taken.
+         * If we're updating then check if the one we found is different from the one we're updating
+         *      If so, then the number is occupied and we'll throw an error
+         */
+        if(
+            !empty($existingArch->first())
+            && isset($existingArch->first()->id)
+            && (
+                $archID == 0
+                || (
+                    $archID > 0
+                    && $existingArch->first()->id != $archID
+                )
+            )
+        ) {
+            return false;
+        }
+
+        return true;
     }
 }

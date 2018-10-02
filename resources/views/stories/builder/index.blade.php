@@ -15,7 +15,7 @@
                     <div class="wrapper">
                         <ul class="nav nav-tabs list" id="myTab">
                             @foreach($info['settings']->tabs as $id => $tabInfo)
-                                <li class="hastip {{($info['show'] == $id ? 'active' : '')}}" data-moretext="{{$tabInfo->description}}"><a href="/stories/4/builder/{{$id}}">{{$tabInfo->name}}</a></li>
+                                <li class="hastip {{($info['show'] == $id ? 'active' : '')}}" data-moretext="{{$tabInfo->description}}"><a href="/stories/{{$info['story']->id}}/builder/{{$id}}">{{$tabInfo->name}}</a></li>
                             @endforeach
                         <li class="add-item hastip" data-moretext="Add a new story arch"><a href="/stories/{{$info['story']->id}}/builder/handle"><span class="glyphicon glyphicon-plus"></span> Add arch</a></li>
                         </ul>

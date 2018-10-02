@@ -29,7 +29,7 @@ class HandleSettings {
     private function GenerateDefaultEditorSettings() {
 
         return [
-            'tabs' => $this->GeneratsTabsArray([
+            'tabs' => $this->GenerateTabsArray([
                 ['name' => 'Main', 'description' => 'Main'],
                 ['name' => 'Idle', 'description' => 'Idle']
             ]),

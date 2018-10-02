@@ -72,12 +72,14 @@ class HandleFiles {
      * @param string $fileField
      * @return void
      */
-    public static function DeleteFile($deleteFilePath, $resourceObj, $fileField)
+    public static function DeleteFile($deleteFilePath, $resourceObj = null, $fileField = null)
     {
-        if($resourceObj->{$fileField} != '')
-        {
-            $resourceObj->{$fileField} = '';
-            $resourceObj->save();
+        if(!is_null($resourceObj) && !empty($resourceObj)) {
+            if($resourceObj->{$fileField} != '')
+            {
+                $resourceObj->{$fileField} = '';
+                $resourceObj->save();
+            }   
         }
 
         Storage::delete($deleteFilePath);

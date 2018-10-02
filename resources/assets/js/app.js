@@ -181,7 +181,6 @@ $(document).ready(function() {
     $('div.tiny-section a.add-section-button').on('click', function() {
     
         var type = $('div.tiny-section select.add-section-select option:selected').val();
-        console.log(type);
         $.post(
             '/add-news-section',
             { 
@@ -203,7 +202,11 @@ $(document).ready(function() {
         if(confirm('Remove section?')) {
             $(this).closest('div.form-group').remove();
 
-            // TODO: Delete image if this is an image-container.
+            // Do we have an image to clean up?
+            var imageName = $(this).closest('div').find('a.image-anchor').data('image-name');
+            if(imageName !== undefined) {
+                $('div.section').append('<input type="hidden" name="remove_images[]" value="' + imageName + '" />')
+            }
 
         }
     });

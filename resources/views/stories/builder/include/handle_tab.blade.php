@@ -16,7 +16,7 @@
     ]) !!}
 
 <div class="form-group">
-    {{Form::label('number', 'number')}}
+    {{Form::label('number', 'Number')}}
     {{Form::number('number', !empty($editArch->number) ? $editArch->number : $info['next_number'], ['class' => 'form-control', 'placeholder' => 'Number'])}}
 </div>
 
@@ -40,5 +40,5 @@
     @endif
 
     <a href="/stories/{{$info['story']->id}}/modules/news" class="btn btn-default">Back</a>
-    {{Form::submit('Create', ['class' => 'btn btn-primary pull-right'])}}
+    {{Form::submit(is_object($editArch) ? 'Update' : 'Create', ['class' => 'btn btn-primary pull-right'])}}
 {!! Form::close() !!}
