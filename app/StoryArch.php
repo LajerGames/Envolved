@@ -11,4 +11,8 @@ class StoryArch extends Model
     {
         return $this->belongsTo('App\Story');
     }
+    public function storypoints()
+    {
+        return $this->hasMany('App\StoryPoint');
+    }
 }

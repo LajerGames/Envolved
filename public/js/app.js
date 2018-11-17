@@ -888,7 +888,7 @@ $(document).ready(function () {
     var tipContent;
 
     function moving() {
-        $('.hastip').mousemove(function (e) {
+        $(document).on('mousemove', '.hastip', function (e) {
             $speech.html(tipContent);
             $offset = 20; /*distance from mouse*/
             $speech.css("top", e.pageY);
@@ -907,7 +907,9 @@ $(document).ready(function () {
         });
     }
 
-    $('.hastip').hover(showTip, hideTip).children();
+    $(document).on('mouseover', '.hastip', showTip);
+    $(document).on('mouseout', '.hastip', hideTip);
+    //$(document).on('hover', '.hastip', showTip, hideTip).children();
 
     var showSpeech = '';
     function showTip() {
@@ -977,60 +979,6 @@ $(document).ready(function () {
     });
 
     // End region
-
-    // Region: Builder
-
-    // Run this once before resize
-    checkStoryArchContainerSize();
-    $(window).resize(function () {
-
-        checkStoryArchContainerSize();
-    });
-
-    function checkStoryArchContainerSize() {
-        // Story arch container
-        var storyArchContainer = $('#story-arch-container'),
-            storyArchContainerWidth = storyArchContainer.width();
-
-        // change css to elements according to the VP size
-        var removeMarginRightFromEveryNth = 0;
-        if (storyArchContainerWidth >= 640 && storyArchContainerWidth < 980) {
-            removeMarginRightFromEveryNth = 2;
-        } else if (storyArchContainerWidth >= 980 && storyArchContainerWidth < 1320) {
-            removeMarginRightFromEveryNth = 3;
-        } else if (storyArchContainerWidth >= 1320 && storyArchContainerWidth < 1660) {
-            removeMarginRightFromEveryNth = 4;
-        } else if (storyArchContainerWidth >= 1660 && storyArchContainerWidth < 2000) {
-            removeMarginRightFromEveryNth = 5;
-        } else if (storyArchContainerWidth >= 2000 && storyArchContainerWidth < 2340) {
-            removeMarginRightFromEveryNth = 6;
-        } else {
-            removeMarginRightFromEveryNth = 0;
-        }
-
-        removeRightMargin(removeMarginRightFromEveryNth);
-    }
-
-    function removeRightMargin(everyNthChild) {
-
-        var margin = 40;
-
-        if (everyNthChild < 2) {
-            $('#story-arch-container > .arch-container').css('margin-right', margin + 'px');
-            $('#story-arch-container > .arch-container').show(100);
-            return;
-        }
-
-        // First set the setting on all of the elements
-        $('#story-arch-container > .arch-container').css('margin-right', margin + 'px');
-        $('#story-arch-container > .arch-container:nth-child(' + everyNthChild + 'n)').css('margin-right', '0px');
-        $('#story-arch-container > .arch-container').show(100);
-    }
-
-    $('.arch-options-menu').on('click', function (e) {
-        $(this).siblings('.arch-options-container').show();
-        e.stopPropagation();
-    });
 });
 
 /***/ }),

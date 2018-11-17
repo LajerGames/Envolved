@@ -24,17 +24,19 @@ class GetNewestValues {
         // Beneath, initiated the array that'll contain the data we'll return.
         $array = self::saveData('', $keys);
 
-        foreach($model as $entry) {
+        if(!empty($model)) {
+            foreach($model as $entry) {
 
-            if($highestNO < $entry->{$highestWhat}) {
-
-                // This entry is newer, use it.
-                $highestNO = $entry->{$highestWhat};
-
-                $array = self::saveData($entry, $keys);
-
+                if($highestNO < $entry->{$highestWhat}) {
+    
+                    // This entry is newer, use it.
+                    $highestNO = $entry->{$highestWhat};
+    
+                    $array = self::saveData($entry, $keys);
+    
+                }
+    
             }
-
         }
 
         return $array;

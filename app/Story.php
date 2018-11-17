@@ -46,4 +46,8 @@ class Story extends Model
     {
         return $this->hasMany('App\StoryArch');
     }
+    public function storypoints()
+    {
+        return $this->hasMany('App\StoryPoint');
+    }
 }

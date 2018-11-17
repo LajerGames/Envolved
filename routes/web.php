@@ -35,9 +35,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('stories/{story}/builder/{tabID}', 'StoryArchesController@destroy');
 
     # Builder - story point "crud"
-    Route::post('stories/{story}/builder/arch/{archID}/handle', 'StoryPointsController@create');
-    Route::put('stories/{story}/builder/arch/{archID}/handle', 'StoryPointsController@update');
-    Route::delete('stories/{story}/builder/arch/{archID}/handle', 'StoryPointsController@destroy');
+    // These are hidden away down at the bottom with the rest of the AJAX, most of this is AJAX - There are reasons get off my back!!!
 
     # Characters
     Route::resource('stories.characters', 'CharactersController');
@@ -72,6 +70,13 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/add-news-section', 'GeneralAjaxController@AddNewsSection');
     Route::post('/add-tab', 'GeneralAjaxController@AddTab');
     Route::post('/get-story-info', 'GeneralAjaxController@GetStoryInfo');
+
+    // Story points (still AJAX)
+    Route::post('/handle-story-point', 'StoryPointsController@HandleStoryPoint');
+    Route::post('/save-story-point-form', 'StoryPointsController@SaveStoryPointForm');
+    Route::post('/render-story-point-type-form', 'StoryPointsController@RenderStoryPointTypeForm');
+    Route::post('/render-story-point-container', 'StoryPointsController@GetStoryPointAndRenderContainer');
+    
     
 }); 
 /**

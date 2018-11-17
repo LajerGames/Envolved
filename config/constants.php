@@ -29,7 +29,8 @@ return [
         'change_master_data' => ['Change Master Data', 'pink'],
         'text_incomming' => ['Text, Incomming', 'lightgreen'],
         'text_outgoing' => ['Text, Outgoing', 'green'],
-        'phone_call_incomming' => ['Phone Call, Incomming', 'lightblue'],
-        'phone_call_outgoing' => ['Phone Call, Outgoing', 'blue']
+        'phone_call_incomming_voice' => ['Phone Call, Incomming Voice', 'lightblue'],
+        'phone_call_outgoing_voice' => ['Phone Call, Incomming Voice', 'blue'],
+        'insert_news_item'  => ['Insert news item', 'yellow']
     ]
 ];

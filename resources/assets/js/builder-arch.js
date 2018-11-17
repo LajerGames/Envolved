@@ -47,6 +47,12 @@ $(document).ready(function() {
         location.href = '/stories/'+storyID+'/builder/arch/'+archID;
     });
 
+    // Story arch "burger menu"....thingy
+    $('.arch-options-menu').on('click', function(e) {
+        $(this).siblings('.arch-options-container').show();
+        e.stopPropagation();
+    });
+
 
 
 

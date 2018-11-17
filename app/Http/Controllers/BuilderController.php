@@ -100,9 +100,25 @@ class BuilderController extends Controller
         )
             return redirect('/stories')->with('error', 'Access denied');
 
+        // Get the story arch.
+        $storyArch = $story->storyarchs->find($arch_id);
+
+        // Find the story points
+        $storyPoints = $storyArch->storypoints;
+
+        // Let's instanciate the story point controller, we need to get the HTML for the storypoints
+        $storyPointController = new StoryPointsController();
+
+        // Loop through the story points and get the HTML for them :)
+        $storyPointHTML = '';
+        foreach($storyPoints as $storyPoint) {
+            $storyPointHTML .= $storyPointController->RenderStoryPointContainer($storyPoint);
+        }
+
         $info = [
             'story' => $story,
-            'story_arch' => $story->storyarchs->find($arch_id)
+            'story_arch' => $storyArch,
+            'storyPointHTML' => $storyPointHTML
         ];
 
         return view('stories.builder.arch.index')->with('info', $info);

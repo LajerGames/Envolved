@@ -1,6 +1,8 @@
 @extends('layouts.editor', ['js' => ['builder-story-point.js']])
 
 @section('content')
+<input type="hidden" value="{{$info['story']->id}}" id="story_id" />
+<input type="hidden" value="{{$info['story_arch']->id}}" id="story_arch_id" />
 <div class="row">
     <div class="col-md-12">
         <div class="panel panel-default">
@@ -8,8 +10,10 @@
             
             <div class="panel-body">
                 
-            <a href="/stories/{{$info['story']->id}}/builder/arch/{{$info['story_arch']->id}}/" class="pull-right btn btn-success more-button hastip" data-moretext="Add a <b>story point</b> to this <b>story arch</b>.<br /><br />Shortcut: <b>ctrl + n</b>"><span class="glyphicon glyphicon-plus"></span></a>
-                HEJSA
+                {!!$info['storyPointHTML']!!}
+
+
+                <a href="javascript:void(0);" class="add-story-point btn btn-success more-button hastip" data-moretext="Add a <b>story point</b> to this <b>story arch</b>.<br /><br />Shortcut: <b>shift + n</b>"><span class="glyphicon glyphicon-plus"></span></a>
                 
             </div>
         </div>
