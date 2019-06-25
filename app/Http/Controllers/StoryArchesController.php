@@ -87,6 +87,29 @@ class StoryArchesController extends Controller
     }
 
     /**
+     * Changes the start story_point_id to a new ID
+     *
+     * @param  int  $story_id
+     * @param  int  $story_arch_id
+     * @param  int  $story_point_id
+     * @return \Illuminate\Http\Response
+     */
+    public function changeStoryPointStartID($story_id, $story_arch_id, $story_point_id) {
+        
+        $story = Story::find($story_id);
+        
+        // Check for access
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        $storyArch = $story->storyarchs->find($story_arch_id);
+        $storyArch->start_story_point_id = intval($story_point_id);
+        $storyArch->save();
+
+        return;
+    }
+
+    /**
      * Validation for both store and update is the same, so we'll just call this method
      */
     public function ValidateRequest(Request $request)
@@ -105,6 +128,7 @@ class StoryArchesController extends Controller
         $storyArch->number =  intval($request->input('number'));
         $storyArch->name = "{$request->input('name')}";
         $storyArch->description = "{$request->input('description')}";
+        $storyArch->start_story_point_id = 0;
         $storyArch->save();
     }
 

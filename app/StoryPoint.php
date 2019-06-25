@@ -11,4 +11,9 @@ class StoryPoint extends Model
     {
         return $this->belongsTo('App\Story');
     }
+
+    public function storyArch()
+    {
+        return $this->belongsTo('App\StoryArch');
+    }
 }

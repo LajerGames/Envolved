@@ -8910,7 +8910,7 @@ li.add-item a {
   width: 300px;
   float: left;
   position: relative;
-  display: none;
+  /*display: none;*/
 }
 
 .story-point-shadow-container:hover {
@@ -8937,6 +8937,18 @@ li.add-item a {
   padding: 0px 15px 15px 15px;
   border-radius: 0 0 8px 8px;
   margin-bottom: 20px;
+  position: relative;
+}
+
+.story-pointleads-to-container {
+  position: absolute;
+}
+
+.story-pointleads-to-container > a {
+  display: block;
+  float: left;
+  margin-right: 8px;
+  cursor: pointer;
 }
 
 .add-story-point {
@@ -8947,11 +8959,43 @@ li.add-item a {
 
 .story-point-shadow-container {
   cursor: default;
+  position: relative;
 }
 
 .story-point-form-container {
   padding: 10px;
   display: none;
+}
+
+.start-story-point-container {
+  margin-bottom: -10px;
+  padding-top: 6px;
+  color: #EEE;
+}
+
+.glyphicon.glyphicon-question-sign.story-points {
+  position: absolute;
+  right: 28px;
+  top: 51px;
+}
+
+.id-number-circle {
+  display: inline-block;
+  color: #FFF;
+  width: 25px;
+  line-height: 25px;
+  text-align: center;
+  border-radius: 15px;
+}
+
+.id-number-pos-top {
+  position: absolute;
+  top: -12px;
+  left: 137.5px;
+}
+
+.story-point-parent-no {
+  margin-bottom: 15px;
 }
 
 .scroller {

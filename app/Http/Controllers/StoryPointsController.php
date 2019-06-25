@@ -11,11 +11,11 @@ use App\Common\GetNewestValues;
 class StoryPointsController extends Controller
 {
     /**
-     * Save or update a story point
+     * Insert new Story point
      *
      * @return \Illuminate\Http\Response
      */
-    public function HandleStoryPoint()
+    public function InsertStoryPoint()
     {
         $story_id = intval($_POST['data']['story_id']);
         $story = Story::find($story_id);
@@ -24,25 +24,30 @@ class StoryPointsController extends Controller
             return redirect('/stories')->with('error', 'Access denied');
         
         // Initialize POST data
-        $editID         = intval($_POST['data']['edit_id']);
-        $storyArchID    = intval($_POST['data']['story_arch_id']);
-        $number         = intval($_POST['data']['number']);
-        $type           = $_POST['data']['type'];
+        $storyArchID        = intval($_POST['data']['story_arch_id']);
+        $parentStoryPointID = intval($_POST['data']['parent_id']);
+        $type               = $_POST['data']['type'];
 
-        // Are we updating or inserting
-        if($editID > 0) {
+        // So if we don't have a number, let's make it the newest one.
+        $highestStoryPointNumber = GetNewestValues::Build($story->storyarchs->find($storyArchID)->storypoints, ['number'], 'number');
+        $number = intval($highestStoryPointNumber['number'])+1;
 
-        } else {
+        // So, we're inserting a new story point not updating one
+        $storyPoint = new StoryPoint;
+        $this->SavePost($storyPoint, $number);
 
-            if($number == 0) {
-                // So if we don't have a number, let's make it the newest one.
-                $highestStoryPointNumber = GetNewestValues::Build($story->storyarchs->find($storyArchID)->storypoints, ['number'], 'number');
-                $number = intval($highestStoryPointNumber['number'])+1;
-            }
+        // Now check if parentStoryPointID is == 0, if it is, then it means that we must make this the new start story point of this arch
+        if($parentStoryPointID == 0) {
 
-            // So, we're inserting a new story point not updating one
-            $storyPoint = new StoryPoint;
-            $this->SavePost($storyPoint, $number);
+            // Get the story arches controller
+            $storyArchesController = new StoryArchesController();
+
+            // Update the Story Point Start ID
+            $storyArchesController->changeStoryPointStartID($story_id, $storyArchID, $storyPoint->id);
+
+        } else  {
+
+            $this->CreateReference($story, $parentStoryPointID, $storyPoint->id);
 
         }
 
@@ -51,21 +56,103 @@ class StoryPointsController extends Controller
     }
 
     /**
+     * Adds a story point ID to the references in instructions_json in another story point
+     */
+    private function CreateReference(Story $story, $refFrom, $refTo) {
+
+        $storyPoint = $story->storyPoints->find($refFrom);
+
+        $this->HandleReference($storyPoint, $refTo);
+
+    }
+
+    /**
+     * Adds or removes a ref from a story point
+     */
+    private function HandleReference(StoryPoint $storyPoint, $ref, $type = 'add') { 
+
+        $leadsTo = [];
+        if(!empty($storyPoint->leads_to_json)) {
+            $leadsTo = (array)json_decode($storyPoint->leads_to_json);
+        }
+
+        switch($type) {
+            case 'add' :
+                // Let's add the $ref to the leads_to_json in the instructions_json
+                if(!in_array($ref, $leadsTo)) {
+                    $leadsTo[] = $ref;
+                }
+                break;
+        }
+
+        $storyPoint->leads_to_json = json_encode($leadsTo);
+        $storyPoint->save();
+
+        return;
+    }
+
+    /**
+     * Returns HTML for all leads to for a particular story point
+     */
+    public function UpdateStoryPointLeadsTo() {
+        $data = $_POST['data'];
+        
+        $story_id = intval($data['story_id']);
+        $storyPointID = intval($data['story_point_id']);
+
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        // Get the right story point
+        $storyPoint = $story->StoryPoints->find($storyPointID);
+
+        return $this->GetStoryPointLeadsToMarkup($storyPoint);
+    }
+
+    /**
+     * Returns HTML for all leads to for a particular story point
+     */
+    private function GetStoryPointLeadsToMarkup($storyPoint, $jsonEncode = true) {
+        $story = $storyPoint->story;        
+
+        $return = '';
+        if(isset($storyPoint->leads_to_json) && !empty($storyPoint->leads_to_json)) {
+            $leadsToJson = json_decode($storyPoint->leads_to_json);
+
+            foreach($leadsToJson as $storyPointID) {
+
+                // Get this particular story point
+                $storyPoint = $story->StoryPoints->find(intval($storyPointID));
+
+                // Get the color
+                $color = config('constants.story_points')[$storyPoint->type][1];
+
+                $return .= '<a class="id-number-circle story-point-leads-to-reference" data-story-point-no="'.$storyPoint->number.'" style="background-color:'.$color.'">'.$storyPoint->number.'</a>';
+
+            }
+
+            return $jsonEncode ? json_encode($return) : $return;
+        }
+    }
+
+    /**
      * Save or update a story point
      *
      * @return \Illuminate\Http\Response
      */
-    public function GetStoryPointAndRenderContainer()
-    {
+    public function GetStoryPointAndRenderContainer() {
+        $story_id = intval($_POST['data']['story_id']);
         $story_point_id = intval($_POST['data']['story_point_id']);
         $storyPoint = $this->GetStoryPoint(
-            intval($_POST['data']['story_id']),
+            $story_id,
             $story_point_id
         );
 
         echo json_encode([
             'story_point_id' => $story_point_id,
-            'story_point_html' =>  trim(preg_replace('/\s+/', ' ', $this->RenderStoryPointContainer($storyPoint))) // Preg replace is to remove newlines
+            'story_point_html' =>  trim(preg_replace('/\s+/', ' ', $this->RenderStoryPointContainer($storyPoint, $story_id))) // Preg replace is to remove newlines
         ]);
 
         return;
@@ -137,17 +224,24 @@ class StoryPointsController extends Controller
     public function RenderStoryPointContainer(StoryPoint $storyPoint) {
         $color = config('constants.story_points')[$storyPoint->type][1];
 
-        // Remember: active
+        // Is this the start story point of this story arch
+        $startStoryPoint = $storyPoint->storyArch->start_story_point_id == $storyPoint->id 
+            ? '<span class="glyphicon glyphicon-fire"></span> ' 
+            : '';
+
         return '
-        <div class="story-point-container" data-story-point-id="'.$storyPoint->id.'" data-story-point-type="'.$storyPoint->type.'">
+        <div class="story-point-container" data-story-point-no="'.$storyPoint->number.'" data-story-point-id="'.$storyPoint->id.'" data-story-point-type="'.$storyPoint->type.'">
             <div class="story-point-shadow-container">
+                <span class="id-number-circle id-number-pos-top" style="background-color:'.$color.'">'.$storyPoint->number.'</span>
                 <div class="story-point-container-top" style="background-color:'.$color.'">
-                    <u>'.ucfirst(str_replace('_', ' ', $storyPoint->type)).'</u>: '.$storyPoint->name.'
+                    '.$startStoryPoint.'<u>'.ucfirst(str_replace('_', ' ', $storyPoint->type)).'</u>: '.$storyPoint->name.'
                 </div>
                 <div class="story-point-container-middle" style="border-left:1px solid '.$color.';border-right:1px solid '.$color.';">
                     <div class="story-point-form-container"></div>
                 </div>
-                <div class="story-point-container-bottom" style="background-color:'.$color.'"></div>
+                <div class="story-point-container-bottom" style="background-color:'.$color.'">
+                    <div class="story-pointleads-to-container">'.$this->GetStoryPointLeadsToMarkup($storyPoint, false).'</div>
+                </div>
             </div>
         </div>
         ';
@@ -205,13 +299,13 @@ class StoryPointsController extends Controller
 
     public function SavePost(StoryPoint $storyPoint, $number)
     {
-        $storyPoint->story_id =  intval($_POST['data']['story_id']);
-        $storyPoint->story_arch_id =  intval($_POST['data']['story_arch_id']);
-        $storyPoint->name =  'Unnamed #'.$number;
-        $storyPoint->number =  $number;
-        $storyPoint->type =  $_POST['data']['type'];
-        $storyPoint->instructions_json = "TESTING";
-        $storyPoint->leads_to = intval($_POST['data']['leads_to']);
+        $storyPoint->story_id           =  intval($_POST['data']['story_id']);
+        $storyPoint->story_arch_id      =  intval($_POST['data']['story_arch_id']);
+        $storyPoint->name               =  'Unnamed #'.$number;
+        $storyPoint->number             =  $number;
+        $storyPoint->type               =  $_POST['data']['type'];
+        $storyPoint->instructions_json  = "";
+        $storyPoint->leads_to_json      = "";
         $storyPoint->save();
     }
 }

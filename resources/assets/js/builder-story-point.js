@@ -3,8 +3,8 @@ $(document).ready(function() {
     // Short cuts
     $(document).bind('keypress', function(e) {
 
-        // Press shift + n for new
-        if(e.which === 78 && e.shiftKey ) {
+        // Press ctrl + shift + x for new
+        if(e.which === 24 && e.shiftKey && e.ctrlKey) {
             
             $('.more-button').click();
 
@@ -24,30 +24,136 @@ $(document).ready(function() {
 
         }
 
+        // Press shift + f to search
+        if(e.which === 6 && e.shiftKey && e.ctrlKey) {
+            
+            var selectStoryPointWindow = $('#select-story-point');
+            if(selectStoryPointWindow.length) {
+                selectStoryPointWindow.modal();
+                setTimeout(function() {
+                    selectStoryPointWindow.find('input.form-control').attr('autofocus', true).focus();
+                }, 500);
+            }
+
+        }
+
+        // What do we do with the enter key?
+        if(e.which == 13) {
+
+            // Check if we have focus in the choose story-point-no
+            if($('input[name="select-story-point"]').is(':focus')) {
+                
+                $('#select-story-point button.btn-primary').click();
+
+            }
+
+        }
+    });
+
+    // Select story point number
+    function selectStoryPointNumber(storyPointNo) {
+        
+
+        if(parseInt(storyPointNo) > 0) {
+
+            var clickInput = $("div.panel-body").find("[data-story-point-no='" + storyPointNo + "']").find('div.story-point-container-top');
+
+            if(clickInput.length > 0) {
+
+                clickInput.click();
+
+            }
+
+        }
+    }
+    //story-point-leads-to-reference
+    $('div.panel-body').on('click', 'a.story-point-leads-to-reference', function() {
+        selectStoryPointNumber(parseInt($(this).data('story-point-no')));
+    });
+    $('#select-story-point button.btn-primary').on('click', function() {
+
+        var storyPointNo = $('input[name="select-story-point"]'),
+            storyPointNoVal = storyPointNo.val();
+
+        selectStoryPointNumber(storyPointNoVal);
+
+        storyPointNo.val('');
+
+        // Close window
+        $('#select-story-point').modal('hide');
     });
 
     $('.more-button').on('click', function() {
 
+        setNewStoryPointParentID("");
+        openNewStoryPointModal(0);
+
+    });
+
+    function openNewStoryPointModal(parentID) {
+
         var storyPointWindow = $('#new-story-point-window');
+
+        // Do we show the parent chooser field?
+        fieldToFocus = storyPointWindow.find('input[name="story_point_type"]');
+        if(parentID == 0) {
+
+            // So, we have no parent ID - that means that we should actually show the parent story point chooser
+            // But we might also be in here because this story arch has no start story point and badly wants you to create one
+            if(parseInt($('#story_arch_start_story_point_id').val()) == 0) {
+
+                // Okay, we have no start story_point in this story arch for sure, make this the one!
+                setNewStoryPointParentID(0);
+                
+                // Hide the parent story point chooser
+                storyPointWindow.find('input[name="story_point_parent"]').hide();
+
+            } else {
+
+                // It seems we have a start story point in this story arch, show the parent chooser to make sure the user chooses a parent
+                setNewStoryPointParentID("");
+
+                // Set new field to focus
+                fieldToFocus = storyPointWindow.find('input[name="story_point_parent"]');
+
+                // Show the parent story point chooser
+                fieldToFocus.show();
+
+            }
+
+        } else {
+
+            // We found a parent ID, set it so we don't need to choose
+            setNewStoryPointParentID(parentID);
+
+            // Hide the parent story point chooser
+            storyPointWindow.find('input[name="story_point_parent"]').hide();
+
+        }
+        
         if(storyPointWindow.length) {
             
             storyPointWindow.modal();
 
             setTimeout(function() {
-                storyPointWindow.find('input[name="story_point_type"]').attr('autofocus', true).focus();
+                fieldToFocus.attr('autofocus', true).focus();
             }, 500);
 
         }
 
-    });
+    }
 
     // Catch datalist change event
     $('#new-story-point-window').find('input[name="story_point_type"]').bind('change', function () {
+
+         var storyPointWindow = $('#new-story-point-window');
+
         // Find selected value
         var that = $(this);
-        $('#new-story-point-window').find('option').each(function() {
+        storyPointWindow.find('option').each(function() {
 
            if($(this).val() == that.val()) {
+
                // Set the hidden input field to the value in the data field
                $('input[name="chosen_story_point_type"]').val($(this).data('value')).trigger('change');
 
@@ -61,40 +167,42 @@ $(document).ready(function() {
 
    // Register when a new story point type is chosen
    $('input[name="chosen_story_point_type"]').on('change', function() {
-        handleStoryPointAndRefreshContainer($(this).val());
+
+        insertStoryPointAndRenderContainer($(this).val());
         
    });
 
    /**
-    * Insert or update a story point. Furthermore, create or update the container for the story point.
+    * Insert a story point. Furthermore, create the container for the story point.
     * 
     * @param {string} type 
     */
-   function handleStoryPointAndRefreshContainer(type) {
-
+   function insertStoryPointAndRenderContainer(type) {
         // Get storyID and StoryArchID
-        var storyID     = $('#story_id').val(),
-            storyArchID = $('#story_arch_id').val(),
-            editID      = 0,
-            number      = 0,
-            leads_to    = 0;
-            
+        var storyID             = $('#story_id').val(),
+            storyArchID         = $('#story_arch_id').val(),
+            parentStoryPointID  = parseInt($('#new-story-point-window').find('input[name="parent_id"]').val());
+       
         $.post(
-            '/handle-story-point',
+            '/insert-story-point',
             { 
                 _token: $('meta[name=csrf-token]').attr('content'),
                 _method : 'POST',
                 data : {
                     story_id: storyID,
                     story_arch_id: storyArchID,
-                    edit_id: editID,
                     type: type,
-                    number: number,
-                    leads_to: leads_to
+                    parent_id: parentStoryPointID
                 }
             },
             function (storyPointID) {
+                // Let's render the newly created story point
                 renderStoryPoint(storyPointID);
+
+                // Let's update the parent story point's leads-to graphics so it's visible that something has changed
+                if(parentStoryPointID > 0) {
+                    updateStoryPointLeadsTo(parentStoryPointID);
+                }
 
                 // Close the modal
                 $('#new-story-point-window').modal('hide');
@@ -104,6 +212,36 @@ $(document).ready(function() {
             }
         );
 
+   }
+
+   // Update story point leads to container
+   function updateStoryPointLeadsTo(storyPointID) {
+        var storyID             = $('#story_id').val();
+
+        $.post(
+            '/update-story-point-leads-to',
+            { 
+                _token: $('meta[name=csrf-token]').attr('content'),
+                _method : 'POST',
+                data : {
+                    story_id: storyID,
+                    story_point_id: storyPointID
+                }
+            },
+            function (data) {
+                var parsedData = JSON.parse(data);
+                
+                // Find the right story point and append
+                var storyPoint = $('div[data-story-point-id="' + storyPointID + '"]');
+
+                updateContainer = storyPoint.find('div.story-pointleads-to-container');
+
+                updateContainer.html("");
+
+                updateContainer.append(parsedData);
+
+            }
+        );
    }
 
    function renderStoryPoint(storyPointID) {
@@ -137,6 +275,7 @@ $(document).ready(function() {
    }
 
    function resetSearchFields() {
+        setNewStoryPointParentID('');
         $('input[name="chosen_story_point_type"]').val('');
         $('#new-story-point-window').find('input[name="story_point_type"]').val('');
 
@@ -144,7 +283,7 @@ $(document).ready(function() {
    }
 
    // 
-   $('div.story-point-shadow-container').on('click', function() {
+   $('div.panel-body').on('click', 'div.story-point-container-top', function() {
 
         var storyID                     = $('#story_id').val(),
             storyPointContainer         = $(this).closest('div.story-point-container'),
@@ -185,7 +324,6 @@ $(document).ready(function() {
                 storyPointContentArea.show(animationTime);
 
                 // Focus
-                console.log(storyPointContentArea.find('input[name="name"]'));
                 storyPointContentArea.find('input[name="name"]').focus();
             }
         );
@@ -213,6 +351,10 @@ $(document).ready(function() {
             that            = $(this),
             storyPointID    = that.closest('div.story-point-container').data('story-point-id');
 
+        // Say that we're updating
+        that.attr('disabled', true);
+        that.html('wait...');
+
         $.post(
             '/save-story-point-form',
             { 
@@ -230,6 +372,9 @@ $(document).ready(function() {
 
                 that.closest('div.story-point-container').find('div.story-point-container-top').html(parsedData);
 
+                that.attr('disabled', false);
+                that.html('Update');
+
             }
         );
 
@@ -237,7 +382,17 @@ $(document).ready(function() {
 
    // Add story to focused story-point
    $('div.panel-body').on('click', 'div.story-point-shadow-container.active a.add-story-point-to-this', function() {
-       console.log('DAV');
+       
+        storyID         = $('#story_id').val(),
+        that            = $(this),
+        storyPointID    = that.closest('div.story-point-container').data('story-point-id');
+
+        openNewStoryPointModal(storyPointID);
+
    });
+
+   function setNewStoryPointParentID(parentID) {
+    $('#new-story-point-window').find('input[name="parent_id"]').val(parentID);
+   }
 
 });
