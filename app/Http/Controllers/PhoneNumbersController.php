@@ -184,6 +184,7 @@ class PhoneNumbersController extends Controller
         $phoneNumber->character_id = "{$request->input('character_id')}";
         $phoneNumber->number = "{$request->input('number')}";
         $phoneNumber->name = "{$request->input('name')}";
+        $phoneNumber->messagable = "{$request->input('messagable')}";
         $phoneNumber->save();
     }
 }

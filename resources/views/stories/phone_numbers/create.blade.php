@@ -23,6 +23,11 @@
                         {{Form::label('name', 'Name')}}
                         {{Form::text('name', '', ['class' => 'form-control', 'placeholder' => 'Enter Name (Not only for editor)'])}}
                     </div>
+
+                    <div class="form-group">
+                        {{Form::label('messagable', 'Can receive messages')}}
+                        {{Form::select('messagable', [0 => 'No', 1 => 'Yes'], $phoneNumber->messagable, ['class' => 'form-control'])}}
+                    </div>
                     
                     <a href="/stories/{{$info['story']->id}}/phone_numbers" class="btn btn-default">Back</a>
                     {{Form::submit('Create', ['class' => 'btn btn-primary pull-right'])}}

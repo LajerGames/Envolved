@@ -24,20 +24,47 @@ class StoryPointsController extends Controller
             return redirect('/stories')->with('error', 'Access denied');
         
         // Initialize POST data
-        $storyArchID        = intval($_POST['data']['story_arch_id']);
-        $parentStoryPointID = intval($_POST['data']['parent_id']);
-        $type               = $_POST['data']['type'];
+        $storyArchID            = intval($_POST['data']['story_arch_id']);
+        $storyArch              = $story->storyarchs->find($storyArchID);
+        $storyPoints            = $storyArch->storypoints;
+
+        // We may get a parent number, which means that we have to look in this storyarch and find the given number
+        // Otherwise we get a parent ID, that means we will just need to use that to find the parent StoryPoint
+        if(intval($_POST['data']['parent_id']) > 0) {
+
+            // We have a parent ID, just find the story_point
+            $parentStoryPoint   = $storyPoints->find(intval($_POST['data']['parent_id']));
+
+        } else {
+
+            // No Parent ID, just a parent number. Go through the given story Arch to get the required StoryPoint
+            $parentStoryPointNumber = intval($_POST['data']['parent_number']);
+            $parentStoryPoint       = $storyPoints->where('number', $parentStoryPointNumber)->first();
+
+        }
+        
+        $type                   = $_POST['data']['type'];
+
+        // Now to catch a potential error. If we insert a new StoryPoint with no parentStoryPoint, then please check if we already have a starting point.
+        // If not, then proceed. If we do, then return an error
+        if(!$parentStoryPoint instanceof StoryPoint && $storyArch->start_story_point_id > 0) {
+
+            // Return an error
+            echo json_encode(['error' => 'no_parent_id']);
+
+            return;
+        }
 
         // So if we don't have a number, let's make it the newest one.
-        $highestStoryPointNumber = GetNewestValues::Build($story->storyarchs->find($storyArchID)->storypoints, ['number'], 'number');
+        $highestStoryPointNumber = GetNewestValues::Build($storyPoints, ['number'], 'number');
         $number = intval($highestStoryPointNumber['number'])+1;
-
+        
         // So, we're inserting a new story point not updating one
         $storyPoint = new StoryPoint;
         $this->SavePost($storyPoint, $number);
 
-        // Now check if parentStoryPointID is == 0, if it is, then it means that we must make this the new start story point of this arch
-        if($parentStoryPointID == 0) {
+        // Now check if parentStoryPointNumber is == 0, if it is, then it means that we must make this the new start story point of this arch
+        if(!$parentStoryPoint instanceof StoryPoint) {
 
             // Get the story arches controller
             $storyArchesController = new StoryArchesController();
@@ -45,26 +72,29 @@ class StoryPointsController extends Controller
             // Update the Story Point Start ID
             $storyArchesController->changeStoryPointStartID($story_id, $storyArchID, $storyPoint->id);
 
+            $parentStoryPointID = 0;
+
         } else  {
 
-            $this->CreateReference($story, $parentStoryPointID, $storyPoint->id);
+            $this->HandleReference($parentStoryPoint, $storyPoint->id);
+
+            $parentStoryPointID = $parentStoryPoint->id;
 
         }
 
-        echo $storyPoint->id;
+        echo json_encode(['story_point_id' => $storyPoint->id, 'parent_story_point_id' => $parentStoryPointID]);
+
         return;
     }
 
     /**
      * Adds a story point ID to the references in instructions_json in another story point
-     */
-    private function CreateReference(Story $story, $refFrom, $refTo) {
+     
+    private function CreateReference(Story $story, $storyPoint, $parentStoryPoint) {
 
-        $storyPoint = $story->storyPoints->find($refFrom);
+        
 
-        $this->HandleReference($storyPoint, $refTo);
-
-    }
+    }*/
 
     /**
      * Adds or removes a ref from a story point
@@ -86,6 +116,7 @@ class StoryPointsController extends Controller
         }
 
         $storyPoint->leads_to_json = json_encode($leadsTo);
+
         $storyPoint->save();
 
         return;
@@ -150,11 +181,14 @@ class StoryPointsController extends Controller
             $story_point_id
         );
 
-        echo json_encode([
-            'story_point_id' => $story_point_id,
-            'story_point_html' =>  trim(preg_replace('/\s+/', ' ', $this->RenderStoryPointContainer($storyPoint, $story_id))) // Preg replace is to remove newlines
-        ]);
-
+        if($storyPoint instanceof StoryPoint) {
+            echo json_encode([
+                'story_point_id' => $story_point_id,
+                'story_point_html' =>  trim(preg_replace('/\s+/', ' ', $this->RenderStoryPointContainer($storyPoint, $story_id))) // Preg replace is to remove newlines
+            ]);
+        } else {
+            echo json_encode('error');
+        }
         return;
     }
 
@@ -181,6 +215,7 @@ class StoryPointsController extends Controller
         
         $storyPoint->name = "{$name}";
         $storyPoint->instructions_json = "{$json}";
+
         $storyPoint->save();
 
         echo json_encode($name);
@@ -211,7 +246,9 @@ class StoryPointsController extends Controller
 
         $story = Story::find($story_id);
 
-        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+        if(
+            !Permission::CheckOwnership(auth()->user()->id, $story->user_id)
+        )
             return redirect('/stories')->with('error', 'Access denied');
 
         return $story->storypoints->find($storyPointID);
@@ -275,8 +312,11 @@ class StoryPointsController extends Controller
     private function RenderStoryPointFormTypeInputs(StoryPoint $storyPoint, $generatedID) {
         $return = '';
         $values = json_decode($storyPoint->instructions_json);
-
+//echo $storyPoint->type.' asdasdas';
         switch($storyPoint->type) {
+            case 'change_variable' :
+                $return = $this->RenderStoryPointFormTypeInputsChangeVariable($values, $generatedID, $storyPoint);
+                break;
             case 'wait' :
                 $return = $this->RenderStoryPointFormTypeInputsWait($values, $generatedID);
                 break;
@@ -297,6 +337,78 @@ class StoryPointsController extends Controller
         ';
     }
 
+    private function RenderStoryPointFormTypeInputsChangeVariable($values, $generatedID, StoryPoint $storyPoint) {
+        
+        $seconds = isset($values->seconds) && intval($values->seconds) > 0 ? intval($values->seconds) : 0;
+
+        // Go through the registered variables and list them
+        $variables = $storyPoint->story->variables;
+        $variableOptions = '';
+
+        foreach($variables as $variable) {
+            $variableOptions .= '<option data-id="'.$variable->id.'" data-type="'.$variable->type.'" data-generated-id="'.$generatedID.'" value="'.$variable->{'key'}.'" />';
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[variable-id]" value="0" class="form-control story-point-variable-choosen-variable" />
+            <label for="'.$generatedID.'_variable_id">Choose variable</label><br />
+            <input list="'.$generatedID.'_choose_variable" name="'.$generatedID.'_choose_variable" type="text" class="form-control story-point-variable-choose-variable" placeholder="Search variable" />
+            <datalist id="'.$generatedID.'_choose_variable">
+                '.$variableOptions.'
+            </datalist>
+        </div>
+        <div class="form-group">
+            <label for="'.$generatedID.'_new_value">Set new variable</label><br />
+            <span class="story-point-variable-new-value">'.$this->RenderStoryPointFormTypeInputsChangeVariableValueInput($variable->type, $variable->value, $generatedID).'</span>
+        </div>
+        ';
+    }
+
+    private function RenderStoryPointFormTypeInputsChangeVariableValueInput($variableType, $value, $generatedID) {
+    
+        // Now find out which type we will return
+        $inputType = '';
+        $inputExtraFeatures = '';
+        $placeholderValue = 'Set new variable';
+        switch($variableType) {
+            case 'number':
+                $inputType = 'number';
+                $inputExtraFeatures = 'step=".01" min="0"';
+                break;
+            case 'float':
+                $inputType = 'number';
+                $inputExtraFeatures = 'step="1" min="0"';
+                break;
+            case 'text':
+                $inputType = 'text';
+                break;
+            default : // If we have no type, then make it disabled
+                $inputType = 'text';
+                $inputExtraFeatures = 'disabled="disabled"';
+                $placeholderValue = 'Choose variable first';
+                break;
+        }
+
+        return '<input type="number" type="'.$inputType.'" '.$inputExtraFeatures.' value="'.$value.'" id="'.$generatedID.'_new_value" name="json[new_value]" class="form-control" placeholder="'.$placeholderValue.'" />';
+    }
+
+    public function RenderStoryPointFormTypeInputsChangeVariableValueInputAjax() {
+
+        $data = $_POST['data'];
+        
+        $story_id = intval($data['story_id']);
+
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        echo json_encode($this->RenderStoryPointFormTypeInputsChangeVariableValueInput($data['variable_type'], '', $data['generated_id']));
+
+        return;
+    }
+
     public function SavePost(StoryPoint $storyPoint, $number)
     {
         $storyPoint->story_id           =  intval($_POST['data']['story_id']);
@@ -307,5 +419,12 @@ class StoryPointsController extends Controller
         $storyPoint->instructions_json  = "";
         $storyPoint->leads_to_json      = "";
         $storyPoint->save();
+    }
+
+    // Temporary printr
+    private function printr($arr) {
+        echo '<pre>';
+        print_r($arr);
+        echo '</pre>';
     }
 }

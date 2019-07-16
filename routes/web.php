@@ -77,6 +77,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/save-story-point-form', 'StoryPointsController@SaveStoryPointForm');
     Route::post('/render-story-point-type-form', 'StoryPointsController@RenderStoryPointTypeForm');
     Route::post('/render-story-point-container', 'StoryPointsController@GetStoryPointAndRenderContainer');
+    Route::post('/update-story-point-variable-input', 'StoryPointsController@RenderStoryPointFormTypeInputsChangeVariableValueInputAjax');
+    
     
     
 }); 

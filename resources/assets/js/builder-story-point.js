@@ -179,10 +179,11 @@ $(document).ready(function() {
     */
    function insertStoryPointAndRenderContainer(type) {
         // Get storyID and StoryArchID
-        var storyID             = $('#story_id').val(),
-            storyArchID         = $('#story_arch_id').val(),
-            parentStoryPointID  = parseInt($('#new-story-point-window').find('input[name="parent_id"]').val());
-       
+        var storyID                 = $('#story_id').val(),
+            storyArchID             = $('#story_arch_id').val(),
+            parentStoryPointNumber  = parseInt($('#new-story-point-window').find('input[name="story_point_parent"]').val()),
+            parentStoryPointID      = parseInt($('#new-story-point-window').find('input[name="parent_id"]').val());
+            
         $.post(
             '/insert-story-point',
             { 
@@ -192,10 +193,26 @@ $(document).ready(function() {
                     story_id: storyID,
                     story_arch_id: storyArchID,
                     type: type,
+                    parent_number: parentStoryPointNumber,
                     parent_id: parentStoryPointID
                 }
             },
-            function (storyPointID) {
+            function (storyPointIDs) {
+                var storyPoints         = JSON.parse(storyPointIDs);
+
+                if(storyPoints.error !== undefined) {
+
+                    // An error occured - what was it?
+                    adviceError(storyPoints.error);
+
+                    resetSearchFields();
+
+                    return;
+                }
+
+                var storyPointID        = storyPoints.story_point_id,
+                    parentStoryPointID  = storyPoints.parent_story_point_id;
+
                 // Let's render the newly created story point
                 renderStoryPoint(storyPointID);
 
@@ -230,7 +247,6 @@ $(document).ready(function() {
             },
             function (data) {
                 var parsedData = JSON.parse(data);
-                
                 // Find the right story point and append
                 var storyPoint = $('div[data-story-point-id="' + storyPointID + '"]');
 
@@ -260,13 +276,19 @@ $(document).ready(function() {
             },
             function (data) {
                 var panelBody = $('div.panel-body'),
-                    parsedData = JSON.parse(data),
-                    storyPointID = parsedData.story_point_id,
+                    parsedData = JSON.parse(data);
+                
+                if(parsedData == 'error') {
+                    // TODO: Error occured - take appropriate action
+                } else {
+                    console.log(parsedData);
+                    var storyPointID = parsedData.story_point_id,
                     html = parsedData.story_point_html;
                 
-                // TODO: Remove the old story_point_container
+                    // TODO: Remove the old story_point_container
 
-                panelBody.append(html);
+                    panelBody.append(html);
+                }
 
                 console.log(html);
             }
@@ -276,8 +298,10 @@ $(document).ready(function() {
 
    function resetSearchFields() {
         setNewStoryPointParentID('');
-        $('input[name="chosen_story_point_type"]').val('');
-        $('#new-story-point-window').find('input[name="story_point_type"]').val('');
+        var storyPointWindow = $('#new-story-point-window');
+        storyPointWindow.find('input[name="chosen_story_point_type"]').val('');
+        storyPointWindow.find('input[name="story_point_parent"]').val('');
+        storyPointWindow.find('input[name="story_point_type"]').val('');
 
         return;
    }
@@ -394,5 +418,74 @@ $(document).ready(function() {
    function setNewStoryPointParentID(parentID) {
     $('#new-story-point-window').find('input[name="parent_id"]').val(parentID);
    }
+
+   function adviceError(error) {
+       switch(error) {
+           case 'no_parent_id' :
+                alert('No parent ID');
+               break;
+       }
+   }
+
+   /*
+        STORY POINT SPECIAL JAVASCRIPT
+   */
+
+   // Variable
+
+   // Catch datalist change event
+   $('#app').bind('change', '.story-point-variable-choose-variable', function () {
+
+    // This may seem like a wierd way to find the real input - but there can be only one, since there can be only one storyPoint open at one time
+    var selectecVariable = $('#app').find('.story-point-variable-choose-variable');
+    var storyPointForm = selectecVariable.closest('form');
+    
+    storyPointForm.find('option').each(function() {
+
+        if($(this).val() == selectecVariable.val()) {
+
+            // Set the hidden input field to the value in the data field
+            storyPointForm.find('.story-point-variable-choosen-variable').val($(this).data('id'));
+
+            // Now create the field selectecVariable will contain the value
+            $.post(
+                '/update-story-point-variable-input',
+                { 
+                    _token: $('meta[name=csrf-token]').attr('content'),
+                    _method : 'POST',
+                    data : {
+                        story_id: $('#story_id').val(),
+                        variable_type: $(this).data('type'),
+                        generated_id: $(this).data('generated-id')
+                    }
+                },
+                function (data) {
+                    var html = JSON.parse(data);
+
+                    // Find the correct span
+                    var valueInputContainer = storyPointForm.find('.story-point-variable-new-value');
+
+                    // In the form - remove the current value-input and add the new one
+                    valueInputContainer.html(html);
+                    /*
+                    // Find the right story point and append
+                    var storyPoint = $('div[data-story-point-id="' + storyPointID + '"]');
+    
+                    updateContainer = storyPoint.find('div.story-pointleads-to-container');
+    
+                    updateContainer.html("");
+    
+                    updateContainer.append(parsedData);*/
+    
+                }
+            );
+
+            return false; // Stop loop
+        }
+
+    });
+
+        return;
+    });
 
 });

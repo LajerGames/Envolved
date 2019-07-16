@@ -8931,6 +8931,9 @@ li.add-item a {
   border-radius: 8px 8px 0 0;
   margin-top: 20px;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .story-point-container-bottom {
