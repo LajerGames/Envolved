@@ -372,6 +372,10 @@ li.add-item a {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.story-point-container-middle {
+    max-height: 300px;
+    overflow: auto;
+}
 .story-point-container-bottom {
     padding: 0px 15px 15px 15px;
     border-radius: 0 0 8px 8px;
@@ -426,6 +430,29 @@ li.add-item a {
 .story-point-parent-no {
     margin-bottom: 15px;
 }
+
+/** Special storypoint CSS */
+.story-point-variable-condition-choose-variable {
+    display: inline-block;
+    width: 78%;
+}
+.story-point-variable-condition-choose-operator {
+    display: inline-block;
+    width: 20%;
+}
+.story-point-variable-condition-updatable-section .auto-generated-input-type {
+    display: inline-block;
+    width: 60%;
+}
+.story-point-variable-condition-updatable-section .story-point-choose-leads-to {
+    display: inline-block;
+    width: 38%;
+}
+.story-point-variable-condition-updatable-section .story-point-choose-leads-to-full-length {
+    display: block;
+    width: 100%;
+}
+
 .scroller {
   text-align:center;
   cursor:pointer;

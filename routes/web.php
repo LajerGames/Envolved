@@ -74,10 +74,12 @@ Route::group(['middleware' => 'auth'], function () {
     // Story points (still AJAX)
     Route::post('/insert-story-point', 'StoryPointsController@InsertStoryPoint');
     Route::post('/update-story-point-leads-to', 'StoryPointsController@UpdateStoryPointLeadsTo');
+    Route::post('/update-story-point-specialized-input', 'StoryPointsController@RenderStoryPointFormTypeInputsAjax');
     Route::post('/save-story-point-form', 'StoryPointsController@SaveStoryPointForm');
     Route::post('/render-story-point-type-form', 'StoryPointsController@RenderStoryPointTypeForm');
     Route::post('/render-story-point-container', 'StoryPointsController@GetStoryPointAndRenderContainer');
-    Route::post('/update-story-point-variable-input', 'StoryPointsController@RenderStoryPointFormTypeInputsChangeVariableValueInputAjax');
+    Route::post('/update-story-point-variable-input', 'StoryPointsController@RenderStoryPointFormTypeInputsTypeAjax');
+    Route::post('/update-story-point-variable-condition-choose-operator', 'StoryPointsController@RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperatorAjax');
     
     
     

@@ -15,8 +15,7 @@ class StoryPointsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function InsertStoryPoint()
-    {
+    public function InsertStoryPoint(){
         $story_id = intval($_POST['data']['story_id']);
         $story = Story::find($story_id);
 
@@ -206,7 +205,7 @@ class StoryPointsController extends Controller
         $data = [];
         parse_str($_POST['data']['data'], $data);
         $name = $data['name'];
-        $json = json_encode($data['json']);
+        $json = isset($data['json']) ? json_encode($data['json']) : '';
 
         // Get the story point
         $storyPoint = $this->GetStoryPoint($story_id, $story_point_id);
@@ -271,7 +270,7 @@ class StoryPointsController extends Controller
             <div class="story-point-shadow-container">
                 <span class="id-number-circle id-number-pos-top" style="background-color:'.$color.'">'.$storyPoint->number.'</span>
                 <div class="story-point-container-top" style="background-color:'.$color.'">
-                    '.$startStoryPoint.'<u>'.ucfirst(str_replace('_', ' ', $storyPoint->type)).'</u>: '.$storyPoint->name.'
+                    '.$startStoryPoint.'<u>'.ucfirst(str_replace('_', ' ', $storyPoint->type)).'</u>: <span class="story-point-container-top-name">'.$storyPoint->name.'</span>
                 </div>
                 <div class="story-point-container-middle" style="border-left:1px solid '.$color.';border-right:1px solid '.$color.';">
                     <div class="story-point-form-container"></div>
@@ -292,13 +291,13 @@ class StoryPointsController extends Controller
         $generatedID = uniqid();
 
         return '
-        <form name="story_point">
+        <form name="story_point" data-generated-id="'.$generatedID.'">
             <input type="hidden" name="story_point_id" value="'.$storyPoint->id.'" />
             <div class="form-group">
                 <label for="'.$generatedID.'_name">Name</label><br />
                 <input type="text" id="'.$generatedID.'_name" name="name" value="'.$storyPoint->name.'" placeholder="Name" class="form-control" />
             </div>
-            '.$this->RenderStoryPointFormTypeInputs($storyPoint, $generatedID).'
+            <div class="story-point-form-specialized-input">'.$this->RenderStoryPointFormTypeInputs($storyPoint, $generatedID).'</div>
             <a href="javascript:void(0);" class="btn btn-default hastip add-story-point-to-this" data-moretext="Shortcut: <b>ctrl + shift + a</b>">Add story-point</a>
             <a href="javascript:void(0);" class="btn btn-primary pull-right hastip update-story-point" data-moretext="Shortcut: <b>ctrl + shift + u</b>">Update</a>
             <div class="clear-both"></div>
@@ -306,13 +305,15 @@ class StoryPointsController extends Controller
         ';
     }
 
+    
+
     // section: Form Type Inputs
 
 
     private function RenderStoryPointFormTypeInputs(StoryPoint $storyPoint, $generatedID) {
         $return = '';
         $values = json_decode($storyPoint->instructions_json);
-//echo $storyPoint->type.' asdasdas';
+       
         switch($storyPoint->type) {
             case 'change_variable' :
                 $return = $this->RenderStoryPointFormTypeInputsChangeVariable($values, $generatedID, $storyPoint);
@@ -320,9 +321,68 @@ class StoryPointsController extends Controller
             case 'wait' :
                 $return = $this->RenderStoryPointFormTypeInputsWait($values, $generatedID);
                 break;
+            case 'condition' :
+                $return = $this->RenderStoryPointFormTypeVariableConditions($values, $generatedID, $storyPoint);
+                break;
         }
 
         return $return;
+    }
+
+    private function RenderStoryPointFormTypeInputsType($type, $value, $generatedID, $inputName, $inputID) {
+        
+        // Now find out which type we will return
+        $inputType = '';
+        $inputExtraFeatures = '';
+        $placeholderValue = 'Set new variable';
+
+        switch($type) {
+            case 'float':
+                $inputType = 'number';
+                $inputExtraFeatures = 'step=".01" min="0"';
+                break;
+            case 'number':
+                $inputType = 'number';
+                $inputExtraFeatures = 'step="1" min="0"';
+                break;
+            case 'text':
+                $inputType = 'text';
+                break;
+            default : // If we have no type, then make it disabled
+                $inputType = 'text';
+                $inputExtraFeatures = 'disabled="disabled"';
+                $placeholderValue = 'Choose variable first';
+                break;
+        }
+
+        return '<input type="'.$inputType.'" '.$inputExtraFeatures.' value="'.$value.'" id="'.$generatedID.'_'.$inputID.'" name="'.$inputName.'" class="form-control auto-generated-input-type" placeholder="'.$placeholderValue.'" />';
+    }
+
+    public function RenderStoryPointFormTypeInputsAjax() {
+
+        $data = $_POST['data'];
+        $storyPointID = intval($data['story_point_id']);
+
+        $storyPoint = StoryPoint::find($storyPointID);
+
+        echo json_encode($this->RenderStoryPointFormTypeInputs($storyPoint, $data['generated_id']));
+    }
+
+    //public function RenderStoryPointFormTypeInputsChangeVariableValueInputAjax() {
+    public function RenderStoryPointFormTypeInputsTypeAjax() {
+
+        $data = $_POST['data'];
+        
+        $story_id = intval($data['story_id']);
+
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        echo json_encode($this->RenderStoryPointFormTypeInputsType($data['variable_type'], '', $data['generated_id'], $data['input_name'], $data['input_id']));
+
+        return;
     }
 
     private function RenderStoryPointFormTypeInputsWait($values, $generatedID) {
@@ -339,75 +399,235 @@ class StoryPointsController extends Controller
 
     private function RenderStoryPointFormTypeInputsChangeVariable($values, $generatedID, StoryPoint $storyPoint) {
         
-        $seconds = isset($values->seconds) && intval($values->seconds) > 0 ? intval($values->seconds) : 0;
+        $chosenVariableID   = isset($values->variable_id) && intval($values->variable_id) > 0 ? intval($values->variable_id) : 0;
+        $chosenNewValue     = isset($values->new_value) && !empty($values->new_value) ? $values->new_value : '';
 
+        $story = $storyPoint->story;
         // Go through the registered variables and list them
         $variables = $storyPoint->story->variables;
-        $variableOptions = '';
 
-        foreach($variables as $variable) {
-            $variableOptions .= '<option data-id="'.$variable->id.'" data-type="'.$variable->type.'" data-generated-id="'.$generatedID.'" value="'.$variable->{'key'}.'" />';
-        }
+        $chosenVariable = $this->GetSpecificVariable($variables, $chosenVariableID);
+
+        // Go through the found variables in order to create options
+        $variableOptions = $this->GetAvailableVariables($story);
 
         return '
-        <div class="form-group">
-            <input type="hidden" name="json[variable-id]" value="0" class="form-control story-point-variable-choosen-variable" />
-            <label for="'.$generatedID.'_variable_id">Choose variable</label><br />
-            <input list="'.$generatedID.'_choose_variable" name="'.$generatedID.'_choose_variable" type="text" class="form-control story-point-variable-choose-variable" placeholder="Search variable" />
-            <datalist id="'.$generatedID.'_choose_variable">
-                '.$variableOptions.'
-            </datalist>
-        </div>
-        <div class="form-group">
-            <label for="'.$generatedID.'_new_value">Set new variable</label><br />
-            <span class="story-point-variable-new-value">'.$this->RenderStoryPointFormTypeInputsChangeVariableValueInput($variable->type, $variable->value, $generatedID).'</span>
+        <div class="form-group-container" data-input-name="json[value]" data-input-id="new_value">
+            <div class="form-group">
+                <input type="hidden" name="json[variable_id]" value="'.$chosenVariableID.'" class="form-control story-point-variable-choosen-variable" />
+                <label for="'.$generatedID.'_variable_id">Choose variable</label><br />
+                <input list="'.$generatedID.'_choose_variable" name="'.$generatedID.'_choose_variable" type="text" value="'.$chosenVariable['chosenVariableName'].'" class="form-control story-point-variable-choose-variable" placeholder="Search variable" />
+                <datalist id="'.$generatedID.'_choose_variable">
+                    '.$variableOptions.'
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label for="'.$generatedID.'_new_value">Set new variable</label><br />
+                <span class="story-point-variable-value-input">'.$this->RenderStoryPointFormTypeInputsType($chosenVariable['chosenVariableType'], $chosenNewValue, $generatedID, 'json[new_value]', 'new_value').'</span>
+            </div>
         </div>
         ';
     }
 
-    private function RenderStoryPointFormTypeInputsChangeVariableValueInput($variableType, $value, $generatedID) {
-    
-        // Now find out which type we will return
-        $inputType = '';
-        $inputExtraFeatures = '';
-        $placeholderValue = 'Set new variable';
-        switch($variableType) {
-            case 'number':
-                $inputType = 'number';
-                $inputExtraFeatures = 'step=".01" min="0"';
-                break;
-            case 'float':
-                $inputType = 'number';
-                $inputExtraFeatures = 'step="1" min="0"';
-                break;
-            case 'text':
-                $inputType = 'text';
-                break;
-            default : // If we have no type, then make it disabled
-                $inputType = 'text';
-                $inputExtraFeatures = 'disabled="disabled"';
-                $placeholderValue = 'Choose variable first';
-                break;
+    private function RenderStoryPointFormTypeVariableConditions($values, $generatedID, StoryPoint $storyPoint) {
+        
+        $return = '';
+
+        // Does this storypoint lead anywhere? If not, then notify the user that it needs to lead somewhere in order to have options.
+        if(!empty($storyPoint->leads_to_json)) {
+
+            // Story point leads somewhere, create the options
+
+            // Get the story
+            $story = $storyPoint->story;
+
+            // Get all the variables made for this story
+            $variableOptions = $this->GetAvailableVariables($story);
+
+            // Get all storypoints for this story-arch
+            $storyPoints = $storyPoint->StoryArch->storyPoints;
+
+            // Get leds to options
+            $leadTos = json_decode($storyPoint->leads_to_json);
+            $leadsToOptions = [];
+            foreach($leadTos as $leadsTo) {
+                $leadsToStoryPoint = $storyPoints->find($leadsTo);
+
+                $leadsToOptions[$leadsTo] = $leadsToStoryPoint->number.' '.$leadsToStoryPoint->name; 
+            }
+
+            // Story point may or may not have filled out leads-tos in the instructions_json - get them
+            
+            // Foreach leads to create a
+            $leadsTos = json_decode($storyPoint->leads_to_json);
+
+            // Create a record for each leads_to in this story point
+            $number = 0;
+            foreach($leadsTos as $leadsToID) {
+
+                // Create leads-to condition record
+                $return .= $this->RenderStoryPointFormTypeVariableConditionRenderRecord($storyPoint, $values, (++$number), $variableOptions, $generatedID, $leadsToOptions);
+
+            }
+            // One more for the else fallback
+            $return .= $this->RenderStoryPointFormTypeVariableConditionRenderRecord($storyPoint, $values, 0, $variableOptions, $generatedID, $leadsToOptions);
+
+        } else {
+
+            // Story point leads nowhere, tell the user that it needs to.
+            $return = 'Story point leads nowhere yet, create leads in order to create the conditions. <br /><br />';
+            
         }
 
-        return '<input type="number" type="'.$inputType.'" '.$inputExtraFeatures.' value="'.$value.'" id="'.$generatedID.'_new_value" name="json[new_value]" class="form-control" placeholder="'.$placeholderValue.'" />';
+        return $return;
+
     }
 
-    public function RenderStoryPointFormTypeInputsChangeVariableValueInputAjax() {
+    private function RenderStoryPointFormTypeVariableConditionRenderRecord(StoryPoint $storyPoint, $values, $number, $variableOptions, $generatedID, $leadsTos) {
 
-        $data = $_POST['data'];
-        
-        $story_id = intval($data['story_id']);
+        $headline = $number == 0 
+            ? 'Else'
+            : (
+                $number > 1
+                    ? '#'.$number.' Else if'
+                    : '#'.$number.' If'
+            );
 
-        $story = Story::find($story_id);
+        // Collect the possible leads to options
+        $leadsToOptions = '';
+        foreach($leadsTos as $storyPointID => $concattedName) {
+            $leadsToOptions .= '<option data-id="'.$storyPointID.'" value="'.$concattedName.'" />';
+        }
 
-        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
-            return redirect('/stories')->with('error', 'Access denied');
+        // So, do we have som values (from instructions_json)
+        $chosenVariableID   = '';
+        $chosenVariableName = '';
+        $chosenVariableType = '';
+        $chosenOperator     = '';
+        $chosenValue        = '';
+        $chosenLeadsToID    = '';
+        $chosenLeadsToName  = '';
+        if(count($values) > 0) {
 
-        echo json_encode($this->RenderStoryPointFormTypeInputsChangeVariableValueInput($data['variable_type'], '', $data['generated_id']));
+            // Okay, we have at least tome values - do we have any relevant for this record?
+            if(property_exists($values, $number) && is_object($values->{$number})) {
 
-        return;
+                $instructions = $values->{$number};
+
+                // We will fetch different variables if we're only looking at the fallback else statement
+                if($number > 0) {
+                    // We have settings for this - let's extract all the information we need
+
+                    // Get the story
+                    $story = $storyPoint->story;
+
+                    // Get info about the variable in question
+                    $variable = $this->GetSpecificVariable($story->variables, $instructions->variable);
+
+                    // So, save all the neccesary information to pre-fill information in this record
+                    $chosenVariableID   = $instructions->variable;
+                    $chosenVariableName = $variable['chosenVariableName'];
+                    $chosenVariableType = $variable['chosenVariableType'];
+                    $chosenOperator     = $instructions->operator;
+                    $chosenValue        = $instructions->value;
+                }
+                
+                // Theese are needed everywhere, both in if statements and else statements
+                $chosenLeadsToID    = $instructions->leads_to;
+                $chosenLeadsToName  = $leadsTos[$instructions->leads_to];
+            }
+
+        }
+
+        // We'll build it differently if we're rendering the else fallback
+        $variableAndOperatorGroup   = '';
+        $valueInput                 = '';
+        $elseHeadline               = '';
+        $leadsToClass               = '';
+        if($number > 0) {
+
+            // Set the Variable and Operator Group
+            $variableAndOperatorGroup = '
+            <div class="form-group">
+                <input type="hidden" name="json['.$number.'][variable]" value="'.$chosenVariableID.'" class="form-control story-point-variable-choosen-variable" />
+                <label for="'.$generatedID.'_variable_id">'.$headline.'</label><br />
+                <input
+                    list="'.$generatedID.'_variable_condition_'.$number.'_variable"
+                    name="'.$generatedID.'_variable_condition_'.$number.'"
+                    type="text"
+                    value="'.$chosenVariableName.'" 
+                    class="form-control story-point-variable-choose-variable story-point-variable-condition-choose-variable"
+                    placeholder="Search variable"
+                />
+                <datalist id="'.$generatedID.'_variable_condition_'.$number.'_variable">
+                    '.$variableOptions.'
+                </datalist>
+                <span class="story-point-variable-condition-operator-section">
+                    '.$this->RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperator($chosenVariableType, $chosenOperator, $number, $generatedID).'
+                </span>
+            </div>
+            ';
+
+            // Set the value input
+            $valueInput = '<span class="story-point-variable-value-input">'.$this->RenderStoryPointFormTypeInputsType($chosenVariableType, $chosenValue, $generatedID, 'json['.$number.'][value]', 'value_'.$number).'</span>';
+            
+        } else {
+            $elseHeadline = '<label for="'.$generatedID.'_variable_condition_'.$number.'_leads_to">'.$headline.'</label><br />';
+
+            $leadsToClass = ' story-point-choose-leads-to-full-length';
+        }
+
+        return '
+        <div class="form-group-container" data-number="'.$number.'" data-input-name="json['.$number.'][value]" data-input-id="value">
+            '.$variableAndOperatorGroup.$elseHeadline.'            
+            <div class="form-group story-point-variable-condition-updatable-section">
+                '.$valueInput.'
+                <input type="hidden" name="json['.$number.'][leads_to]" value="'.$chosenLeadsToID.'" class="form-control story-point-chosen-leads-to" />
+                <input
+                    list="'.$generatedID.'_variable_condition_'.$number.'_leads_to_list"
+                    type="text"
+                    name="'.$generatedID.'_variable_condition_'.$number.'_leads_to"
+                    id="'.$generatedID.'_variable_condition_'.$number.'_leads_to"
+                    value="'.$chosenLeadsToName.'"
+                    class="form-control story-point-choose-leads-to'.$leadsToClass.'"
+                />
+                <datalist id="'.$generatedID.'_variable_condition_'.$number.'_leads_to_list">
+                    '.$leadsToOptions.'
+                </datalist>
+            </div>
+        </div>
+        ';
+
     }
+
+        private function RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperator($chosenVariableType, $value, $number, $generatedID) {
+            $return = '
+            <select name="json['.$number.'][operator]" id="'.$generatedID.'_variable_condition_'.$number.'_operator" value="'.$generatedID.'_variable_condition_'.$number.'_operator" class="form-control story-point-variable-condition-choose-operator">
+            ';
+
+            if($chosenVariableType == 'text') {
+                $return .= '
+                <option value="equals" '.($value == 'equals' ? 'checked' : '').'>=</option>
+                ';
+            } else {
+                $return .= '
+                <option value="equals" '.($value == 'equals' ? 'checked' : '').'>=</option>
+                <option value="smaller" '.($value == 'smaller' ? 'checked' : '').'><</option>
+                <option value="larger" '.($value == 'larger' ? 'checked' : '').'>></option>
+                ';
+            }
+
+            $return .= '</select>';
+
+            return $return;
+        }
+
+        public function RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperatorAjax() {
+            $data = $_POST['data'];
+
+            echo json_encode($this->RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperator($data['type'], '', $data['number'], $data['generated_id']));
+        }
+
 
     public function SavePost(StoryPoint $storyPoint, $number)
     {
@@ -420,6 +640,45 @@ class StoryPointsController extends Controller
         $storyPoint->leads_to_json      = "";
         $storyPoint->save();
     }
+
+
+    // Get stuff - should probably be disbursed between other files
+    private function GetAvailableVariables(Story $story) {
+        $variables = $story->variables;
+
+        // Go through the found variables in order to create options
+        $variableOptions = '';
+        foreach($variables as $variable) {
+            $variableOptions .= '<option data-id="'.$variable->id.'" data-type="'.$variable->type.'" value="'.$variable->{'key'}.'" />';
+        }
+
+        return $variableOptions;
+    }
+
+    private function GetSpecificVariable($variables, $chosenVariableID) {
+        // So see if we found a pre-chosen variable? Will only happen if we're updating.
+        $return = [
+            'chosenVariableName' => '',
+            'chosenVariableType' => ''
+        ];
+        if($chosenVariableID > 0) {
+
+            // Prechosen variable found - let's see if it exists?
+            $chosenVariable = $variables->find($chosenVariableID);
+
+            if($chosenVariable) {
+                // Prechosen Variable exists - save it in a variable
+                $return['chosenVariableName'] = $chosenVariable->{'key'};
+                $return['chosenVariableType'] = $chosenVariable->{'type'};
+            }
+
+        }
+
+        return $return;
+    }
+
+
+
 
     // Temporary printr
     private function printr($arr) {

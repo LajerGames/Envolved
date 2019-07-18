@@ -25,7 +25,7 @@ return [
     'story_points' => [
         'change_variable' => ['Change Variable', 'orange'],
         'wait' => ['Wait', 'grey'],
-        'condition' => ['Condition', 'purple'],
+        'condition' => ['Variable Condition', 'purple'],
         'change_master_data' => ['Change Master Data', 'pink'],
         'text_incomming' => ['Text, Incomming', 'lightgreen'],
         'text_outgoing' => ['Text, Outgoing', 'green'],

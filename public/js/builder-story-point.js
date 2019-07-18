@@ -275,6 +275,27 @@ $(document).ready(function () {
 
             // Let's update the parent story point's leads-to graphics so it's visible that something has changed
             if (parentStoryPointID > 0) {
+
+                // Decide whether or not we need to update the storypoint form.
+
+                // Find the story point container that we've added a "leads-to" to.
+                var storyPointContainer = $('div.panel-body').find('div[data-story-point-id="' + parentStoryPointID + '"]'),
+                    storyPointType = storyPointContainer.data('story-point-type');
+
+                // Now some story-point-types may need to have their specialized input refreshed on new "leads-to". Find out if this is one of them
+                switch (storyPointType) {
+                    case "condition":
+
+                        // Find the appropriate container
+                        var storyPointSpecializedInputContainer = storyPointContainer.find('div.story-point-form-specialized-input'),
+                            generatedID = storyPointContainer.find('form').data('generated-id');
+
+                        // This one needs to - let's make sure that happens.
+                        updateStoryPointSpecializedInput(parentStoryPointID, storyPointSpecializedInputContainer, generatedID);
+
+                        break;
+                }
+
                 updateStoryPointLeadsTo(parentStoryPointID);
             }
 
@@ -283,6 +304,28 @@ $(document).ready(function () {
 
             // Reset the search fields.
             resetSearchFields();
+        });
+    }
+
+    // Update the form input that makes each 
+    function updateStoryPointSpecializedInput(storyPointID, storyPointSpecializedInputContainer, generatedID) {
+
+        var container = storyPointSpecializedInputContainer;
+
+        $.post('/update-story-point-specialized-input', {
+            _token: $('meta[name=csrf-token]').attr('content'),
+            _method: 'POST',
+            data: {
+                story_point_id: storyPointID,
+                generated_id: generatedID
+            }
+        }, function (data) {
+
+            // Now we've recieved a new rendition of the specialized form input
+            var parsedData = JSON.parse(data);
+
+            // Now update the specialized container with the new input
+            container.html(parsedData);
         });
     }
 
@@ -328,7 +371,6 @@ $(document).ready(function () {
             if (parsedData == 'error') {
                 // TODO: Error occured - take appropriate action
             } else {
-                console.log(parsedData);
                 var storyPointID = parsedData.story_point_id,
                     html = parsedData.story_point_html;
 
@@ -336,8 +378,6 @@ $(document).ready(function () {
 
                 panelBody.append(html);
             }
-
-            console.log(html);
         });
     }
 
@@ -431,7 +471,7 @@ $(document).ready(function () {
 
             var parsedData = JSON.parse(data);
 
-            that.closest('div.story-point-container').find('div.story-point-container-top').html(parsedData);
+            that.closest('div.story-point-container').find('div.story-point-container-top span.story-point-container-top-name').html(parsedData);
 
             that.attr('disabled', false);
             that.html('Update');
@@ -459,24 +499,27 @@ $(document).ready(function () {
     }
 
     /*
-         STORY POINT SPECIAL JAVASCRIPT
+         STORY POINT SPECIAL TYPE JAVASCRIPT
     */
 
     // Variable
 
-    // Catch datalist change event
-    $('#app').bind('change', '.story-point-variable-choose-variable', function () {
+    // Catch datalist change event (Works for everywhere where you can choose a variable)
+    $('div.panel-body').on('change', '.story-point-variable-choose-variable', function () {
 
-        // This may seem like a wierd way to find the real input - but there can be only one, since there can be only one storyPoint open at one time
-        var selectecVariable = $('#app').find('.story-point-variable-choose-variable');
+        var selectecVariable = $(this);
         var storyPointForm = selectecVariable.closest('form');
+        var generatedID = storyPointForm.data('generated-id');
 
         storyPointForm.find('option').each(function () {
 
             if ($(this).val() == selectecVariable.val()) {
 
+                // Find the correct chosen-variable input
+                var formGroupContainer = selectecVariable.closest('div.form-group-container');
+
                 // Set the hidden input field to the value in the data field
-                storyPointForm.find('.story-point-variable-choosen-variable').val($(this).data('id'));
+                formGroupContainer.find('.story-point-variable-choosen-variable').val($(this).data('id'));
 
                 // Now create the field selectecVariable will contain the value
                 $.post('/update-story-point-variable-input', {
@@ -485,22 +528,18 @@ $(document).ready(function () {
                     data: {
                         story_id: $('#story_id').val(),
                         variable_type: $(this).data('type'),
-                        generated_id: $(this).data('generated-id')
+                        generated_id: generatedID,
+                        input_name: formGroupContainer.data('input-name'),
+                        input_id: formGroupContainer.data('input-id')
                     }
                 }, function (data) {
                     var html = JSON.parse(data);
 
                     // Find the correct span
-                    var valueInputContainer = storyPointForm.find('.story-point-variable-new-value');
+                    var valueInputContainer = formGroupContainer.find('.story-point-variable-value-input');
 
                     // In the form - remove the current value-input and add the new one
                     valueInputContainer.html(html);
-                    /*
-                    // Find the right story point and append
-                    var storyPoint = $('div[data-story-point-id="' + storyPointID + '"]');
-                          updateContainer = storyPoint.find('div.story-pointleads-to-container');
-                          updateContainer.html("");
-                          updateContainer.append(parsedData);*/
                 });
 
                 return false; // Stop loop
@@ -508,6 +547,60 @@ $(document).ready(function () {
         });
 
         return;
+    });
+
+    // Variable Condition - on change variable - set operator-options accordingly
+    $('div.panel-body').on('change', '.story-point-variable-condition-choose-variable', function () {
+
+        var selectecVariable = $(this);
+        var storyPointForm = selectecVariable.closest('form');
+        var generatedID = storyPointForm.data('generated-id');
+
+        storyPointForm.find('option').each(function () {
+
+            if ($(this).val() == selectecVariable.val()) {
+
+                // Find the correct chosen-variable input
+                var formGroupContainer = selectecVariable.closest('div.form-group-container');
+
+                $.post('/update-story-point-variable-condition-choose-operator', {
+                    _token: $('meta[name=csrf-token]').attr('content'),
+                    _method: 'POST',
+                    data: {
+                        type: $(this).data('type'),
+                        number: formGroupContainer.data('number'),
+                        generated_id: generatedID
+                    }
+                }, function (data) {
+                    var html = JSON.parse(data);
+
+                    // Find the correct span
+                    var valueInputContainer = formGroupContainer.find('.story-point-variable-condition-operator-section');
+
+                    // In the form - remove the current value-input and add the new one
+                    valueInputContainer.html(html);
+                });
+
+                return false; // Stop loop
+            }
+        });
+    });
+
+    // Leads to chooser (Used in multiple story-point types)
+    $('div.panel-body').on('change', '.story-point-choose-leads-to', function () {
+
+        var selectecVariable = $(this);
+        var storyPointForm = selectecVariable.closest('form');
+
+        storyPointForm.find('option').each(function () {
+
+            if ($(this).val() == selectecVariable.val()) {
+
+                selectecVariable.closest('div.form-group-container').find('.story-point-chosen-leads-to').val($(this).data('id'));
+
+                return false; // Stop loop
+            }
+        });
     });
 });
 
