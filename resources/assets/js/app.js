@@ -199,6 +199,20 @@ $(document).ready(function() {
 
     });
 
+    // Remove published time if published is set to no
+    $('select#published').on('change', function() {
+    
+        // Find the closest form, then find the fields within that form to deactivate.
+        var form = $(this).closest('form');
+
+        // Deactivate or activate (No, toggle is no good here...)
+        var active = $(this).val() == 0;
+
+        // Do the action
+        form.find('input#days_ago').val('').attr('disabled', active);
+        form.find('input#time').val('').attr('disabled', active);
+    });
+
     // Make sure we can remove added sections in the News module
     $('div.section').on('click', 'a.remove-link', function() {
         if(confirm('Remove section?')) {

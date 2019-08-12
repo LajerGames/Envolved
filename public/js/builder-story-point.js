@@ -453,25 +453,35 @@ $(document).ready(function () {
 
         var storyID = $('#story_id').val(),
             that = $(this),
+            form = that.closest('form'),
             storyPointID = that.closest('div.story-point-container').data('story-point-id');
 
         // Say that we're updating
         that.attr('disabled', true);
         that.html('wait...');
-
         $.post('/save-story-point-form', {
             _token: $('meta[name=csrf-token]').attr('content'),
             _method: 'POST',
             data: {
                 story_id: storyID,
                 story_point_id: storyPointID,
-                data: that.closest('form').serialize()
+                data: form.serialize()
             }
         }, function (data) {
 
             var parsedData = JSON.parse(data);
 
             that.closest('div.story-point-container').find('div.story-point-container-top span.story-point-container-top-name').html(parsedData);
+
+            // Now are there any special functions here?
+            var runJS = form.find('input.run-js-on-save');
+            if (runJS !== undefined) {
+                switch (runJS.data('js-function')) {
+                    case 'addLeadsToToStoryPoint':
+                        addLeadsToToStoryPoint(storyPointID, runJS.data('id'), runJS.data('type'));
+                        break;
+                }
+            }
 
             that.attr('disabled', false);
             that.html('Update');
@@ -597,6 +607,106 @@ $(document).ready(function () {
             if ($(this).val() == selectecVariable.val()) {
 
                 selectecVariable.closest('div.form-group-container').find('.story-point-chosen-leads-to').val($(this).data('id'));
+
+                return false; // Stop loop
+            }
+        });
+    });
+
+    // Redirect - change type
+    $('div.panel-body').on('change', '.story-point-redirect-select-type', function () {
+
+        // Get some relevant values
+        var thisFormContainer = $(this).closest('.story-point-form-container'),
+            destinationDatalist = thisFormContainer.find('datalist'),
+            storyPointID = thisFormContainer.find('input[name="story_point_id"]').val(),
+            selectedIDInput = thisFormContainer.find('.story-point-redirect-selected-id'),
+            runJSOnSave = thisFormContainer.find('.run-js-on-save');
+
+        $.post('/update-story-point-redirect', {
+            _token: $('meta[name=csrf-token]').attr('content'),
+            _method: 'POST',
+            data: {
+                story_point_id: storyPointID,
+                type: $(this).val()
+            }
+        }, function (data) {
+
+            var html = JSON.parse(data);
+
+            // Insert new data into the datalist
+            destinationDatalist.html(html);
+
+            // Set the hidden field that saves the ID of the chosen destination to nothing
+            thisFormContainer.find('.story-point-redirect-selected-id').val('');
+
+            // Set the chosen destination field to ''
+            thisFormContainer.find('.story-point-redirect-choose-destination').val('');
+
+            // Set some important values on the run JS on save input - to ''
+            runJSOnSave.data('id', '');
+            runJSOnSave.data('type', '');
+        });
+    });
+
+    // Redirect - choose destination
+    $('div.panel-body').on('change', '.story-point-redirect-choose-destination', function () {
+
+        var selectedDestination = $(this),
+            thisFormContainer = $(this).closest('.story-point-form-container'),
+            destinationDatalist = thisFormContainer.find('datalist'),
+            selectedIDInput = thisFormContainer.find('.story-point-redirect-selected-id'),
+            runJSOnSave = thisFormContainer.find('.run-js-on-save');
+
+        destinationDatalist.find('option').each(function () {
+
+            if ($(this).val() == selectedDestination.val()) {
+
+                // Set the appropriate value in the hidden ID field
+                selectedIDInput.val($(this).data('id'));
+
+                // Set some important values on the run JS on save input - to make sure we do the right thing after save
+                runJSOnSave.data('id', $(this).data('id'));
+                runJSOnSave.data('type', thisFormContainer.find('.story-point-redirect-select-type option:selected').val());
+
+                return false; // Stop loop
+            }
+        });
+    });
+
+    // Redirect - update leads-to
+    var addLeadsToToStoryPoint = function addLeadsToToStoryPoint(storyPointID, ref, type) {
+
+        $.post('/handle-story-point-reference', {
+            _token: $('meta[name=csrf-token]').attr('content'),
+            _method: 'POST',
+            data: {
+                story_point_id: storyPointID,
+                ref: ref,
+                type: type,
+                action: 'replace'
+            }
+        }, function (data) {
+
+            // Update storypoint leads to
+            updateStoryPointLeadsTo(storyPointID);
+        });
+    };
+
+    // Text, incomming - choose sender
+    $('div.panel-body').on('change', '.story-point-text-incomming-sender-name', function () {
+
+        var selectedDestination = $(this),
+            thisFormContainer = $(this).closest('.story-point-form-container'),
+            destinationDatalist = thisFormContainer.find('datalist'),
+            selectedIDInput = thisFormContainer.find('.story-point-text-incomming-sender-id');
+
+        destinationDatalist.find('option').each(function () {
+
+            if ($(this).val() == selectedDestination.val()) {
+
+                // Set the appropriate value in the hidden ID field
+                selectedIDInput.val($(this).data('id'));
 
                 return false; // Stop loop
             }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Story;
+use App\StoryArch;
 use App\StoryPoint;
 use App\Common\Permission;
 use App\Common\GetNewestValues;
@@ -75,7 +76,7 @@ class StoryPointsController extends Controller
 
         } else  {
 
-            $this->HandleReference($parentStoryPoint, $storyPoint->id);
+            $this->HandleReference($parentStoryPoint, ['point' => $storyPoint->id]);
 
             $parentStoryPointID = $parentStoryPoint->id;
 
@@ -98,19 +99,21 @@ class StoryPointsController extends Controller
     /**
      * Adds or removes a ref from a story point
      */
-    private function HandleReference(StoryPoint $storyPoint, $ref, $type = 'add') { 
+    private function HandleReference(StoryPoint $storyPoint, $ref, $action = 'add') {
 
         $leadsTo = [];
         if(!empty($storyPoint->leads_to_json)) {
             $leadsTo = (array)json_decode($storyPoint->leads_to_json);
         }
 
-        switch($type) {
+        switch($action) {
             case 'add' :
                 // Let's add the $ref to the leads_to_json in the instructions_json
-                if(!in_array($ref, $leadsTo)) {
-                    $leadsTo[] = $ref;
-                }
+                $leadsTo[] = $ref;
+                break;
+            case 'replace' :
+                // Let's replace everything in the leads_to_json with whatever we recieved
+                $leadsTo = [$ref];
                 break;
         }
 
@@ -119,6 +122,26 @@ class StoryPointsController extends Controller
         $storyPoint->save();
 
         return;
+    }
+
+    /**
+     * Handle reference called from AJAX
+     */
+    public function HandleReferenceAjax() {
+
+       $data = $_POST['data'];
+
+       $storyPointID = intval($data['story_point_id']);
+
+       if($storyPointID > 0) {
+            $storyPoint = StoryPoint::find($storyPointID);
+
+            // Reference looks different if we'rereferencing an arch
+            $reference = $data['type'] == 'story_arch' ? ['arch' => intval($data['ref'])] : ['point' => intval($data['ref'])];
+            $this->HandleReference($storyPoint, $reference, $data['action']);
+       }
+
+       return;
     }
 
     /**
@@ -150,16 +173,28 @@ class StoryPointsController extends Controller
         $return = '';
         if(isset($storyPoint->leads_to_json) && !empty($storyPoint->leads_to_json)) {
             $leadsToJson = json_decode($storyPoint->leads_to_json);
+            
+            foreach($leadsToJson as $leadsToID) {
 
-            foreach($leadsToJson as $storyPointID) {
-
-                // Get this particular story point
-                $storyPoint = $story->StoryPoints->find(intval($storyPointID));
-
-                // Get the color
-                $color = config('constants.story_points')[$storyPoint->type][1];
-
-                $return .= '<a class="id-number-circle story-point-leads-to-reference" data-story-point-no="'.$storyPoint->number.'" style="background-color:'.$color.'">'.$storyPoint->number.'</a>';
+                if(is_object($leadsToID)) {
+                    // leadsToID is an object and it might lead to either a storyarch of a storypoint - find out which
+                    if(property_exists($leadsToID, 'point')) {
+                        // This leads to a storypoint
+    
+                        // Get this particular story point
+                        $storyPoint = $story->StoryPoints->find(intval($leadsToID->point));
+    
+                        // Get the color
+                        $color = config('constants.story_points')[$storyPoint->type][1];
+    
+                        $return .= '<a class="id-number-circle story-point-leads-to-reference" data-story-point-no="'.$storyPoint->number.'" style="background-color:'.$color.'">'.$storyPoint->number.'</a>';
+                    }
+                    else {
+                        // This leads to a storyarch
+                        $return .= '<a href="/stories/'.($storyPoint->story->id).'/builder/arch/'.$leadsToID->arch.'" class="id-number-circle" style="background-color:#0D0">A</a>';
+                    }
+    
+                }
 
             }
 
@@ -290,6 +325,30 @@ class StoryPointsController extends Controller
 
         $generatedID = uniqid();
 
+        // Some story points has special functions let's render those here.
+        $specialElement = '';
+        switch($storyPoint->type) {
+            case 'redirect' :
+                $specialElement = '<input type="hidden" class="run-js-on-save" data-js-function="addLeadsToToStoryPoint" data-type="" data-id="" value="" />';
+                break;
+        }
+
+        // Get addable storyPoints
+        $addableStoryPoints = $this->GetListOfAddableStoryPoints($storyPoint);
+        if($addableStoryPoints)
+        {
+            // Did we get an array in return? If we did, then make sure that we only enable addition of the ones that we allow
+            /*if(is_array($addableStoryPoints)) {
+                // Todo: enforce list
+            }*/
+            $addStoryPointButton = '<a href="javascript:void(0);" class="btn btn-default hastip add-story-point-to-this" data-moretext="Shortcut: <b>ctrl + shift + a</b>">Add story-point</a>';
+        }
+        else
+        {
+            $addStoryPointButton = '';
+        }
+
+
         return '
         <form name="story_point" data-generated-id="'.$generatedID.'">
             <input type="hidden" name="story_point_id" value="'.$storyPoint->id.'" />
@@ -298,11 +357,83 @@ class StoryPointsController extends Controller
                 <input type="text" id="'.$generatedID.'_name" name="name" value="'.$storyPoint->name.'" placeholder="Name" class="form-control" />
             </div>
             <div class="story-point-form-specialized-input">'.$this->RenderStoryPointFormTypeInputs($storyPoint, $generatedID).'</div>
-            <a href="javascript:void(0);" class="btn btn-default hastip add-story-point-to-this" data-moretext="Shortcut: <b>ctrl + shift + a</b>">Add story-point</a>
+            '.$specialElement.$addStoryPointButton.'
             <a href="javascript:void(0);" class="btn btn-primary pull-right hastip update-story-point" data-moretext="Shortcut: <b>ctrl + shift + u</b>">Update</a>
             <div class="clear-both"></div>
         </form>
         ';
+    }
+
+    /**
+     * there are several rules that decides which (if any) new storypoints can be added to this - ask for a list of story points that can be added to this (false if none true if all)
+     * Returns: []]
+     */
+    private function GetListOfAddableStoryPoints(StoryPoint $storyPoint) {
+
+        // So, type of story point is a big deciding factor in which type of storypoint we can add
+        $addStoryPoints = true;
+        switch($storyPoint->type) {
+            case 'redirect' : // You can never add storypoints to redirect
+                $addStoryPoints = false;
+                break;
+            // Now for a list of types that can only have 1 child - if it already has that, then block the addition of more
+            case 'change_variable' :
+            case 'wait' :
+            case 'text_incomming' : // incomming texts immidiately leads to a new story-point - but it can only lead to one
+            case 'phone_call_incomming_voice' : // incomming voice immidiately leads to a new story-point - but it can only lead to one
+            case 'insert_news_item' :
+
+                // If we wind up in here, that means that we can only add one story-point-child to this story point.
+                // If that is already done - then block for the addition of more
+
+                if(!empty($storyPoint->leads_to_json)) {
+
+                    $addStoryPoints = false;
+
+                }
+
+                break;
+        }
+
+        // Only proceed if we're even allowed to add more story-points
+        if($addStoryPoints) {
+
+            // If this already leads to a reply (either text or voice) - then we can only add more of those
+
+            // Does this already lead somewhere? If yes, then go through them.
+            if(!empty($storyPoint->leads_to_json)) {
+
+                // Yes, story point leads somewhere. Check what type it leads to? (Only neccesary to check the first one)
+                $leadsTos = json_decode($storyPoint->leads_to_json);
+                foreach($leadsTos as $leadsTo) {
+
+                    // This is only relevant if it leads to a point, not it it leads to an arch
+                    if(is_object($leadsTo) && property_exists($leadsTo, 'point')) {
+
+                        // This leads to a story point - what storypoint is it
+                        $leadsToStoryPoint = $storyPoint->story->storypoints->find($leadsTo->point);
+
+                        switch($leadsToStoryPoint->type) {
+                            case 'text_outgoing' :
+                            case 'phone_call_outgoing_voice' :
+
+                                // If we've added one of this type, then we can only add this type for the future - anything else wont make sense.
+                                $addStoryPoints = [$leadsToStoryPoint->type];
+
+                                break;
+                        }
+
+                    }
+
+
+                    break;
+                }
+
+            }
+
+        }
+
+        return $addStoryPoints;
     }
 
     
@@ -313,7 +444,7 @@ class StoryPointsController extends Controller
     private function RenderStoryPointFormTypeInputs(StoryPoint $storyPoint, $generatedID) {
         $return = '';
         $values = json_decode($storyPoint->instructions_json);
-       
+       //echo $storyPoint->type;
         switch($storyPoint->type) {
             case 'change_variable' :
                 $return = $this->RenderStoryPointFormTypeInputsChangeVariable($values, $generatedID, $storyPoint);
@@ -324,6 +455,13 @@ class StoryPointsController extends Controller
             case 'condition' :
                 $return = $this->RenderStoryPointFormTypeVariableConditions($values, $generatedID, $storyPoint);
                 break;
+            case 'redirect' :
+                $return = $this->RenderStoryPointFormTypeRedirect($values, $generatedID, $storyPoint);
+                break;
+            case 'text_incomming' :
+                $return = $this->RenderStoryPointFormTextIncomming($values, $generatedID, $storyPoint);
+                break;
+                
         }
 
         return $return;
@@ -447,13 +585,18 @@ class StoryPointsController extends Controller
             // Get all storypoints for this story-arch
             $storyPoints = $storyPoint->StoryArch->storyPoints;
 
-            // Get leds to options
+            // Get leads to options
             $leadTos = json_decode($storyPoint->leads_to_json);
             $leadsToOptions = [];
             foreach($leadTos as $leadsTo) {
-                $leadsToStoryPoint = $storyPoints->find($leadsTo);
 
-                $leadsToOptions[$leadsTo] = $leadsToStoryPoint->number.' '.$leadsToStoryPoint->name; 
+                // This can only lead to story-points so let's assume that
+
+                if(is_object( $leadsTo) && property_exists($leadsTo, 'point')) {
+                    $leadsToStoryPoint = $storyPoints->find($leadsTo->point);
+
+                    $leadsToOptions[$leadsTo->point] = $leadsToStoryPoint->number.' '.$leadsToStoryPoint->name; 
+                }
             }
 
             // Story point may or may not have filled out leads-tos in the instructions_json - get them
@@ -607,13 +750,13 @@ class StoryPointsController extends Controller
 
             if($chosenVariableType == 'text') {
                 $return .= '
-                <option value="equals" '.($value == 'equals' ? 'checked' : '').'>=</option>
+                <option value="equals" '.($value == 'equals' ? 'selected' : '').'>=</option>
                 ';
             } else {
                 $return .= '
-                <option value="equals" '.($value == 'equals' ? 'checked' : '').'>=</option>
-                <option value="smaller" '.($value == 'smaller' ? 'checked' : '').'><</option>
-                <option value="larger" '.($value == 'larger' ? 'checked' : '').'>></option>
+                <option value="equals" '.($value == 'equals' ? 'selected' : '').'>=</option>
+                <option value="smaller" '.($value == 'smaller' ? 'selected' : '').'><</option>
+                <option value="larger" '.($value == 'larger' ? 'selected' : '').'>></option>
                 ';
             }
 
@@ -628,7 +771,114 @@ class StoryPointsController extends Controller
             echo json_encode($this->RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperator($data['type'], '', $data['number'], $data['generated_id']));
         }
 
+    private function RenderStoryPointFormTypeRedirect($values, $generatedID, StoryPoint $storyPoint) {
 
+        $type           = is_object($values) && property_exists($values, 'type') ? $values->type : '';
+        $redirectID     = is_object($values) && property_exists($values, 'redirect_id') ? intval($values->redirect_id) : '';
+        $redirectValue  = '';
+
+        // Do we have a redirectID? If so, then please write find the correct value
+        if($redirectID > 0 && !empty($type)) {
+
+            // So which type are are we looking at?
+            switch($type) {
+                case 'story_point' :
+                    
+                    // Get the correct storypoint
+                    $leadsToStoryPoint = $storyPoint->story->storypoints->find($redirectID);
+
+                    $redirectValue = $leadsToStoryPoint->name;
+
+                    break;
+                case 'story_arch' :
+
+                    // Get the correct storypoint
+                    $leadsToStoryArch = $storyPoint->story->storyarchs->find($redirectID);
+
+                    $redirectValue = $leadsToStoryArch->name;
+
+                    break;
+            }
+
+        }
+
+        return '
+        <div class="form-group">
+            <label for="'.$generatedID.'_redirect_type">Redirect to</label><br />
+            <select id="'.$generatedID.'_redirect_type" name="json[type]" class="form-control story-point-redirect-select-type">
+                <option value="story_point" '.($type == 'story_point' ? 'selected' : '').'>Story point in this arch</option>
+                <option value="story_arch" '.($type == 'story_arch' ? 'selected' : '').'>Story Arch</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="hidden" name="json[redirect_id]" value="'.$redirectID.'" class="form-control story-point-redirect-selected-id" />
+            <label for="'.$generatedID.'_redirect_id">Choose destination</label><br />
+            <input list="'.$generatedID.'_choose_destination" name="'.$generatedID.'_redirect_id" type="text" value="'.$redirectValue.'" class="form-control story-point-redirect-choose-destination" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_destination">
+                '.$this->RenderStoryPointFormRedirectDestinationOptions($storyPoint, $type).'
+            </datalist>
+        </div>
+        ';
+    }
+
+        private function RenderStoryPointFormRedirectDestinationOptions(StoryPoint $storyPoint, $type = '') {
+
+            $options = '';
+            switch($type) {
+                case 'story_arch' :
+                    
+                    $options = $this->GetAvailableStoryArchs($storyPoint->story);
+
+                    break;
+                default :
+
+                    $options = $this->GetAvailableStoryPoints($storyPoint->storyarch, [$storyPoint->id]);
+
+                    break;
+            }
+            
+            return $options;
+        }
+
+        public function RenderStoryPointFormRedirectTypeAjax() {
+            $data = $_POST['data'];
+
+            // Get the story
+            $storyPoint = StoryPoint::find($data['story_point_id']);
+
+            echo json_encode($this->RenderStoryPointFormRedirectDestinationOptions($storyPoint, $data['type']));
+        }
+
+    private function RenderStoryPointFormTextIncomming($values, $generatedID, StoryPoint $storyPoint) {
+
+        $senderID   = is_object($values) && property_exists($values, 'from_character_id') ? $values->from_character_id : '';
+        $message    = is_object($values) && property_exists($values, 'message') ? $values->message : '';
+
+        // Do we have a redirectID? If so, then please write find the correct value
+        $characterName = '';
+        if($senderID > 0) {
+
+            $character = $storyPoint->story->characters->find($senderID);
+
+            $characterName = $character->first_name.' '.$character->middle_names.' '.$character->last_name;
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[from_character_id]" value="'.$senderID.'" class="form-control story-point-text-incomming-sender-id" />
+            <label for="'.$generatedID.'_sender_id">Message from</label><br />
+            <input list="'.$generatedID.'_choose_sender" id="'.$generatedID.'_sender_id" name="'.$generatedID.'_sender_id" type="text" value="'.$characterName.'" class="form-control story-point-text-incomming-sender-name" placeholder="Search character" />
+            <datalist id="'.$generatedID.'_choose_sender">
+                '.$this->GetAllCharacters($storyPoint->story).'
+            </datalist>
+        </div>
+        <div class="form-group">
+            <label for="'.$generatedID.'_sender_id">Message</label><br />
+            <textarea name="json[message]" value="" class="form-control story-point-text-incomming-message">'.$message.'</textarea>
+        </div>
+        ';
+    }
+    
     public function SavePost(StoryPoint $storyPoint, $number)
     {
         $storyPoint->story_id           =  intval($_POST['data']['story_id']);
@@ -675,6 +925,43 @@ class StoryPointsController extends Controller
         }
 
         return $return;
+    }
+
+    private function GetAvailableStoryArchs(Story $story) {
+        $archs = $story->storyarchs->where('story_id', $story->id)->all();
+
+        // Go through the found variables in order to create options
+        $archOptions = '';
+        foreach($archs as $arch) {
+            $archOptions .= '<option data-id="'.$arch->id.'" value="'.$arch->name.'" />';
+        }
+
+        return $archOptions;
+    }
+
+    private function GetAvailableStoryPoints(StoryArch $storyArch, $excludes = []) {
+        $storyPoints = $storyArch->storypoints->all();
+
+        // Go through the found variables in order to create options
+        $storyPointOptions = '';
+        foreach($storyPoints as $storyPoint) {
+            if(!in_array($storyPoint->id, $excludes))
+                $storyPointOptions .= '<option data-id="'.$storyPoint->id.'" value="'.$storyPoint->name.'" />';
+        }
+
+        return $storyPointOptions;
+    }
+
+    private function GetAllCharacters(Story $story) {
+        $characters = $story->characters->all();
+
+        // Go through the found variables in order to create options
+        $characterOptions = '';
+        foreach($characters as $character) {
+            $characterOptions .= '<option data-id="'.$character->id.'" value="'.$character->first_name.' '.$character->middle_names.' '.$character->last_name.'" />';
+        }
+
+        return $characterOptions;
     }
 
 

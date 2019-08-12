@@ -22,13 +22,33 @@
 </div>
 
 <div class="form-group">
+    {{Form::label('published', 'Published')}}
+    {{Form::select('published', [1 => 'Yes', 0 => 'No'], (isset($news_item) ? $news_item->published : 0), ['class' => 'form-control'])}}
+</div>
+
+<div class="form-group">
     {{Form::label('days_ago', 'Days ago')}}
-    {{Form::number('days_ago', (isset($news_item) ? $news_item->days_ago : ''), ['class' => 'form-control', 'placeholder' => 'Days ago'])}}
+    {{Form::number(
+        'days_ago',
+        (isset($news_item) ? $news_item->days_ago : ''),
+        [
+            'class' => 'form-control',
+            'placeholder' => 'Days ago',
+            'disabled' => (isset($news_item) && $news_item->published == 1 ? false : true)
+        ]
+    )}}
 </div>
 
 <div class="form-group">
     {{Form::label('time', 'Time')}}
-    {{Form::time('time', (isset($news_item) ? $news_item->time : ''), ['class' => 'form-control'])}}
+    {{Form::time(
+        'time',
+        (isset($news_item) ? $news_item->time : ''),
+        [
+            'class' => 'form-control',
+            'disabled' => (isset($news_item) && $news_item->published == 1 ? false : true)
+        ]
+    )}}
 </div>
 
 <h2>Build article</h2>

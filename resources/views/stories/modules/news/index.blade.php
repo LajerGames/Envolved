@@ -17,6 +17,7 @@
                     
                     @php
                         $role = '';
+                        $published = '';
                         $news = $story->news;
                     @endphp
                     @if(count($news) > 0)
@@ -25,6 +26,21 @@
                             @php
                                 $time = new \DateTime($newsItem->time);
                             @endphp
+
+                            @if($published !== $newsItem->published)
+                                <tr>
+                                    <th scope="col" colspan="5" class="text-center divider-headline">
+                                        @if($newsItem->published == 1)
+                                            Published
+                                        @else
+                                            Unpublished
+                                        @endif
+                                    </th>
+                                </tr>
+                                @php
+                                    $published = $newsItem->published
+                                @endphp
+                            @endif
                         
                             <tr>
                                 <td scope="col">

@@ -243,14 +243,24 @@ class NewsController extends Controller
      */
     public function ValidateRequest(Request $request)
     {
-        $this->validate($request, [
-            'character_id' => 'required|not_in:0',
-            'headline' => 'required',
-            'image' => [new ValidFile(true, false)],
-            'teaser_text' => 'required',
-            'days_ago' => 'required',
-            'time' => 'required'
-        ]);
+        if($request->input('published') == 1) {
+            $this->validate($request, [
+                'character_id' => 'required|not_in:0',
+                'headline' => 'required',
+                'image' => [new ValidFile(true, false)],
+                'teaser_text' => 'required',
+                'days_ago' => 'required',
+                'time' => 'required'
+            ]);
+        }
+        else {
+            $this->validate($request, [
+                'character_id' => 'required|not_in:0',
+                'headline' => 'required',
+                'image' => [new ValidFile(true, false)],
+                'teaser_text' => 'required'
+            ]);
+        }
     }
 
     /**
@@ -264,9 +274,10 @@ class NewsController extends Controller
         if(!empty($imageName))
             $newsItem->image = "{$imageName}";
         $newsItem->teaser_text = "{$request->input('teaser_text')}";
+        $newsItem->published = "{$request->input('published')}";
         $newsItem->article_json = "{$JSONArticle}";
-        $newsItem->days_ago = "{$request->input('days_ago')}";
-        $newsItem->time = "{$request->input('time')}";
+        $newsItem->days_ago = !empty($request->input('days_ago')) ? "{$request->input('days_ago')}" : 0;
+        $newsItem->time = !empty($request->input('time')) ? "{$request->input('time')}" : '00:00:00';
         $newsItem->save();
     }
 

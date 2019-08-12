@@ -22,6 +22,7 @@ class CreateStoryPointsTable extends Migration
                 'change_variable',
                 'wait',
                 'condition',
+                'redirect',
                 'change_master_data',
                 'text_incomming',
                 'text_outgoing',

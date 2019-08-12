@@ -26,11 +26,12 @@ return [
         'change_variable' => ['Change Variable', 'orange'],
         'wait' => ['Wait', 'grey'],
         'condition' => ['Variable Condition', 'purple'],
+        'redirect' => ['Redirect', 'brown'],
         'change_master_data' => ['Change Master Data', 'pink'],
         'text_incomming' => ['Text, Incomming', 'lightgreen'],
-        'text_outgoing' => ['Text, Outgoing', 'green'],
+        'text_outgoing' => ['Text, Outgoing Options', 'green'],
         'phone_call_incomming_voice' => ['Phone Call, Incomming Voice', 'lightblue'],
-        'phone_call_outgoing_voice' => ['Phone Call, Incomming Voice', 'blue'],
-        'insert_news_item'  => ['Insert news item', 'yellow']
+        'phone_call_outgoing_voice' => ['Phone Call, Outgoing Options', 'blue'],
+        'insert_news_item'  => ['Insert news item', 'gold']
     ]
 ];
