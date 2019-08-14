@@ -118,6 +118,7 @@ class BuilderController extends Controller
         $info = [
             'story' => $story,
             'story_arch' => $storyArch,
+            'add-button-disabled' => (intval($storyArch->start_story_point_id) > 0 ? 'disabled' : ''),
             'storyPointHTML' => $storyPointHTML
         ];
 

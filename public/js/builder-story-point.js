@@ -300,6 +300,15 @@ $(document).ready(function () {
                 updateStoryPointLeadsTo(parentStoryPointID);
             }
 
+            // Let's look through all of the elements and see if we can find the glyphicon-fire - if we can, then make sure that the add-story-point in the top right corner is disabled, otherwise - enable it
+            storyPointStart = $('div.panel-body').find('div.story-point-container-top > span.glyphicon.glyphicon-fire');
+
+            if (storyPointStart !== undefined) {
+                $('.add-story-point.btn-success').addClass('disabled');
+            } else {
+                $('.add-story-point.btn-success').removeClass('disabled');
+            }
+
             // Close the modal
             $('#new-story-point-window').modal('hide');
 

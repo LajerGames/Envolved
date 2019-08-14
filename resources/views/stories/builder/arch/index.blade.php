@@ -14,7 +14,7 @@
                 {!!$info['storyPointHTML']!!}
 
 
-                <a href="javascript:void(0);" class="add-story-point btn btn-success more-button hastip" data-moretext="Add a <b>story point</b> to this <b>story arch</b>.<br /><br />Shortcut: <b>ctrl + shift + x</b>"><span class="glyphicon glyphicon-plus"></span></a>
+            <a href="javascript:void(0);" class="add-story-point btn btn-success more-button hastip {{$info['add-button-disabled']}}" data-moretext="Add a <b>story point</b> to this <b>story arch</b>.<br /><br />Shortcut: <b>ctrl + shift + x</b>"><span class="glyphicon glyphicon-plus"></span></a>
 
                 <span class="glyphicon glyphicon-question-sign story-points hastip" data-moretext="<u>Tips:</u><br /> - <b>ctrl + shift + f</b> to select story point"></span>
                 
