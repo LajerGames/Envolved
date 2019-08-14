@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Story;
+use App\Settings;
 use App\Character;
 use App\Common\Permission;
 use App\Common\HandleFiles;
+use App\Common\HandleSettings;
 use App\Rules\ValidFile;
 
 class CharactersController extends Controller
@@ -51,7 +53,27 @@ class CharactersController extends Controller
         if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
 
-        return view('stories.characters.create')->with('story', $story);
+        // Get default settings
+        $handleSettings = new HandleSettings();
+
+        $settings = $handleSettings->GenerateDefaultSettings('character', [
+            'tabs',
+            'phone_time_between_call_logs_pregame',
+            'text_time_between_texts_prestory',
+            'photos_time_between_photos'
+        ]);
+
+        $info = [
+            'story' => $story,
+            'settings' => $handleSettings->GenerateDefaultSettings('character', [
+                'tabs',
+                'phone_time_between_call_logs_pregame',
+                'text_time_between_texts_prestory',
+                'photos_time_between_photos'
+            ])
+        ];
+
+        return view('stories.characters.create')->with('info', $info);
     }
 
     /**
@@ -106,9 +128,14 @@ class CharactersController extends Controller
             return redirect('/stories/'.$story->id.'/characters')->with('error', 'Access denied');
         }
 
+        $handleSettings = new HandleSettings();
+
+        $settings = $handleSettings->GetSettings($story, 'character', $story->characters->find($id));
+
         $info = [
-            'id'    => $id,
-            'story' => $story
+            'id'        => $id,
+            'story'     => $story,
+            'settings'  => $settings
         ];
 
         return view('stories.characters.edit')->with('info', $info);
@@ -218,8 +245,12 @@ class CharactersController extends Controller
         $character->last_name = "{$request->input('last_name')}";
         $character->gender = "{$request->input('gender')}";
         $character->role = "{$request->input('role')}";
+        $character->settings = json_encode($request->settings);
         if(!empty($imageName) || $isInsert)
             $character->avatar_url = "{$imageName}";
+
+            
+
         $character->save();
     }
 

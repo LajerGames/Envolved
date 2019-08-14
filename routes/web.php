@@ -82,6 +82,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/update-story-point-variable-input', 'StoryPointsController@RenderStoryPointFormTypeInputsTypeAjax');
     Route::post('/update-story-point-variable-condition-choose-operator', 'StoryPointsController@RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperatorAjax');
     Route::post('/update-story-point-redirect', 'StoryPointsController@RenderStoryPointFormRedirectTypeAjax');
+    Route::post('/get-character-and-storypoint-settings', 'StoryPointsController@GetStoryPointOrCharacterSettingsAjax');
     
     
     

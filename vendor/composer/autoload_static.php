@@ -346,6 +346,7 @@ class ComposerStaticInita1e0b67c7b9c79c6430d0d73b5639985
         'AddNumberToStoryStoryArchs' => __DIR__ . '/../..' . '/database/migrations/2018_09_12_142905_add_number_to_story_story_archs.php',
         'AddPublishedToNews' => __DIR__ . '/../..' . '/database/migrations/2019_08_10_204953_add_published_to_news.php',
         'AddSentOnAndSeenOn' => __DIR__ . '/../..' . '/database/migrations/2018_08_19_172243_add_sent_on_and_seen_on.php',
+        'AddSettingsToUser' => __DIR__ . '/../..' . '/database/migrations/2019_08_12_102702_add_settings_to_user.php',
         'AddShowInContactsToCharacters' => __DIR__ . '/../..' . '/database/migrations/2018_10_01_151613_add_show_in_contacts_to_characters.php',
         'AddStartStoryPointToStoryArchesTable' => __DIR__ . '/../..' . '/database/migrations/2018_11_17_132718_add_start_story_point_to_story_arches_table.php',
         'AddStoryIdToTexts' => __DIR__ . '/../..' . '/database/migrations/2018_09_29_140026_add_story_id_to_texts.php',

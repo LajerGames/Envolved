@@ -36,7 +36,7 @@ class Story extends Model
     }
     public function news()
     {
-        return $this->hasMany('App\NewsItem')->orderBy('days_ago', 'DESC')->orderBy('time', 'ASC');
+        return $this->hasMany('App\NewsItem')->orderBy('published', 'DESC')->orderBy('days_ago', 'DESC')->orderBy('time', 'ASC');
     }
     public function settings()
     {

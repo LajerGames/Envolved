@@ -228,6 +228,7 @@ $(document).ready(function() {
                     // Now some story-point-types may need to have their specialized input refreshed on new "leads-to". Find out if this is one of them
                     switch(storyPointType) {
                         case "condition" :
+                        case "text_outgoing" :
 
                             // Find the appropriate container
                             var storyPointSpecializedInputContainer = storyPointContainer.find('div.story-point-form-specialized-input'),
@@ -236,7 +237,7 @@ $(document).ready(function() {
                             // This one needs to - let's make sure that happens.
                             updateStoryPointSpecializedInput(parentStoryPointID, storyPointSpecializedInputContainer, generatedID)
 
-                            break;
+                            break
                     }
 
                     updateStoryPointLeadsTo(parentStoryPointID);
@@ -695,12 +696,71 @@ $(document).ready(function() {
     }
 
     // Text, incomming - choose sender
-    $('div.panel-body').on('change', '.story-point-text-incomming-sender-name', function () {
+    $('div.panel-body').on('change', '.story-point-text-interlocutor-name', function () {
 
+        var selectedDestination = $(this),
+            storyPointID = selectedDestination.data('storypoint-id');
+            thisFormContainer = $(this).closest('.story-point-form-container'),
+            destinationDatalist = thisFormContainer.find('datalist'),
+            selectedIDInput = thisFormContainer.find('.story-point-text-interlocutor-id');
+        
+            destinationDatalist.find('option').each(function() {
+
+                if($(this).val() == selectedDestination.val()) {
+
+                    // Set the appropriate value in the hidden ID field
+                    var characterID = $(this).data('id');
+                    selectedIDInput.val(characterID);
+
+                    // When that's done, then let's find the settings for this user
+                    $.post(
+                        '/get-character-and-storypoint-settings',
+                        { 
+                            _token: $('meta[name=csrf-token]').attr('content'),
+                            _method: 'POST',
+                            data: {
+                                story_point_id: storyPointID,
+                                character_id: characterID
+                            }
+                        },
+                        function (data) {
+                            
+                            var parsedData = JSON.parse(data);
+
+                            // Update fields
+                            timeToReplyInput = thisFormContainer.find('.story-point-text-time-to-reply');
+                            if(timeToReplyInput !== undefined) {
+                                timeToReplyInput.val(parsedData.text_time_to_reply);
+                            }
+
+                            timeBeforeRead = thisFormContainer.find('.story-point-text-time-before-read');
+                            if(timeBeforeRead !== undefined) {
+                                timeBeforeRead.val(parsedData.text_time_before_read);
+                            }
+
+                            timeToRead = thisFormContainer.find('.story-point-text-time-to-read');
+                            if(timeToRead !== undefined) {
+                                timeToRead.val(parsedData.text_time_to_reply);
+                            }
+            
+                        }
+                    );
+
+                    return false; // Stop loop
+                }
+
+            });
+
+    });
+    
+
+    // News item, insert - choose article
+    $('div.panel-body').on('change', '.story-point-insert-news-item-name', function () {
+        
         var selectedDestination = $(this),
             thisFormContainer = $(this).closest('.story-point-form-container'),
             destinationDatalist = thisFormContainer.find('datalist'),
-            selectedIDInput = thisFormContainer.find('.story-point-text-incomming-sender-id');
+            selectedIDInput = thisFormContainer.find('.story-point-insert-news-item-id');
         
         destinationDatalist.find('option').each(function() {
 

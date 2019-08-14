@@ -5,18 +5,19 @@ namespace App\Common;
 class HandleSettings {
 
     /**
-     * Whenever a story is created, we'll imbue it with some default settings - those will be returned here.
+     * Whenever a story or a character is created, we'll imbue it with some default settings - those will be returned here.
      * 
-     * @param  string $type (editor or story)
+     * @param  string $type (editor, character or story)
      * @return array
      */
-    public function GenerateDefaultSettings($type) {
+    public function GenerateDefaultSettings($type, $exclude = []) {
         switch($type) {
             case 'editor' :
-                return $this->GenerateDefaultEditorSettings();
+            case 'character' :
+                return $this->GenerateDefaultEditorSettings($exclude);
                 break;
             case 'story' :
-                return $this->GenerateDefaultStorySettings();
+                return $this->GenerateDefaultStorySettings($exclude);
                 break;
         }
     }
@@ -26,24 +27,60 @@ class HandleSettings {
      * 
      * @return array
      */
-    private function GenerateDefaultEditorSettings() {
+    private function GenerateDefaultEditorSettings($exclude) {
 
-        return [
-            'tabs' => $this->GenerateTabsArray([
+        $return = [];
+
+        # Tabs
+        if(!in_array('tabs', $exclude)) {
+            $return['tabs'] = $this->GenerateTabsArray([
                 ['name' => 'Main', 'description' => 'Main'],
                 ['name' => 'Idle', 'description' => 'Idle']
-            ]),
-            /** Phone */
-            'phone_ring_patience' => 30, // sec
-            'phone_time_between_call_logs_pregame' => 2, // min
-            /** Texts */
-            'text_time_before_read' => 10, // min
-            'text_time_to_read' => 200, // wpm
-            'text_time_to_reply' => 150, // cpm
-            'text_time_between_texts_prestory' => 2, // min
-            /** Photos */
-            'photos_time_between_photos' => 10 // min
-        ];
+            ]);
+        }
+
+        /** Phone */
+
+        # Phone ring patience
+        if(!in_array('phone_ring_patience', $exclude)) {
+            $return['phone_ring_patience'] = 30; // Sec
+        }
+
+        # Phone time between call logs pregame
+        if(!in_array('phone_time_between_call_logs_pregame', $exclude)) {
+            $return['phone_time_between_call_logs_pregame'] = 2; // min
+        }
+
+        /** Texts */
+
+        # Text time before read
+        if(!in_array('text_time_before_read', $exclude)) {
+            $return['text_time_before_read'] = 10; // sec
+        }
+
+        # Text time to read
+        if(!in_array('text_time_to_read', $exclude)) {
+            $return['text_time_to_read'] = 200; // wpm
+        }
+
+        # Text time to reply
+        if(!in_array('text_time_to_reply', $exclude)) {
+            $return['text_time_to_reply'] = 150; // cpm
+        }
+
+        # Text time between texts prestory
+        if(!in_array('text_time_between_texts_prestory', $exclude)) {
+            $return['text_time_between_texts_prestory'] = 2; // npm
+        }
+
+        /** Photos */
+
+        # Photos time between photos
+        if(!in_array('photos_time_between_photos', $exclude)) {
+            $return['photos_time_between_photos'] = 10; // npm
+        }
+
+        return $return;
 
     }
 
@@ -91,28 +128,78 @@ class HandleSettings {
      * @param string $type (editor or story)
      * @return array
      */
-    public function GetSettings(\App\Story $story,  $type) {
+    public function GetSettings(\App\Story $story,  $type, $character = '', $storyPoint = '') {
         $settings = '';
         switch($type) {
             case 'editor' :
-                $settings = $this->GetEditorSettings($story);
+            case 'character' :
+                $settings = $this->GetEditorSettings($story, $character, $storyPoint);
                 break;
             case 'story' :
                 $settings = $this->GetStorySettings($story);
                 break;
         }
 
-        return json_decode($settings);
+        return $settings;
     }
 
     /**
      * Get editor settings as JSON
      * 
      * @param Story $story
-     * @return JSON
+     * @return object
      */
-    public function GetEditorSettings(\App\Story $story) {
-        return $story->settings->editor_settings;
+    public function GetEditorSettings(\App\Story $story, $character = '', $storyPoint = '') {
+
+        $settings = json_decode($story->settings->editor_settings);
+
+        // If we have a character, then those settings take priority over story settings
+        if($character instanceof \App\Character) {
+            $characterSettings = json_decode($character->settings);
+
+            # Phone Ring Patience
+            $settings->phone_ring_patience = $this->DecideOnValue($characterSettings, 'phone_ring_patience', $settings->phone_ring_patience);
+            
+            # Text Time Before Read
+            $settings->text_time_before_read = $this->DecideOnValue($characterSettings, 'text_time_before_read', $settings->text_time_before_read);
+
+            # Text Time To Read
+            $settings->text_time_to_read = $this->DecideOnValue($characterSettings, 'text_time_to_read', $settings->text_time_to_read);
+
+            # Text Time To Reply
+            $settings->text_time_to_reply = $this->DecideOnValue($characterSettings, 'text_time_to_reply', $settings->text_time_to_reply);
+
+        }
+
+        // If we have provided a StoryPoint - then that value takes priority over anything else
+        if($storyPoint instanceof \App\StoryPoint) {
+            $storyPointSettings = json_decode($storyPoint->instructions_json);
+
+            # Phone Ring Patience
+            $settings->phone_ring_patience = $this->DecideOnValue($storyPointSettings, 'phone_ring_patience', $settings->phone_ring_patience);
+            
+            # Text Time Before Read
+            $settings->text_time_before_read = $this->DecideOnValue($storyPointSettings, 'text_time_before_read', $settings->text_time_before_read);
+
+            # Text Time To Read
+            $settings->text_time_to_read = $this->DecideOnValue($storyPointSettings, 'text_time_to_read', $settings->text_time_to_read);
+
+            # Text Time To Reply
+            $settings->text_time_to_reply = $this->DecideOnValue($storyPointSettings, 'text_time_to_reply', $settings->text_time_to_reply);
+
+        }
+
+        return $settings;
+    }
+
+    private function DecideOnValue($object, $property, $fallback) {
+        return
+            is_object($object)
+            && !empty($property)
+            && property_exists($object, $property)
+            && !empty($object->{$property})
+                ? $object->{$property}
+                : $fallback;
     }
 
     /**

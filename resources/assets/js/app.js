@@ -177,6 +177,40 @@ $(document).ready(function() {
         $speech.hide();
     }
 
+    // Character
+
+    $('.character-settings-phone-expandable').on('click', function() {
+        $('.character-phone-expandable').toggle(200);
+
+        // Check what glyph is active and make the switcharoo
+        var glyphSpan = $(this).find('span.glyphicon');
+        if(glyphSpan.hasClass('glyphicon-plus')) {
+            glyphSpan.removeClass('glyphicon-plus');
+            glyphSpan.addClass('glyphicon-minus');
+        }
+        else if(glyphSpan.hasClass('glyphicon-minus')) {
+            glyphSpan.removeClass('glyphicon-minus');
+            glyphSpan.addClass('glyphicon-plus');
+        }
+    });
+
+    $('.character-settings-text-expandable').on('click', function() {
+        $('.character-text-expandable').toggle(200);
+
+        // Check what glyph is active and make the switcharoo
+        var glyphSpan = $(this).find('span.glyphicon');
+        if(glyphSpan.hasClass('glyphicon-plus')) {
+            glyphSpan.removeClass('glyphicon-plus');
+            glyphSpan.addClass('glyphicon-minus');
+        }
+        else if(glyphSpan.hasClass('glyphicon-minus')) {
+            glyphSpan.removeClass('glyphicon-minus');
+            glyphSpan.addClass('glyphicon-plus');
+        }
+    });
+
+    // End region
+
     // News
 
     // Enable adding of sections for articles

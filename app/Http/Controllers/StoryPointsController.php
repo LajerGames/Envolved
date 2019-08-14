@@ -7,6 +7,7 @@ use App\Story;
 use App\StoryArch;
 use App\StoryPoint;
 use App\Common\Permission;
+use App\Common\HandleSettings;
 use App\Common\GetNewestValues;
 
 class StoryPointsController extends Controller
@@ -444,7 +445,7 @@ class StoryPointsController extends Controller
     private function RenderStoryPointFormTypeInputs(StoryPoint $storyPoint, $generatedID) {
         $return = '';
         $values = json_decode($storyPoint->instructions_json);
-       //echo $storyPoint->type;
+
         switch($storyPoint->type) {
             case 'change_variable' :
                 $return = $this->RenderStoryPointFormTypeInputsChangeVariable($values, $generatedID, $storyPoint);
@@ -460,6 +461,12 @@ class StoryPointsController extends Controller
                 break;
             case 'text_incomming' :
                 $return = $this->RenderStoryPointFormTextIncomming($values, $generatedID, $storyPoint);
+                break;
+            case 'text_outgoing' :
+                $return = $this->RenderStoryPointFormTextOutgoing($values, $generatedID, $storyPoint);
+                break;
+            case 'insert_news_item' :
+                $return = $this->RenderStoryPointFormInsertNewsItem($values, $generatedID, $storyPoint);
                 break;
                 
         }
@@ -856,6 +863,7 @@ class StoryPointsController extends Controller
 
         // Do we have a redirectID? If so, then please write find the correct value
         $characterName = '';
+        $character = '';
         if($senderID > 0) {
 
             $character = $storyPoint->story->characters->find($senderID);
@@ -863,19 +871,140 @@ class StoryPointsController extends Controller
             $characterName = $character->first_name.' '.$character->middle_names.' '.$character->last_name;
         }
 
+        // Get settings (For time to write(reply))
+        $settings = $this->GetStoryPointOrCharacterSettings($storyPoint, $character, true);
+
         return '
         <div class="form-group">
-            <input type="hidden" name="json[from_character_id]" value="'.$senderID.'" class="form-control story-point-text-incomming-sender-id" />
+            <input type="hidden" name="json[from_character_id]" value="'.$senderID.'" class="form-control story-point-text-interlocutor-id" />
             <label for="'.$generatedID.'_sender_id">Message from</label><br />
-            <input list="'.$generatedID.'_choose_sender" id="'.$generatedID.'_sender_id" name="'.$generatedID.'_sender_id" type="text" value="'.$characterName.'" class="form-control story-point-text-incomming-sender-name" placeholder="Search character" />
+            <input list="'.$generatedID.'_choose_sender" id="'.$generatedID.'_sender_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_sender_id" type="text" value="'.$characterName.'" class="form-control story-point-text-interlocutor-name" placeholder="Search character" />
             <datalist id="'.$generatedID.'_choose_sender">
                 '.$this->GetAllCharacters($storyPoint->story).'
             </datalist>
         </div>
         <div class="form-group">
-            <label for="'.$generatedID.'_sender_id">Message</label><br />
-            <textarea name="json[message]" value="" class="form-control story-point-text-incomming-message">'.$message.'</textarea>
+            <label for="'.$generatedID.'_message">Message</label><br />
+            <textarea name="json[message]" id="'.$generatedID.'_message"" value="" class="form-control story-point-text-incomming-message">'.$message.'</textarea>
         </div>
+        <div class="form-group">
+            <label for="'.$generatedID.'_time_to_reply">Time to write (characters per minute)</label><br />
+            <input type="number" id="'.$generatedID.'_time_to_reply" name="json[text_time_to_reply]" value="'.$settings->text_time_to_reply.'" class="form-control story-point-text-time-to-reply" />
+        </div>
+        ';
+    }
+
+        private function GetStoryPointOrCharacterSettings(StoryPoint $storyPoint, $character = '', $checkStoryPoint = false) {
+            $handleSettings = new HandleSettings();
+
+            $sendStoryPoint = $checkStoryPoint ? $storyPoint : '';
+
+            return $handleSettings->GetSettings($storyPoint->story, 'character', $character, $sendStoryPoint);
+        }
+
+        public function GetStoryPointOrCharacterSettingsAjax() {
+
+            $data = $_POST['data'];
+
+            // Get the story
+            $storyPoint = StoryPoint::find($data['story_point_id']);
+            $character = $storyPoint->story->characters->find($data['character_id']);
+
+            echo json_encode($this->GetStoryPointOrCharacterSettings($storyPoint, $character));
+
+            return;
+        }
+
+    private function RenderStoryPointFormTextOutgoing($values, $generatedID, StoryPoint $storyPoint) {
+        $receiverID   = is_object($values) && property_exists($values, 'to_character_id') ? $values->to_character_id : '';
+
+        // Get the story
+        $story = $storyPoint->story;
+        
+        $characterName = '';
+        $character = '';
+        if($receiverID  > 0) {
+
+            $character = $story->characters->find($receiverID);
+
+            $characterName = $character->first_name.' '.$character->middle_names.' '.$character->last_name;
+        }
+
+        // Get settings (For time to write(reply))
+        $settings = $this->GetStoryPointOrCharacterSettings($storyPoint, $character, true);
+
+        // Does this storypoint lead anywhere? If not, then notify the user that it needs to lead somewhere in order to have options.
+        if(!empty($storyPoint->leads_to_json)) {
+
+            // Story point leads somewhere, create the options
+            
+            // Go through them all and make sure the is a message
+            $leadsTos = json_decode($storyPoint->leads_to_json);
+
+            $leadsToMessages = '';
+            foreach($leadsTos as $leadsTo) {
+
+                // Get the story_point it leads_to
+                $leadsToStoryPoint = $story->storypoints->find($leadsTo->point);
+
+                $message = (is_object($values) && property_exists($values, $leadsTo->point) && is_object($values->{$leadsTo->point})) ? $values->{$leadsTo->point}->message : '';
+
+                $leadsToMessages .= '
+                <div class="form-group">
+                    <label for="'.$generatedID.'_'.$leadsToStoryPoint->id.'_message">'.$leadsToStoryPoint->number.' '.$leadsToStoryPoint->name.' (message)</label><br />
+                    <textarea name="json['.$leadsToStoryPoint->id.'][message]" id="'.$generatedID.'_'.$leadsToStoryPoint->id.'_message" class="form-control story-point-text-outgoing-message">'.$message.'</textarea>
+                </div>
+                ';
+            }
+        }
+        else {
+            // Story point leads nowhere, tell the user that it needs to.
+            $leadsToMessages = 'Story point leads nowhere yet, create leads in order to create the conditions. <br /><br />';
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[to_character_id]" value="'.$receiverID.'" class="form-control story-point-text-interlocutor-id" />
+            <label for="'.$generatedID.'_receiver_id">Message from</label><br />
+            <input list="'.$generatedID.'_choose_receiver" id="'.$generatedID.'_receiver_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_receiver_id" type="text" value="'.$characterName.'" class="form-control story-point-text-interlocutor-name" placeholder="Search character" />
+            <datalist id="'.$generatedID.'_choose_receiver">
+                '.$this->GetAllCharacters($storyPoint->story).'
+            </datalist>
+        </div>
+        '.$leadsToMessages.'
+        <div class="form-group">
+            <label for="'.$generatedID.'_time_before_read">Time before read (seconds)</label><br />
+            <input type="number" id="'.$generatedID.'_time_before_read" name="json[text_time_before_read]" value="'.$settings->text_time_before_read.'" class="form-control story-point-text-time-before-read" />
+        </div>
+        <div class="form-group">
+            <label for="'.$generatedID.'_time_to_read">Time To read (words per minute)</label><br />
+            <input type="number" id="'.$generatedID.'_time_to_read" name="json[text_time_to_read]" value="'.$settings->text_time_to_read.'" class="form-control story-point-text-time-to-read" />
+        </div>
+        ';
+    }
+
+    private function RenderStoryPointFormInsertNewsItem($values, $generatedID, StoryPoint $storyPoint) {
+
+        $newsItemID   = is_object($values) && property_exists($values, 'news_item') ? intval($values->news_item) : '';
+
+        // Do we have a news item ID
+        $newsHeadline = '';
+        if($newsItemID > 0) {
+
+            // Get news item name
+            $newsItem = $storyPoint->story->news->find($newsItemID);
+
+            $newsHeadline = $newsItem->headline;
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[news_item]" value="'.$newsItemID.'" class="form-control story-point-insert-news-item-id" />
+            <label for="'.$generatedID.'_news_item">Message from</label><br />
+            <input list="'.$generatedID.'_news_item_name" id="'.$generatedID.'_news_item" name="'.$generatedID.'_news_item_name" type="text" value="'.$newsHeadline.'" class="form-control story-point-insert-news-item-name" placeholder="Search news article" />
+            <datalist id="'.$generatedID.'_news_item_name">
+                '.$this->GetAllUnpublishedNews($storyPoint->story).'
+            </datalist>
         ';
     }
     
@@ -964,7 +1093,17 @@ class StoryPointsController extends Controller
         return $characterOptions;
     }
 
+    private function GetAllUnpublishedNews(Story $story) {
+        $news = $story->news->where('published', 0)->all();
 
+        // Go through the found variables in order to create options
+        $newsOptions = '';
+        foreach($news as $newsItem) {
+            $newsOptions .= '<option data-id="'.$newsItem->id.'" value="'.$newsItem->headline.'" />';
+        }
+
+        return $newsOptions;
+    }
 
 
     // Temporary printr

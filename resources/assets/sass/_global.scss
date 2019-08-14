@@ -343,6 +343,19 @@ li.add-item a {
     vertical-align:middle;
 }
 
+// Character
+span.character-settings-expand-plus {
+    float: right;
+    font-size: 15px;
+    
+}
+h3.character-settings-expandable {
+    cursor: pointer;
+}
+div.character-expandable {
+    display: none;
+}
+
 // story points
 .story-point-container {
     width: 300px;

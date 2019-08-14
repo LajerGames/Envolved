@@ -8906,6 +8906,19 @@ li.add-item a {
   vertical-align: middle;
 }
 
+span.character-settings-expand-plus {
+  float: right;
+  font-size: 15px;
+}
+
+h3.character-settings-expandable {
+  cursor: pointer;
+}
+
+div.character-expandable {
+  display: none;
+}
+
 .story-point-container {
   width: 300px;
   float: left;
