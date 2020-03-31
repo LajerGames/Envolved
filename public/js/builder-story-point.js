@@ -99,6 +99,12 @@ $(document).ready(function () {
             $('div.story-point-shadow-container.active').find('a.update-story-point').click();
         }
 
+        // Press ctrl + shift + h for new
+        if (e.which === 25 && e.shiftKey && e.ctrlKey) {
+
+            $('div.story-point-shadow-container.active').find('div.story-point-container-top-opacity-icon-container').click();
+        }
+
         // Press shift + f to search
         if (e.which === 6 && e.shiftKey && e.ctrlKey) {
 
@@ -295,6 +301,10 @@ $(document).ready(function () {
                         updateStoryPointSpecializedInput(parentStoryPointID, storyPointSpecializedInputContainer, generatedID);
 
                         break;
+                    default:
+                        // All other story-point-types needs to have their Add story-point button removed
+                        storyPointContainer.find('a.add-story-point-to-this').hide();
+                        break;
                 }
 
                 updateStoryPointLeadsTo(parentStoryPointID);
@@ -386,6 +396,8 @@ $(document).ready(function () {
 
                 // TODO: Remove the old story_point_container
 
+                checkContainerSize('points');
+
                 panelBody.append(html);
             }
         });
@@ -420,6 +432,12 @@ $(document).ready(function () {
         storyPointContentArea.html('');
         closeStoryPointForms();
 
+        // Set z-index up
+        adjustZIndex(storyPointContainer.find('div.story-point-container-middle-and-bottom'), 1);
+
+        // Show
+        toggleStoryPointOpacityIcon(storyPointContainer.find('div.story-point-container-top-opacity-icon-container'), 'show', animationTime);
+
         // Make sure the active class is added
         storyPointShadowContainer.addClass('active');
 
@@ -444,18 +462,67 @@ $(document).ready(function () {
         });
     });
 
+    function adjustZIndex(element, indexno) {
+        element.css('z-index', indexno);
+    }
+
     // close all story point forms, also inactivate everything else
     function closeStoryPointForms() {
-        var animationTime = 500;
+        var animationTime = 500,
 
-        $('div.panel-body').find('div.story-point-container').each(function () {
-            var that = $(this),
-                formContainer = $(this).find('div.story-point-form-container');
+        // Get all story-point-containers that has a shadow container that has the class active
+        storyPointsToClose = $('div.panel-body').find('div.story-point-container div.story-point-shadow-container.active').closest('div.story-point-container');
+
+        // At first loop through it all and close all other story points
+        storyPointsToClose.each(function () {
+            var formContainer = $(this).find('div.story-point-form-container');
             formContainer.hide(animationTime);
 
+            // Hide the toggleStoryPointOpacityIcon
+            toggleStoryPointOpacityIcon($(this).find('div.story-point-container-top-opacity-icon-container'), 'hide', animationTime);
+
+            toggleStoryPointOpacity($(this), false, animationTime);
+
             // Make sure active classes removed
-            that.find('div.story-point-shadow-container').removeClass('active');
+            $(this).find('div.story-point-shadow-container').removeClass('active');
         });
+
+        // Then wait for animation time and remove all remove all z-indexes and make sure opacity is reset back to 1
+        setTimeout(function () {
+
+            storyPointsToClose.each(function () {
+                adjustZIndex($(this).find('div.story-point-container-middle-and-bottom'), 0);
+            });
+        }, animationTime);
+    }
+
+    $('div.panel-body').on('click', 'div.story-point-container-top-opacity-icon-container', function () {
+
+        var iconContainer = $(this),
+            makeStoryPointTransparent = iconContainer.css('opacity') == 1;
+
+        toggleStoryPointOpacity($(this).closest('div.story-point-container'), makeStoryPointTransparent, 500);
+    });
+
+    function toggleStoryPointOpacity(storyPointContainer, makeTransparent, animationTime) {
+
+        var storyPointOpacity = makeTransparent ? 0.25 : 1,
+            iconOpacity = makeTransparent ? 0.50 : 1;
+
+        // Update story point body opacity
+        storyPointContainer.find('div.story-point-container-middle-and-bottom').fadeTo(animationTime, storyPointOpacity);
+
+        // Update icon container opacity
+        storyPointContainer.find('div.story-point-container-top-opacity-icon-container').fadeTo(animationTime, iconOpacity);
+    }
+
+    function toggleStoryPointOpacityIcon(iconContainer, newStatus, animationTime) {
+
+        if (newStatus == 'hide') {
+            iconContainer.hide(animationTime);
+        } else {
+            iconContainer.show(animationTime);
+        }
     }
 
     // Update a story-point
@@ -501,7 +568,9 @@ $(document).ready(function () {
     // Add story to focused story-point
     $('div.panel-body').on('click', 'div.story-point-shadow-container.active a.add-story-point-to-this', function () {
 
-        storyID = $('#story_id').val(), that = $(this), storyPointID = that.closest('div.story-point-container').data('story-point-id');
+        var storyID = $('#story_id').val(),
+            that = $(this),
+            storyPointID = that.closest('div.story-point-container').data('story-point-id');
 
         openNewStoryPointModal(storyPointID);
     });

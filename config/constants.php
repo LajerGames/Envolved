@@ -32,6 +32,9 @@ return [
         'text_outgoing' => ['Text, Outgoing Options', 'green'],
         'phone_call_incomming_voice' => ['Phone Call, Incomming Voice', 'lightblue'],
         'phone_call_outgoing_voice' => ['Phone Call, Outgoing Options', 'blue'],
-        'insert_news_item'  => ['Insert news item', 'gold']
+        'insert_news_item'  => ['Insert news item', 'gold'],
+        'start_new_thread'  => ['Start new thread', 'lightgrey'],
+        'end_thread'  => ['End current Thread', 'deeporange'],
+        'end_game'  => ['Insert news item', 'red']
     ]
 ];

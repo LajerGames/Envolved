@@ -64,11 +64,13 @@ class TextsController extends Controller
 
         $this->ValidateRequest($request);
 
+        // TODO: Image upload does not work.
+        // Folder is not created, but when it is created it still does not work. How to do it?
         // Upload image/* or video*/
         $fileName = HandleFiles::UploadFile(
             $request,
             'mms',
-            'public/stories/'.$story_id.'/texts/'
+            '/public/stories/'.$story_id.'/texts/'
         );
 
         // If we have a image /*or a video*/ it will be saved as two texts text first image/video after

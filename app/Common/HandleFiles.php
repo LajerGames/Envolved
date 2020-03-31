@@ -47,12 +47,16 @@ class HandleFiles {
         {
             // Get filename with extension
             $filenameWithExt = $request->file($requestFileName)->getClientOriginalName();
+
             // Get just filename
             $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+
             // Get just extension
             $extension = $request->file($requestFileName)->getClientOriginalExtension();
+
             // Filename to store
             $fileName = $filename.'_'.time().'.'.$extension;
+
             // Upload file
             $path = $request->file($requestFileName)->storeAs($saveFilePath, $fileName);
         }

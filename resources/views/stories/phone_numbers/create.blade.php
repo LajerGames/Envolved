@@ -26,7 +26,7 @@
 
                     <div class="form-group">
                         {{Form::label('messagable', 'Can receive messages')}}
-                        {{Form::select('messagable', [0 => 'No', 1 => 'Yes'], $phoneNumber->messagable, ['class' => 'form-control'])}}
+                        {{Form::select('messagable', [0 => 'No', 1 => 'Yes'], 1, ['class' => 'form-control'])}}
                     </div>
                     
                     <a href="/stories/{{$info['story']->id}}/phone_numbers" class="btn btn-default">Back</a>

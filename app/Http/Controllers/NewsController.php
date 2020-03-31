@@ -365,7 +365,7 @@ class NewsController extends Controller
                             if(!empty($section['saved'])) {
                                 $imageName = $section['saved'];
                             } else {
-                                continue;
+                                continue 2;
                             }
                         }
 

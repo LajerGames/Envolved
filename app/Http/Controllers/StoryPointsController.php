@@ -306,13 +306,16 @@ class StoryPointsController extends Controller
             <div class="story-point-shadow-container">
                 <span class="id-number-circle id-number-pos-top" style="background-color:'.$color.'">'.$storyPoint->number.'</span>
                 <div class="story-point-container-top" style="background-color:'.$color.'">
+                    <div class="story-point-container-top-opacity-icon-container hastip" data-moretext="Shortcut: <b>ctrl + shift + h</b>"><span class="glyphicon glyphicon-eye-open"></span></div>
                     '.$startStoryPoint.'<u>'.ucfirst(str_replace('_', ' ', $storyPoint->type)).'</u>: <span class="story-point-container-top-name">'.$storyPoint->name.'</span>
                 </div>
-                <div class="story-point-container-middle" style="border-left:1px solid '.$color.';border-right:1px solid '.$color.';">
-                    <div class="story-point-form-container"></div>
-                </div>
-                <div class="story-point-container-bottom" style="background-color:'.$color.'">
-                    <div class="story-pointleads-to-container">'.$this->GetStoryPointLeadsToMarkup($storyPoint, false).'</div>
+                <div class="story-point-container-middle-and-bottom">
+                    <div class="story-point-container-middle" style="border-left:1px solid '.$color.';border-right:1px solid '.$color.';">
+                        <div class="story-point-form-container"></div>
+                    </div>
+                    <div class="story-point-container-bottom" style="background-color:'.$color.'">
+                        <div class="story-pointleads-to-container">'.$this->GetStoryPointLeadsToMarkup($storyPoint, false).'</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -649,6 +652,8 @@ class StoryPointsController extends Controller
             $leadsToOptions .= '<option data-id="'.$storyPointID.'" value="'.$concattedName.'" />';
         }
 
+
+
         // So, do we have som values (from instructions_json)
         $chosenVariableID   = '';
         $chosenVariableName = '';
@@ -657,7 +662,7 @@ class StoryPointsController extends Controller
         $chosenValue        = '';
         $chosenLeadsToID    = '';
         $chosenLeadsToName  = '';
-        if(count($values) > 0) {
+        if(is_object($values)) {
 
             // Okay, we have at least tome values - do we have any relevant for this record?
             if(property_exists($values, $number) && is_object($values->{$number})) {
@@ -861,6 +866,21 @@ class StoryPointsController extends Controller
         $senderID   = is_object($values) && property_exists($values, 'from_character_id') ? $values->from_character_id : '';
         $message    = is_object($values) && property_exists($values, 'message') ? $values->message : '';
 
+        // If we didn't find a $senderID, look at the latest story point that leads to this story point that is of the type of outgoing OR incomming message.
+        // If we can find such a story point, and if it has a sender_id, then insert that as a suggestion to receiver
+        if(empty($senderID)) {
+
+            // Get character from previous story_point of text_incomming or text_outgoing
+            $prevStoryPointFromOrToCharacterID    = intval($this->ExtractValueFromObject(
+                ['to_character_id', 'from_character_id'],
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['text_outgoing', 'text_incomming'])
+            ));
+
+            // Check if we set a from character in the previous StoryPoint
+            if($prevStoryPointFromOrToCharacterID > 0)
+                $senderID = $prevStoryPointFromOrToCharacterID;
+        }
+
         // Do we have a redirectID? If so, then please write find the correct value
         $characterName = '';
         $character = '';
@@ -916,10 +936,26 @@ class StoryPointsController extends Controller
         }
 
     private function RenderStoryPointFormTextOutgoing($values, $generatedID, StoryPoint $storyPoint) {
+
         $receiverID   = is_object($values) && property_exists($values, 'to_character_id') ? $values->to_character_id : '';
 
         // Get the story
         $story = $storyPoint->story;
+
+        // If we didn't find a receiverID, look at the latest story point that leads to this story point that is of the type of incomming message.
+        // If we can find such a story point, and if it has a sender_id, then insert that as a suggestion to receiver
+        if(empty($receiverID)) {
+
+            // Get character from previous story_point of text_incomming or text_outgoing
+            $prevStoryPointFromOrToCharacterID    = intval($this->ExtractValueFromObject(
+                ['to_character_id', 'from_character_id'],
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['text_outgoing', 'text_incomming'])
+            ));
+
+            // Check if we set a from character in the previous StoryPoint
+            if($prevStoryPointFromOrToCharacterID > 0)
+                $receiverID = $prevStoryPointFromOrToCharacterID;
+        }
         
         $characterName = '';
         $character = '';
@@ -965,7 +1001,7 @@ class StoryPointsController extends Controller
         return '
         <div class="form-group">
             <input type="hidden" name="json[to_character_id]" value="'.$receiverID.'" class="form-control story-point-text-interlocutor-id" />
-            <label for="'.$generatedID.'_receiver_id">Message from</label><br />
+            <label for="'.$generatedID.'_receiver_id">Message to</label><br />
             <input list="'.$generatedID.'_choose_receiver" id="'.$generatedID.'_receiver_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_receiver_id" type="text" value="'.$characterName.'" class="form-control story-point-text-interlocutor-name" placeholder="Search character" />
             <datalist id="'.$generatedID.'_choose_receiver">
                 '.$this->GetAllCharacters($storyPoint->story).'
@@ -1103,6 +1139,54 @@ class StoryPointsController extends Controller
         }
 
         return $newsOptions;
+    }
+
+    /**
+     * @param StoryPoint $storyPoint
+     * @param array $types
+     * @return mixed|null
+     */
+    private function GetInstructionJSONFromClosestRefererOfTypes(StoryPoint $storyPoint, array $types) {
+        $referer = StoryPoint::where(
+            'story_id', $storyPoint->story_id
+        )->whereRaw(
+            'JSON_CONTAINS(leads_to_json, \'{"point": '.$storyPoint->id.'}\')'
+        )->orderBy(
+            'id', 'ASC'
+        )->first();
+
+
+        $prevStoryPointInstructions = null;
+        if(isset($referer->id) && $referer->id > 0) {
+
+            // Is the referer we found of the desired type?
+            if(in_array($referer->type, $types)) {
+                // Yes! We found a referer of the desired type!
+                $prevStoryPointInstructions = json_decode($referer->instructions_json);
+            } else {
+                $prevStoryPointInstructions = self::GetInstructionJSONFromClosestRefererOfTypes($referer, $types);
+            }
+        }
+
+        return $prevStoryPointInstructions;
+    }
+    private function ExtractValueFromObject($acceptableValues, $object = null) {
+
+        $value = 0;
+        if(is_object($object)) {
+
+            foreach ($acceptableValues as $acceptableValue) {
+
+                if (property_exists($object, $acceptableValue) && !empty($object->{$acceptableValue})) {
+                    $value = $object->{$acceptableValue};
+
+                    break; // No need to look any further
+                }
+            }
+
+        }
+
+        return $value;
     }
 
 
