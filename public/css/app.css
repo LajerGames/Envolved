@@ -8971,6 +8971,10 @@ div.character-expandable {
   background-color: white;
 }
 
+.story-point-container-middle audio {
+  width: 260px;
+}
+
 .story-point-container-bottom {
   padding: 0px 15px 15px 15px;
   border-radius: 0 0 8px 8px;

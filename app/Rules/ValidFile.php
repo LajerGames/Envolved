@@ -8,15 +8,17 @@ class ValidFile implements Rule
 {
     public  $allowedImageMimes = [],
             $allowedVideoMimes = [],
+            $allowedAudioMimes = [],
             $allowedMimeTypes = [];
     /**
      * Create a new rule instance.
      *
      * @param  bool  $allowImage
      * @param  bool  $allowVideo
+     * @param  bool  $allowAudio
      * @return void
      */
-    public function __construct($allowImage = true, $allowVideo = true)
+    public function __construct($allowImage = true, $allowVideo = true, $allowAudio = true)
     {
         if($allowImage) {
             // Allow gif, jpg and png
@@ -29,9 +31,15 @@ class ValidFile implements Rule
             $this->allowedVideoMimes[] = 'video/mp4';
             $this->allowedVideoMimes[] = 'video/mpeg';
         }
+        if($allowAudio) {
+            $this->allowedAudioMimes[] = 'audio/mpeg';
+            $this->allowedAudioMimes[] = 'audio/mp4';
+            $this->allowedAudioMimes[] = 'audio/vnd.wav';
+            $this->allowedAudioMimes[] = 'audio/mid';
+        }
 
         // Combine the mime types
-        $this->allowedMimeTypes = array_merge($this->allowedImageMimes, $this->allowedVideoMimes);
+        $this->allowedMimeTypes = array_merge($this->allowedImageMimes, $this->allowedVideoMimes, $this->allowedAudioMimes);
     }
 
     /**
@@ -55,10 +63,12 @@ class ValidFile implements Rule
     {
         // Construct message, depending on what types of files we're accepting
         $strMessage = 'Uploaded file needs to be of type:';
-        if(count($this->allowedImageMimes) > 0)
+        if(@count($this->allowedImageMimes) > 0)
             $strMessage .= "<br /> - Image: ".implode(',', $this->allowedImageMimes);
-        if($this->allowedVideoMimes)
+        if(@count($this->allowedVideoMimes) > 0)
             $strMessage .= "<br /> - Video: ".implode(',', $this->allowedVideoMimes);
+        if(@count($this->allowedAudioMimes) > 0)
+            $strMessage .= "<br /> - Audio: ".implode(', ', $this->allowedAudioMimes);
         
         return $strMessage;
     }

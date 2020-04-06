@@ -74,7 +74,7 @@ class NewsController extends Controller
             $request,
             'image',
             'public/stories/'.$story_id.'/news/'
-        );
+        )['filename'];
 
         $newsItem = new NewsItem;
         $this->SaveRequest($newsItem, $story_id, $imageName, $request, $JSONArticle);
@@ -174,7 +174,7 @@ class NewsController extends Controller
             'image',
             'image',
             'public/stories/'.$story_id.'/news/'
-        );
+        )['filename'];
 
         $this->SaveRequest($newsItem, $story_id, $imageName, $request, $JSONArticle);
 
@@ -247,7 +247,7 @@ class NewsController extends Controller
             $this->validate($request, [
                 'character_id' => 'required|not_in:0',
                 'headline' => 'required',
-                'image' => [new ValidFile(true, false)],
+                'image' => [new ValidFile(true, false, false)],
                 'teaser_text' => 'required',
                 'days_ago' => 'required',
                 'time' => 'required'
@@ -257,7 +257,7 @@ class NewsController extends Controller
             $this->validate($request, [
                 'character_id' => 'required|not_in:0',
                 'headline' => 'required',
-                'image' => [new ValidFile(true, false)],
+                'image' => [new ValidFile(true, false, false)],
                 'teaser_text' => 'required'
             ]);
         }
@@ -355,10 +355,9 @@ class NewsController extends Controller
                         $imageName = HandleFiles::UploadFile(
                             $request,
                             'article.'.$uniqueID.'.content',
-                            'public/stories/'.$story_id.'/news/'
-                        );
-
-                        // TODO: Check filetype, pretty important for when other ppl get access to this.
+                            'public/stories/'.$story_id.'/news/',
+                            new ValidFile(true, false, false)
+                        )['filename'];
 
                         // If no file was saved check if we can just use saved data - otherwise; just mozy on!
                         if(empty($imageName)) {
@@ -366,6 +365,14 @@ class NewsController extends Controller
                                 $imageName = $section['saved'];
                             } else {
                                 continue 2;
+                            }
+                        }
+                        else {
+                            // If a new image was saved, check if we had a previous image. If we did, then delete it.
+                            if(!empty($section['saved'])) {
+                                HandleFiles::DeleteFile(
+                                    'public/stories/'.$story_id.'/news/'.$section['saved']
+                                );
                             }
                         }
 

@@ -30,7 +30,7 @@
                         @endif
                         <div
                             class="photos-image-container control-buttons-parent"
-                            style="background-image:url('/storage/stories/{{$photo->story_id}}/photos/{{$photo->image_name}}')
+                            style="background-image:url('/storage/stories/{{$photo->story_id}}/photos/{{$photo->image_path}}')
                         ">
                             <div class="control-buttons">
                                 <div>

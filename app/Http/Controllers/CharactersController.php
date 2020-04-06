@@ -100,7 +100,7 @@ class CharactersController extends Controller
             $request,
             'avatar',
             'public/stories/'.$story_id.'/characters/'
-        );
+        )['filename'];
 
         $character = new Character;
         $this->SaveRequest($character, $story_id, $imageName, $request, true);
@@ -176,7 +176,7 @@ class CharactersController extends Controller
             'avatar_url',
             'avatar',
             'public/stories/'.$story_id.'/characters/'
-        );          
+        )['filename'];
 
         $this->SaveRequest($character, $story_id, $imageName, $request);
 
@@ -229,7 +229,7 @@ class CharactersController extends Controller
         $this->validate($request, [
             'first_name' => 'required',
             'gender' => 'required',
-            'avatar' => [new ValidFile(true, false)]
+            'avatar' => [new ValidFile(true, false, false)]
         ]);
     }
 

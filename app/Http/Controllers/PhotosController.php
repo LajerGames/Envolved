@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use App\Story;
 use App\Photo;
@@ -48,7 +49,7 @@ class PhotosController extends Controller
         }
 
         $time = new \DateTime($time);
-        $time->add(new \DateInterval('PT'.$settings->photos_time_between_photos.'M')); // Add 10 minutes so all pictures isn't taken at the same time!
+        $time->add(new \DateInterval('PT'.$settings->photos_time_between_photos.'M')); // Add xx minutes so all pictures isn't taken at the same time!
 
         // Prepare an array to send to the view
         $info = [
@@ -88,14 +89,14 @@ class PhotosController extends Controller
         $this->ValidateRequest($request);
 
         // Upload image
-        $imageName = HandleFiles::UploadFile(
+        $imagePath = HandleFiles::UploadFile(
             $request,
             'photo',
             'public/stories/'.$story_id.'/photos/'
-        );
+        )['filename'];
 
         $photo = new Photo;
-        $this->SaveRequest($photo, $story_id, $imageName, $request);
+        $this->SaveRequest($photo, $story_id, $imagePath, $request);
 
         return redirect('/stories/'.$story_id.'/photos')->with('success', 'Photo inserted');
     }
@@ -154,9 +155,9 @@ class PhotosController extends Controller
             return redirect('/stories/'.$story->id.'/photos')->with('error', 'Access denied');
         
             HandleFiles::DeleteFile(
-                'public/stories/'.$story_id.'/photos/'.$photo->image_name,
+                'public/stories/'.$story_id.'/photos/'.$photo->image_path,
                 $photo,
-                'image_name'
+                'image_path'
             );
 
             $photo->delete();
@@ -171,19 +172,19 @@ class PhotosController extends Controller
         $this->validate($request, [
             'days_ago' => 'required',
             'time' => 'required',
-            'photo' => ['required', new ValidFile(true, false)]
+            'photo' => ['required', new ValidFile(true, false, false)]
         ]);
     }
     
     /**
      * Save request for Photos
      */
-    public function SaveRequest(Photo $photo, $story_id, $imageName, Request $request)
+    public function SaveRequest(Photo $photo, $story_id, $imagePath, Request $request)
     {
         $photo->story_id =  $story_id;
         $photo->days_ago = "{$request->input('days_ago')}";
         $photo->time = "{$request->input('time')}";
-        $photo->image_name = "{$imageName}";
+        $photo->image_path = "{$imagePath}";
         $photo->save();
     }
 }

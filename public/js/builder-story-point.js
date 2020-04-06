@@ -536,33 +536,83 @@ $(document).ready(function () {
         // Say that we're updating
         that.attr('disabled', true);
         that.html('wait...');
-        $.post('/save-story-point-form', {
-            _token: $('meta[name=csrf-token]').attr('content'),
-            _method: 'POST',
-            data: {
-                story_id: storyID,
-                story_point_id: storyPointID,
-                data: form.serialize()
-            }
-        }, function (data) {
 
-            var parsedData = JSON.parse(data);
+        $.ajax({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                _method: 'POST'
+            },
+            url: '/save-story-point-form',
+            method: 'POST',
+            data: new FormData(form[0]),
+            dataType: 'JSON',
+            contentType: false,
+            cache: false,
+            processData: false,
+            success: function success(data) {
 
-            that.closest('div.story-point-container').find('div.story-point-container-top span.story-point-container-top-name').html(parsedData);
+                // BUG: The data should be JSON encoded... but somehow it's not... I don't wanna mess with it anymore... It seems to work, so it's fine for now
+                var parsedData = data;
 
-            // Now are there any special functions here?
-            var runJS = form.find('input.run-js-on-save');
-            if (runJS !== undefined) {
-                switch (runJS.data('js-function')) {
-                    case 'addLeadsToToStoryPoint':
-                        addLeadsToToStoryPoint(storyPointID, runJS.data('id'), runJS.data('type'));
-                        break;
+                that.closest('div.story-point-container').find('div.story-point-container-top span.story-point-container-top-name').html(parsedData);
+
+                // Now are there any special functions here?
+                var runJS = form.find('input.run-js-on-save');
+                if (runJS !== undefined) {
+                    switch (runJS.data('js-function')) {
+                        case 'addLeadsToToStoryPoint':
+                            addLeadsToToStoryPoint(storyPointID, runJS.data('id'), runJS.data('type'), runJS.data('action'));
+                            break;
+                        case 'refreshStoryPoint':
+                            var content = $('div.container'),
+                                storyPointContainer = content.find('div[data-story-point-id="' + storyPointID + '"]'),
+                                storyPointSpecializedInputContainer = storyPointContainer.find('div.story-point-form-container div.story-point-phone-call-voice-incomming-updatable-section'),
+                                generatedID = storyPointContainer.find('form').data('generated-id');
+
+                            updateStoryPointSpecializedInput(storyPointID, storyPointSpecializedInputContainer, generatedID);
+                            break;
+                    }
                 }
-            }
 
-            that.attr('disabled', false);
-            that.html('Update');
+                that.attr('disabled', false);
+                that.html('Update');
+            }
         });
+
+        /*
+        $.post(
+            '/save-story-point-form',
+            {
+                _token: $('meta[name=csrf-token]').attr('content'),
+                _method: 'POST',
+                type        : 'POST',
+                cache       : false,
+                contentType : false,
+                processData : false,
+                data: {
+                    story_id: storyID,
+                    story_point_id: storyPointID,
+                    data: form.serialize()
+                },
+                dataType: 'JSON'
+            },
+            function (data) {
+                  var parsedData = JSON.parse(data);
+                  that.closest('div.story-point-container').find('div.story-point-container-top span.story-point-container-top-name').html(parsedData);
+                  // Now are there any special functions here?
+                var runJS = form.find('input.run-js-on-save');
+                if(runJS !== undefined) {
+                    switch(runJS.data('js-function')) {
+                        case 'addLeadsToToStoryPoint' :
+                                addLeadsToToStoryPoint(storyPointID, runJS.data('id'), runJS.data('type'), runJS.data('action'));
+                            break;
+                    }
+                }
+                  that.attr('disabled', false);
+                that.html('Update');
+              }
+        );
+        */
     });
 
     // Add story to focused story-point
@@ -753,8 +803,34 @@ $(document).ready(function () {
         });
     });
 
+    // Start new thread - choose destination
+    $('div.panel-body').on('change', '.story-point-start-new-thread-choose-destination', function () {
+
+        var selectedDestination = $(this),
+            thisFormContainer = $(this).closest('.story-point-form-container'),
+            destinationDatalist = thisFormContainer.find('datalist'),
+            selectedIDInput = thisFormContainer.find('.story-point-start-new-thread-selected-id'),
+            runJSOnSave = thisFormContainer.find('.run-js-on-save');
+
+        destinationDatalist.find('option').each(function () {
+
+            if ($(this).val() == selectedDestination.val()) {
+
+                // Set the appropriate value in the hidden ID field
+                selectedIDInput.val($(this).data('id'));
+
+                // Set some important values on the run JS on save input - to make sure we do the right thing after save
+                runJSOnSave.data('id', $(this).data('id'));
+
+                return false; // Stop loop
+            }
+        });
+    });
+
     // Redirect - update leads-to
-    var addLeadsToToStoryPoint = function addLeadsToToStoryPoint(storyPointID, ref, type) {
+    var addLeadsToToStoryPoint = function addLeadsToToStoryPoint(storyPointID, ref, type, action) {
+
+        action = action === undefined ? 'replace' : action;
 
         $.post('/handle-story-point-reference', {
             _token: $('meta[name=csrf-token]').attr('content'),
@@ -763,7 +839,7 @@ $(document).ready(function () {
                 story_point_id: storyPointID,
                 ref: ref,
                 type: type,
-                action: 'replace'
+                action: action
             }
         }, function (data) {
 
@@ -772,12 +848,12 @@ $(document).ready(function () {
         });
     };
 
-    // Text, incomming - choose sender
-    $('div.panel-body').on('change', '.story-point-text-interlocutor-name', function () {
+    // Text, incomming/outgoing and voice, incomming/outgoing - choose sender
+    $('div.panel-body').on('change', '.story-point-interlocutor-name', function () {
 
         var selectedDestination = $(this),
             storyPointID = selectedDestination.data('storypoint-id');
-        thisFormContainer = $(this).closest('.story-point-form-container'), destinationDatalist = thisFormContainer.find('datalist'), selectedIDInput = thisFormContainer.find('.story-point-text-interlocutor-id');
+        thisFormContainer = $(this).closest('.story-point-form-container'), destinationDatalist = thisFormContainer.find('datalist'), selectedIDInput = thisFormContainer.find('.story-point-interlocutor-id');
 
         destinationDatalist.find('option').each(function () {
 

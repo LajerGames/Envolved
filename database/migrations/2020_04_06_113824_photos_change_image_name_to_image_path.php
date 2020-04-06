@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class DummyClass extends Migration
+class PhotosChangeImageNameToImagePath extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,8 @@ class DummyClass extends Migration
      */
     public function up()
     {
-        Schema::create('DummyTable', function (Blueprint $table) {
-            $table->increments('id');
-            $table->timestamps();
+        Schema::table('story_photos', function(Blueprint $table) {
+            $table->renameColumn('image_name', 'image_path');
         });
     }
 
@@ -26,6 +25,8 @@ class DummyClass extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('DummyTable');
+        Schema::table('story_photos', function(Blueprint $table) {
+            $table->renameColumn('image_path', 'image_name');
+        });
     }
 }

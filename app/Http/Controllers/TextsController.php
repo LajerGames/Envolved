@@ -64,14 +64,13 @@ class TextsController extends Controller
 
         $this->ValidateRequest($request);
 
-        // TODO: Image upload does not work.
         // Folder is not created, but when it is created it still does not work. How to do it?
         // Upload image/* or video*/
         $fileName = HandleFiles::UploadFile(
             $request,
             'mms',
             '/public/stories/'.$story_id.'/texts/'
-        );
+        )['filename'];
 
         // If we have a image /*or a video*/ it will be saved as two texts text first image/video after
         if(!empty($request->input('text')))
@@ -194,7 +193,7 @@ class TextsController extends Controller
             'filename',
             'mms',
             'public/stories/'.$story_id.'/texts/'
-        );
+        )['filename'];
 
         // On an update we can only update a file or a text, so which is it?
         if(!empty($request->input('text')))
@@ -249,7 +248,7 @@ class TextsController extends Controller
     {
         $this->validate($request, [
             'sender' => 'required',
-            'mms' => [new ValidFile(true, false)],
+            'mms' => [new ValidFile(true, true, false)],
             'time' => 'required'
         ]);
     }

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\ValidFile;
+use http\Message;
 use Illuminate\Http\Request;
 use App\Story;
 use App\StoryArch;
 use App\StoryPoint;
 use App\Common\Permission;
 use App\Common\HandleSettings;
+use App\Common\HandleFiles;
 use App\Common\GetNewestValues;
 
 class StoryPointsController extends Controller
@@ -113,8 +116,47 @@ class StoryPointsController extends Controller
                 $leadsTo[] = $ref;
                 break;
             case 'replace' :
-                // Let's replace everything in the leads_to_json with whatever we recieved
-                $leadsTo = [$ref];
+
+                // Find out what type we're bringing along here
+                foreach($ref as $removeType => $value) {
+                    break;
+                }
+
+                // Let's replace everything in the leads_to_json with whatever we recieved - only if we have a value
+                if($value > 0) {
+                    $leadsTo = [$ref];
+                }
+                break;
+            case 'replace_type' :
+
+                // Find out what type we're bringing along here
+                foreach($ref as $removeType => $value) {
+                    break;
+                }
+
+                // Only do anything if we get a value
+                if($value > 0) {
+
+                    // Loop through the leadsTos and remove all of the type $removeType
+                    foreach($leadsTo as $entryNo => $object) {
+                        if(property_exists($object, $removeType)) {
+                            unset($leadsTo[$entryNo]);
+                        }
+                    }
+
+                    // The array may now be an accosiative array - which bugs me, so we'll now run through it and give it new keys
+                    $newLeadsToArray = [];
+                    foreach($leadsTo as $object) {
+                        $newLeadsToArray[] = $object;
+                    }
+
+                    // Set array back to leads to
+                    $leadsTo = $newLeadsToArray;
+
+                    // Add te new reference
+                    $leadsTo[] = $ref;
+                }
+
                 break;
         }
 
@@ -232,19 +274,51 @@ class StoryPointsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function SaveStoryPointForm()
+    public function SaveStoryPointForm(Request $request)
     {
         // Initialize variables
-        $postData = $_POST['data'];
-        $story_id = intval($postData['story_id']);
-        $story_point_id = intval($postData['story_point_id']);
+        $data = $_POST;
+        $story_id = intval($data['story_id']);
+        $story_point_id = intval($data['story_point_id']);
+
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+        /*
         $data = [];
         parse_str($_POST['data']['data'], $data);
+        */
         $name = $data['name'];
-        $json = isset($data['json']) ? json_encode($data['json']) : '';
 
         // Get the story point
         $storyPoint = $this->GetStoryPoint($story_id, $story_point_id);
+
+        // Did we get a file?
+        if($request->file('file') && $request->hasFile('file')) {
+
+            // TODO: HandleFiles needs to be able to create folders if they dont exist
+
+            // Delete old and upload new image
+            $imageInfo = HandleFiles::DeleteThenUpload(
+                $request,
+                $storyPoint,
+                'file',
+                'file',
+                'public/stories/'.$story_id.'/storypoints/'.$story_point_id.'/',
+                new ValidFile(false, false, true)
+            );
+
+            $fileName = isset($imageInfo['filename']) ? "{$imageInfo['filename']}" : '';
+
+            $storyPoint->file = $fileName;
+
+            $data['json']['file'] = $fileName;
+            $data['json']['mimetype'] = isset($imageInfo['mimetype']) ? "{$imageInfo['mimetype']}" : '';
+        }
+
+        $json = isset($data['json']) ? json_encode($data['json']) : '';
+
 
         // Update the story point json instructions and name
         
@@ -335,6 +409,12 @@ class StoryPointsController extends Controller
             case 'redirect' :
                 $specialElement = '<input type="hidden" class="run-js-on-save" data-js-function="addLeadsToToStoryPoint" data-type="" data-id="" value="" />';
                 break;
+            case 'start_new_thread' :
+                $specialElement = '<input type="hidden" class="run-js-on-save" data-js-function="addLeadsToToStoryPoint" data-type="story_arch" data-id="" data-action="replace_type" value="" />';
+                break;
+            case 'phone_call_incomming_voice' :
+                $specialElement = '<input type="hidden" class="run-js-on-save" data-js-function="refreshStoryPoint" data-type="" data-id="" data-action="" value="" />';
+                break;
         }
 
         // Get addable storyPoints
@@ -354,7 +434,8 @@ class StoryPointsController extends Controller
 
 
         return '
-        <form name="story_point" data-generated-id="'.$generatedID.'">
+        <form name="story_point" data-generated-id="'.$generatedID.'" enctype="multipart/form-data">
+            <input type="hidden" name="story_id" value="'.$storyPoint->story->id.'" />
             <input type="hidden" name="story_point_id" value="'.$storyPoint->id.'" />
             <div class="form-group">
                 <label for="'.$generatedID.'_name">Name</label><br />
@@ -378,7 +459,27 @@ class StoryPointsController extends Controller
         $addStoryPoints = true;
         switch($storyPoint->type) {
             case 'redirect' : // You can never add storypoints to redirect
+            case 'end_thread' : // You can never add storypoints to end_thread
                 $addStoryPoints = false;
+                break;
+            // Now for a list of types that can only have 1 story point, it may also lead to a story arch, but that doesn't count
+            case 'start_new_thread' :
+
+                $leadsTo = json_decode($storyPoint->leads_to_json);
+
+                // Loop through the leads tos, and see if we can find merely one "point" - if we can, then block this type from adding anymore story points
+                if(is_object($leadsTo))
+                {
+                    foreach($leadsTo as $object) {
+                        if(property_exists($object, 'point')) {
+
+                            $addStoryPoints = false;
+
+                            break; // No need to loop any further
+                        }
+                    }
+                }
+
                 break;
             // Now for a list of types that can only have 1 child - if it already has that, then block the addition of more
             case 'change_variable' :
@@ -386,6 +487,7 @@ class StoryPointsController extends Controller
             case 'text_incomming' : // incomming texts immidiately leads to a new story-point - but it can only lead to one
             case 'phone_call_incomming_voice' : // incomming voice immidiately leads to a new story-point - but it can only lead to one
             case 'insert_news_item' :
+            case 'start_new_thread' :
 
                 // If we wind up in here, that means that we can only add one story-point-child to this story point.
                 // If that is already done - then block for the addition of more
@@ -468,8 +570,27 @@ class StoryPointsController extends Controller
             case 'text_outgoing' :
                 $return = $this->RenderStoryPointFormTextOutgoing($values, $generatedID, $storyPoint);
                 break;
+            case 'phone_call_incomming_voice' :
+                $return = $this->RenderStoryPointFormPhoneCallVoiceIncomming($values, $generatedID, $storyPoint);
+                break;
+            case 'phone_call_outgoing_voice' :
+                $return = $this->RenderStoryPointFormPhoneCallVoiceOutgoing($values, $generatedID, $storyPoint);
+                break;
+            case 'phone_call_hang_up' :
+                echo 'hej';exit;
+                //$return = $this->RenderStoryPointFormPhoneCallVoiceOutgoing($values, $generatedID, $storyPoint);
+                break;
             case 'insert_news_item' :
                 $return = $this->RenderStoryPointFormInsertNewsItem($values, $generatedID, $storyPoint);
+                break;
+            case 'start_new_thread' :
+                $return = $this->RenderStoryPointFormStartNewThread($values, $generatedID, $storyPoint);
+                break;
+            case 'end_thread' :
+                // End thread needs nothin' but a name. We're just ending this paricular game-thread
+                break;
+            case 'end_game' :
+                $return = $this->RenderStoryPointFormEndGame($values, $generatedID, $storyPoint);
                 break;
                 
         }
@@ -896,9 +1017,9 @@ class StoryPointsController extends Controller
 
         return '
         <div class="form-group">
-            <input type="hidden" name="json[from_character_id]" value="'.$senderID.'" class="form-control story-point-text-interlocutor-id" />
+            <input type="hidden" name="json[from_character_id]" value="'.$senderID.'" class="form-control story-point-interlocutor-id" />
             <label for="'.$generatedID.'_sender_id">Message from</label><br />
-            <input list="'.$generatedID.'_choose_sender" id="'.$generatedID.'_sender_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_sender_id" type="text" value="'.$characterName.'" class="form-control story-point-text-interlocutor-name" placeholder="Search character" />
+            <input list="'.$generatedID.'_choose_sender" id="'.$generatedID.'_sender_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_sender_id" type="text" value="'.$characterName.'" class="form-control story-point-interlocutor-name" placeholder="Search character" />
             <datalist id="'.$generatedID.'_choose_sender">
                 '.$this->GetAllCharacters($storyPoint->story).'
             </datalist>
@@ -1000,9 +1121,9 @@ class StoryPointsController extends Controller
 
         return '
         <div class="form-group">
-            <input type="hidden" name="json[to_character_id]" value="'.$receiverID.'" class="form-control story-point-text-interlocutor-id" />
+            <input type="hidden" name="json[to_character_id]" value="'.$receiverID.'" class="form-control story-point-interlocutor-id" />
             <label for="'.$generatedID.'_receiver_id">Message to</label><br />
-            <input list="'.$generatedID.'_choose_receiver" id="'.$generatedID.'_receiver_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_receiver_id" type="text" value="'.$characterName.'" class="form-control story-point-text-interlocutor-name" placeholder="Search character" />
+            <input list="'.$generatedID.'_choose_receiver" id="'.$generatedID.'_receiver_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_receiver_id" type="text" value="'.$characterName.'" class="form-control story-point-interlocutor-name" placeholder="Search character" />
             <datalist id="'.$generatedID.'_choose_receiver">
                 '.$this->GetAllCharacters($storyPoint->story).'
             </datalist>
@@ -1015,6 +1136,71 @@ class StoryPointsController extends Controller
         <div class="form-group">
             <label for="'.$generatedID.'_time_to_read">Time To read (words per minute)</label><br />
             <input type="number" id="'.$generatedID.'_time_to_read" name="json[text_time_to_read]" value="'.$settings->text_time_to_read.'" class="form-control story-point-text-time-to-read" />
+        </div>
+        ';
+    }
+
+    private function RenderStoryPointFormPhoneCallVoiceIncomming($values, $generatedID, StoryPoint $storyPoint) {
+
+        $senderID       = $this->ExtractValueFromObject(['from_character_id'], $values);
+        $file           = $this->ExtractValueFromObject(['file'], $values);
+        $fileMime       = $this->ExtractValueFromObject(['mimetype'], $values);
+        $allowedFormats = new ValidFile(false, false, true);
+
+        // If we didn't find a $senderID, look at the latest story point that leads to this story point that is of the type of outgoing OR incomming message.
+        // If we can find such a story point, and if it has a sender_id, then insert that as a suggestion to receiver
+        if(empty($senderID)) {
+
+            // Get character from previous story_point of text_incomming or text_outgoing
+            $prevStoryPointFromOrToCharacterID    = intval($this->ExtractValueFromObject(
+                ['to_character_id', 'from_character_id'],
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'])
+            ));
+
+            // Check if we set a from character in the previous StoryPoint
+            if($prevStoryPointFromOrToCharacterID > 0)
+                $senderID = $prevStoryPointFromOrToCharacterID;
+        }
+
+        // Do we have a redirectID? If so, then please write find the correct value
+        $characterName = '';
+        if($senderID > 0) {
+
+            $character = $storyPoint->story->characters->find($senderID);
+
+            $characterName = $character->first_name.' '.$character->middle_names.' '.$character->last_name;
+        }
+
+        if($file && $fileMime) {
+            $audioSection = '
+            <br />
+            <audio controls>
+                <source src="/storage/stories/'.$storyPoint->story_id.'/storypoints/'.$storyPoint->id.'/'.$file.'" type="'.$fileMime.'">
+                Your browser does not support the audio element.
+            </audio>
+            ';
+        }
+        else {
+            $audioSection = '<br />Notice:<br /><small>'.$allowedFormats->message().'</small>';
+        }
+
+        return '
+        <div class="story-point-phone-call-voice-incomming-updatable-section">
+            <div class="form-group">
+                <input type="hidden" name="json[from_character_id]" value="'.$senderID.'" class="form-control story-point-interlocutor-id" />
+                <input type="hidden" name="json[file]" value="'.$file.'" class="form-control" />
+                <input type="hidden" name="json[mimetype]" value="'.$fileMime.'" class="form-control" />
+                <label for="'.$generatedID.'_sender_id">From</label><br />
+                <input list="'.$generatedID.'_choose_sender" id="'.$generatedID.'_sender_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_sender_id" type="text" value="'.$characterName.'" class="form-control story-point-interlocutor-name" placeholder="Search character" />
+                <datalist id="'.$generatedID.'_choose_sender">
+                    '.$this->GetAllCharacters($storyPoint->story).'
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label for="'.$generatedID.'_message_file">Voice message</label><br />
+                <input type="file" name="file" id="'.$generatedID.'_message_file">
+                '.$audioSection.'
+            </div>
         </div>
         ';
     }
@@ -1036,11 +1222,39 @@ class StoryPointsController extends Controller
         return '
         <div class="form-group">
             <input type="hidden" name="json[news_item]" value="'.$newsItemID.'" class="form-control story-point-insert-news-item-id" />
-            <label for="'.$generatedID.'_news_item">Message from</label><br />
+            <label for="'.$generatedID.'_news_item">Select news item</label><br />
             <input list="'.$generatedID.'_news_item_name" id="'.$generatedID.'_news_item" name="'.$generatedID.'_news_item_name" type="text" value="'.$newsHeadline.'" class="form-control story-point-insert-news-item-name" placeholder="Search news article" />
             <datalist id="'.$generatedID.'_news_item_name">
                 '.$this->GetAllUnpublishedNews($storyPoint->story).'
             </datalist>
+        </div>
+        ';
+    }
+
+    private function RenderStoryPointFormStartNewThread($values, $generatedID, StoryPoint $storyPoint) {
+
+        $redirectID     = intval($this->ExtractValueFromObject(['spawn_new_thread_arch'], $values));
+        $redirectValue  = '';
+
+        // Do we have a redirectID? If so, then please write find the correct value
+        if($redirectID > 0) {
+
+            // Get the correct storypoint
+            $leadsToStoryArch = $storyPoint->story->storyarchs->find($redirectID);
+
+            $redirectValue = $leadsToStoryArch->name;
+
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[spawn_new_thread_arch]" value="'.$redirectID.'" class="form-control story-point-start-new-thread-selected-id" />
+            <label for="'.$generatedID.'_start_new_thread_id">Choose destination</label><br />
+            <input list="'.$generatedID.'_choose_destination" name="'.$generatedID.'_start_new_thread_id" type="text" value="'.$redirectValue.'" class="form-control story-point-start-new-thread-choose-destination" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_destination">
+                '.$this->GetAvailableStoryArchs($storyPoint->story).'
+            </datalist>
+        </div>
         ';
     }
     
@@ -1052,6 +1266,7 @@ class StoryPointsController extends Controller
         $storyPoint->number             =  $number;
         $storyPoint->type               =  $_POST['data']['type'];
         $storyPoint->instructions_json  = "";
+        $storyPoint->file               = "";
         $storyPoint->leads_to_json      = "";
         $storyPoint->save();
     }
@@ -1172,7 +1387,7 @@ class StoryPointsController extends Controller
     }
     private function ExtractValueFromObject($acceptableValues, $object = null) {
 
-        $value = 0;
+        $value = '';
         if(is_object($object)) {
 
             foreach ($acceptableValues as $acceptableValue) {

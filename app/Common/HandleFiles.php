@@ -2,9 +2,10 @@
 
 namespace App\Common;
 
+use App\Rules\ValidFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
- 
+
 class HandleFiles {
 
     /**
@@ -15,10 +16,12 @@ class HandleFiles {
      * @param string $fileTableField
      * @param string $requestFileName
      * @param string $filePath
-     * @return string $fileName
+     * @param ValidFile $saveFilePath You may send an instance of valid file class, and MIME types will be barred from upload (most files do this check elsewhere though)
+     * @return array $fileInfo
      */
-    public static function DeleteThenUpload(Request $request, $model, $fileTableField, $requestFileName, $filePath)
+    public static function DeleteThenUpload(Request $request, $model, $fileTableField, $requestFileName, $filePath, $validFile = false)
     {
+
         // Only do anything if we're uploading a new picture
         if($request->hasFile($requestFileName))
         {
@@ -29,7 +32,7 @@ class HandleFiles {
             }
 
             // Upload file
-            return self::UploadFile($request, $requestFileName, $filePath);
+            return self::UploadFile($request, $requestFileName, $filePath, $validFile);
         }
     }
 
@@ -39,12 +42,24 @@ class HandleFiles {
      * @param \Illuminate\Http\Request  $request
      * @param string $requestFileName  
      * @param string $saveFilePath
-     * @return string $fileName
+     * @param ValidFile $saveFilePath You may send an instance of valid file class, and MIME types will be barred from upload (most files do this check elsewhere though)
+     * @return array $fileInfo
      */
-    public static function UploadFile(Request $request, $requestFileName, $saveFilePath)
+    public static function UploadFile(Request $request, $requestFileName, $saveFilePath, $validFile = false)
     {
-        if($request->hasFile($requestFileName))
-        {
+        $saveFilePath = rtrim($saveFilePath, '/');
+
+        if($request->hasFile($requestFileName)) {
+
+            // Do we check filetype according to ValidFile class?
+            if($validFile instanceof ValidFile) {
+                // Now check if this file passes the requirements
+                if(!$validFile->passes('', $request->file($requestFileName))) {
+                    // If not, return nothing - we're not telling the user... cba atm!
+                    return '';
+                }
+            }
+
             // Get filename with extension
             $filenameWithExt = $request->file($requestFileName)->getClientOriginalName();
 
@@ -55,17 +70,26 @@ class HandleFiles {
             $extension = $request->file($requestFileName)->getClientOriginalExtension();
 
             // Filename to store
-            $fileName = $filename.'_'.time().'.'.$extension;
+            $fileName = mt_rand(0, 10000).'_'.microtime().'.'.$extension;
+
+            // Make sure we have the directory
+            Storage::makeDirectory($saveFilePath);
 
             // Upload file
-            $path = $request->file($requestFileName)->storeAs($saveFilePath, $fileName);
+            $request->file($requestFileName)->storeAs($saveFilePath, $fileName);
+
+            $mimeType = $request->file($requestFileName)->getMimeType();
         }
         else
         {
             $fileName = '';
+            $mimeType = '';
         }
 
-        return $fileName;
+        return [
+            'filename' => $fileName,
+            'mimetype' => $mimeType
+        ];
     }
 
     /**
