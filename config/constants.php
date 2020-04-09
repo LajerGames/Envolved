@@ -36,6 +36,6 @@ return [
         'insert_news_item'  => ['Insert news item', 'gold'],
         'start_new_thread'  => ['Start new thread', 'lightgrey'],
         'end_thread'  => ['End current Thread', 'orangered'],
-        'end_game'  => ['Insert news item', 'red']
+        'end_game'  => ['End Game', 'red']
     ]
 ];

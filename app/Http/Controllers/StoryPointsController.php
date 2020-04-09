@@ -230,7 +230,7 @@ class StoryPointsController extends Controller
                         // Get the color
                         $color = config('constants.story_points')[$storyPoint->type][1];
     
-                        $return .= '<a class="id-number-circle story-point-leads-to-reference" data-story-point-no="'.$storyPoint->number.'" style="background-color:'.$color.'">'.$storyPoint->number.'</a>';
+                        $return .= '<a class="id-number-circle story-point-leads-to-reference" href data-story-point-no="'.$storyPoint->number.'" style="background-color:'.$color.'">'.$storyPoint->number.'</a>';
                     }
                     else {
                         // This leads to a storyarch
@@ -545,8 +545,6 @@ class StoryPointsController extends Controller
     
 
     // section: Form Type Inputs
-
-
     private function RenderStoryPointFormTypeInputs(StoryPoint $storyPoint, $generatedID) {
         $return = '';
         $values = json_decode($storyPoint->instructions_json);
@@ -577,8 +575,7 @@ class StoryPointsController extends Controller
                 $return = $this->RenderStoryPointFormPhoneCallVoiceOutgoing($values, $generatedID, $storyPoint);
                 break;
             case 'phone_call_hang_up' :
-                echo 'hej';exit;
-                //$return = $this->RenderStoryPointFormPhoneCallVoiceOutgoing($values, $generatedID, $storyPoint);
+                // Hangs up any ongoing conversation
                 break;
             case 'insert_news_item' :
                 $return = $this->RenderStoryPointFormInsertNewsItem($values, $generatedID, $storyPoint);
@@ -801,16 +798,16 @@ class StoryPointsController extends Controller
                     $variable = $this->GetSpecificVariable($story->variables, $instructions->variable);
 
                     // So, save all the neccesary information to pre-fill information in this record
-                    $chosenVariableID   = $instructions->variable;
+                    $chosenVariableID   = property_exists($instructions, 'variable') ? $instructions->variable : '';;
                     $chosenVariableName = $variable['chosenVariableName'];
                     $chosenVariableType = $variable['chosenVariableType'];
-                    $chosenOperator     = $instructions->operator;
-                    $chosenValue        = $instructions->value;
+                    $chosenOperator     = property_exists($instructions, 'operator') ? $instructions->operator : '';
+                    $chosenValue        = property_exists($instructions, 'value') ? $instructions->value : '';
                 }
                 
                 // Theese are needed everywhere, both in if statements and else statements
                 $chosenLeadsToID    = $instructions->leads_to;
-                $chosenLeadsToName  = $leadsTos[$instructions->leads_to];
+                $chosenLeadsToName  = isset($leadsTos[$instructions->leads_to]) ? $leadsTos[$instructions->leads_to] : '';
             }
 
         }
@@ -1142,10 +1139,10 @@ class StoryPointsController extends Controller
 
     private function RenderStoryPointFormPhoneCallVoiceIncomming($values, $generatedID, StoryPoint $storyPoint) {
 
-        $senderID       = $this->ExtractValueFromObject(['from_character_id'], $values);
-        $file           = $this->ExtractValueFromObject(['file'], $values);
-        $fileMime       = $this->ExtractValueFromObject(['mimetype'], $values);
-        $allowedFormats = new ValidFile(false, false, true);
+        $senderID               = $this->ExtractValueFromObject(['from_character_id'], $values);
+        $file                   = $this->ExtractValueFromObject(['file'], $values);
+        $fileMime               = $this->ExtractValueFromObject(['mimetype'], $values);
+        $allowedFormats         = new ValidFile(false, false, true);
 
         // If we didn't find a $senderID, look at the latest story point that leads to this story point that is of the type of outgoing OR incomming message.
         // If we can find such a story point, and if it has a sender_id, then insert that as a suggestion to receiver
@@ -1162,7 +1159,7 @@ class StoryPointsController extends Controller
                 $senderID = $prevStoryPointFromOrToCharacterID;
         }
 
-        // Do we have a redirectID? If so, then please write find the correct value
+        // Do we have a sender ID? If so, then please write find the correct value
         $characterName = '';
         if($senderID > 0) {
 
@@ -1201,6 +1198,160 @@ class StoryPointsController extends Controller
                 <input type="file" name="file" id="'.$generatedID.'_message_file">
                 '.$audioSection.'
             </div>
+            '.$this->GeneratePhoneCallsIfUserHangUpFallbacks($values, $generatedID, $storyPoint).'
+        </div>
+        ';
+    }
+
+    private function RenderStoryPointFormPhoneCallVoiceOutgoing($values, $generatedID, StoryPoint $storyPoint) {
+
+        $receiverID   = $this->ExtractValueFromObject(['to_character_id', 'from_character_id'], $values);
+
+        // Get the story
+        $story = $storyPoint->story;
+
+        // If we didn't find a receiverID, look at the latest story point that leads to this story point that is of the type of incomming or outgoing voice.
+        // If we can find such a story point, and if it has a sender_id, then insert that as a suggestion to receiver
+        if(empty($receiverID)) {
+
+            // Get character from previous story_point of text_incomming or text_outgoing
+            $prevStoryPointFromOrToCharacterID    = intval($this->ExtractValueFromObject(
+                ['to_character_id', 'from_character_id'],
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'])
+            ));
+
+            // Check if we set a from character in the previous StoryPoint
+            if($prevStoryPointFromOrToCharacterID > 0)
+                $receiverID = $prevStoryPointFromOrToCharacterID;
+        }
+
+        $characterName = '';
+        if($receiverID  > 0) {
+
+            $character = $story->characters->find($receiverID);
+
+            $characterName = $character->first_name.' '.$character->middle_names.' '.$character->last_name;
+        }
+
+        // Does this storypoint lead anywhere? If not, then notify the user that it needs to lead somewhere in order to have options.
+        if(!empty($storyPoint->leads_to_json)) {
+
+            // Story point leads somewhere, create the options
+
+            // Go through them all and make sure the is a message
+            $leadsTos = json_decode($storyPoint->leads_to_json);
+
+            $leadsToMessages = '';
+            foreach($leadsTos as $leadsTo) {
+
+                // Get the story_point it leads_to
+                $leadsToStoryPoint = $story->storypoints->find($leadsTo->point);
+
+                $message = (is_object($values) && property_exists($values, $leadsTo->point) && is_object($values->{$leadsTo->point})) ? $values->{$leadsTo->point}->message : '';
+
+                $leadsToMessages .= '
+                <div class="form-group">
+                    <label for="'.$generatedID.'_'.$leadsToStoryPoint->id.'_message">'.$leadsToStoryPoint->number.' '.$leadsToStoryPoint->name.' (message)</label><br />
+                    <textarea name="json['.$leadsToStoryPoint->id.'][message]" id="'.$generatedID.'_'.$leadsToStoryPoint->id.'_message" class="form-control story-point-text-outgoing-message">'.$message.'</textarea>
+                </div>
+                ';
+            }
+        }
+        else {
+            // Story point leads nowhere, tell the user that it needs to.
+            $leadsToMessages = 'Story point leads nowhere yet, create leads in order to create the conditions. <br /><br />';
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[to_character_id]" value="'.$receiverID.'" class="form-control story-point-interlocutor-id" />
+            <label for="'.$generatedID.'_receiver_id">Message to</label><br />
+            <input list="'.$generatedID.'_choose_receiver" id="'.$generatedID.'_receiver_id" data-storypoint-id="'.$storyPoint->id.'" name="'.$generatedID.'_receiver_id" type="text" value="'.$characterName.'" class="form-control story-point-interlocutor-name" placeholder="Search character" />
+            <datalist id="'.$generatedID.'_choose_receiver">
+                '.$this->GetAllCharacters($storyPoint->story).'
+            </datalist>
+        </div>
+        '.$leadsToMessages.'
+        '.$this->GeneratePhoneCallsIfUserHangUpFallbacks($values, $generatedID, $storyPoint).'
+        ';
+    }
+
+    private function GeneratePhoneCallsIfUserHangUpFallbacks($values, $generatedID, StoryPoint $storyPoint)
+    {
+        $redirectToArchIfHangUp = $this->ExtractValueFromObject(['if_user_hang_up_start_arch'], $values);
+        $redirectToStoryPointAfterArchID = intval($this->ExtractValueFromObject(['if_user_hang_up_start_story_point'], $values));
+
+        // If we didn't find a receiverID, look at the latest story point that leads to this story point that is of the type of incomming or outgoing voice.
+        // If we can find such a story point, and if it has a $redirectToArchIfHangUp, then insert that as a suggestion to $redirectToArchIfHangUp
+        if(empty($redirectToArchIfHangUp)) {
+
+            // Get character from previous story_point of text_incomming or text_outgoing
+            $redirectToArchIfHangUp    = intval($this->ExtractValueFromObject(
+                ['if_user_hang_up_start_arch'],
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'])
+            ));
+        }
+
+        $redirectToArchValue  = '';
+        // Do we have a redirectID? If so, then please write find the correct value
+        if($redirectToArchIfHangUp > 0) {
+
+            // Get the correct story arch
+            $leadsToStoryArch = $storyPoint->story->storyarchs->find($redirectToArchIfHangUp);
+
+            $redirectToArchValue = $leadsToStoryArch->name;
+
+        }
+        else
+        {
+            $redirectToArchValue = ' -- Do nothing -- ';
+        }
+
+        // If we didn't find a receiverID, look at the latest story point that leads to this story point that is of the type of incomming or outgoing voice.
+        // If we can find such a story point, and if it has a $redirectToArchIfHangUp, then insert that as a suggestion to $redirectToArchIfHangUp
+        if(empty($redirectToStoryPointAfterArchID)) {
+
+            // Get character from previous story_point of text_incomming or text_outgoing
+            $redirectToStoryPointAfterArchID    = intval($this->ExtractValueFromObject(
+                ['if_user_hang_up_start_story_point'],
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'], ['phone_call_hang_up'])
+            ));
+        }
+
+        $redirectToStoryPointAfterArch  = '';
+        // Do we have a redirectID? If so, then please write find the correct value
+        if($redirectToStoryPointAfterArchID > 0) {
+
+            // Get the correct storypoint
+            $leadsToStoryPoint = $storyPoint->story->storypoints->find($redirectToStoryPointAfterArchID);
+
+            $redirectToStoryPointAfterArch = $leadsToStoryPoint->name;
+
+        }
+        else
+        {
+            $redirectToStoryPointAfterArch = ' -- Do nothing -- ';
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[if_user_hang_up_start_arch]" value="'.$redirectToArchIfHangUp.'" class="form-control story-point-phone-call-hang-up-options-selected-id" />
+            <label for="'.$generatedID.'_choose_arch_if_user_hangs_up">If user hangs up</label><br />
+            <small>Start story arch</small>
+            <input list="'.$generatedID.'_choose_destination_arch" name="'.$generatedID.'_choose_arch_if_user_hangs_up" type="text" value="'.$redirectToArchValue.'" class="form-control choose-story-point-phone-call-hang-up-options" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_destination_arch">
+                <option data-id="0" value=" -- Do nothing -- " />
+                '.$this->GetAvailableStoryArchs($storyPoint->story).'
+            </datalist>
+        </div>
+        <div class="form-group">
+            <input type="hidden" name="json[if_user_hang_up_start_story_point]" value="'.$redirectToStoryPointAfterArchID.'" class="form-control story-point-phone-call-hang-up-options-selected-id" />
+            <small>After arch redirect to</small>
+            <input list="'.$generatedID.'_choose_destination_story_point" name="'.$generatedID.'_choose_arch_if_user_hangs_up" type="text" value="'.$redirectToStoryPointAfterArch.'" class="form-control choose-story-point-phone-call-hang-up-options" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_destination_story_point">
+                <option data-id="0" value=" -- Do nothing -- " />
+                '.$this->GetAvailableStoryPoints($storyPoint->storyArch, [$storyPoint->id]).'
+            </datalist>
         </div>
         ';
     }
@@ -1250,6 +1401,20 @@ class StoryPointsController extends Controller
         <div class="form-group">
             <input type="hidden" name="json[spawn_new_thread_arch]" value="'.$redirectID.'" class="form-control story-point-start-new-thread-selected-id" />
             <label for="'.$generatedID.'_start_new_thread_id">Choose destination</label><br />
+            <input list="'.$generatedID.'_choose_destination" name="'.$generatedID.'_start_new_thread_id" type="text" value="'.$redirectValue.'" class="form-control story-point-start-new-thread-choose-destination" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_destination">
+                '.$this->GetAvailableStoryArchs($storyPoint->story).'
+            </datalist>
+        </div>
+        ';
+    }
+
+    private function RenderStoryPointFormEndGame($values, $generatedID, StoryPoint $storyPoint) {
+        return;
+
+        return '
+        <div class="form-group">
+            <label for="'.$generatedID.'_end_game_message">Choose destination</label><br />
             <input list="'.$generatedID.'_choose_destination" name="'.$generatedID.'_start_new_thread_id" type="text" value="'.$redirectValue.'" class="form-control story-point-start-new-thread-choose-destination" placeholder="Search destination" />
             <datalist id="'.$generatedID.'_choose_destination">
                 '.$this->GetAvailableStoryArchs($storyPoint->story).'
@@ -1359,9 +1524,10 @@ class StoryPointsController extends Controller
     /**
      * @param StoryPoint $storyPoint
      * @param array $types
+     * @param array $stopIfArriveAt (Stop looking if we arrive at a story point of types)
      * @return mixed|null
      */
-    private function GetInstructionJSONFromClosestRefererOfTypes(StoryPoint $storyPoint, array $types) {
+    private function GetInstructionJSONFromClosestRefererOfTypes(StoryPoint $storyPoint, array $types, array $stopIfArriveAt = []) {
         $referer = StoryPoint::where(
             'story_id', $storyPoint->story_id
         )->whereRaw(
@@ -1374,12 +1540,19 @@ class StoryPointsController extends Controller
         $prevStoryPointInstructions = null;
         if(isset($referer->id) && $referer->id > 0) {
 
-            // Is the referer we found of the desired type?
-            if(in_array($referer->type, $types)) {
+            if(is_countable($stopIfArriveAt) && count($stopIfArriveAt) > 0 && in_array($referer->type, $stopIfArriveAt)) {
+
+                return '';
+
+            } elseif(in_array($referer->type, $types)) { // Is the referer we found of the desired type?
+
                 // Yes! We found a referer of the desired type!
                 $prevStoryPointInstructions = json_decode($referer->instructions_json);
+
             } else {
+
                 $prevStoryPointInstructions = self::GetInstructionJSONFromClosestRefererOfTypes($referer, $types);
+
             }
         }
 

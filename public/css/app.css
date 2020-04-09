@@ -8963,6 +8963,7 @@ div.character-expandable {
 .story-point-container-middle-and-bottom {
   width: 100%;
   position: absolute;
+  z-index: 1;
 }
 
 .story-point-container-middle {

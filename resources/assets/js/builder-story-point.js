@@ -394,7 +394,7 @@ $(document).ready(function() {
         closeStoryPointForms();
 
         // Set z-index up
-        adjustZIndex(storyPointContainer.find('div.story-point-container-middle-and-bottom'), 1);
+        adjustZIndex(storyPointContainer.find('div.story-point-container-middle-and-bottom'), 2);
 
         // Show
        toggleStoryPointOpacityIcon(storyPointContainer.find('div.story-point-container-top-opacity-icon-container'), 'show', animationTime);
@@ -456,7 +456,7 @@ $(document).ready(function() {
        setTimeout(function() {
 
            storyPointsToClose.each(function() {
-               adjustZIndex($(this).find('div.story-point-container-middle-and-bottom'), 0);
+               adjustZIndex($(this).find('div.story-point-container-middle-and-bottom'), 1);
            });
 
        }, animationTime);
@@ -803,7 +803,7 @@ $(document).ready(function() {
     });
 
     // Start new thread - choose destination
-    $('div.panel-body').on('change', '.story-point-start-new-thread-choose-destination', function () {
+    $('div.panel-body').on('change', '.story-point-start-new-thread-selected-id', function () {
 
 
         var selectedDestination = $(this),
@@ -910,6 +910,29 @@ $(document).ready(function() {
                 }
 
             });
+
+    });
+
+    // Phone call incomming voice and outgoing choose hang-up-arch and after-arch-action
+    $('div.panel-body').on('change', '.choose-story-point-phone-call-hang-up-options', function () {
+
+
+        var selectedDestination = $(this),
+            thisFormGroupContainer = $(this).closest('.form-group'),
+            destinationDatalist = thisFormGroupContainer.find('datalist'),
+            selectedIDInput = thisFormGroupContainer.find('.story-point-phone-call-hang-up-options-selected-id');
+
+        destinationDatalist.find('option').each(function() {
+
+            if($(this).val() == selectedDestination.val()) {
+
+                // Set the appropriate value in the hidden ID field
+                selectedIDInput.val($(this).data('id'));
+
+                return false; // Stop loop
+            }
+
+        });
 
     });
     
