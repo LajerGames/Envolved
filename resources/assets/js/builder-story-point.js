@@ -935,6 +935,29 @@ $(document).ready(function() {
         });
 
     });
+
+    // Phone number choose new story arch for text and call
+    $('div.panel-body').on('change', '.choose-new-story-arch-phone-number', function () {
+
+
+        var selectedDestination = $(this),
+            thisFormGroupContainer = $(this).closest('.form-group'),
+            destinationDatalist = thisFormGroupContainer.find('datalist'),
+            selectedIDInput = thisFormGroupContainer.find('.story-point-phone-call-number-change-arch-selected-id');
+
+        destinationDatalist.find('option').each(function() {
+
+            if($(this).val() == selectedDestination.val()) {
+
+                // Set the appropriate value in the hidden ID field
+                selectedIDInput.val($(this).data('id'));
+
+                return false; // Stop loop
+            }
+
+        });
+
+    });
     
 
     // News item, insert - choose article

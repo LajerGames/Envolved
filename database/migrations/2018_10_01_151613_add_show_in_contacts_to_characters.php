@@ -26,7 +26,7 @@ class AddShowInContactsToCharacters extends Migration
     public function down()
     {
         Schema::table('story_characters', function($table) {
-            $table->dtopColumn('in_contacts');
+            $table->dropColumn('in_contacts');
         });
     }
 }

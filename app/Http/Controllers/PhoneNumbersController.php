@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Common\HandleSettings;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Story;
@@ -42,7 +43,8 @@ class PhoneNumbersController extends Controller
 
         $info = [
             'story' => $story,
-            'characters_list' => BuildSelectOptions::Build($story->characters, 'id', ['first_name', 'middle_names', 'last_name'], ' ', 'None')
+            'characters_list' => BuildSelectOptions::Build($story->characters, 'id', ['first_name', 'middle_names', 'last_name'], ' ', 'None'),
+            'story_archs' => BuildSelectOptions::Build($story->storyarchs, 'id', 'name', ' ', 'None')
         ];
 
         return view('stories.phone_numbers.create')->with('info', $info);
@@ -101,10 +103,17 @@ class PhoneNumbersController extends Controller
             return redirect('/stories/'.$story->id.'/phone_numbers')->with('error', 'Access denied');
         }
 
+        $phoneNumber = $story->phonenumber->find($id);
+
+        $handleSettings = new HandleSettings();
+
         $info = [
             'id'    => $id,
             'story' => $story,
-            'characters_list' => BuildSelectOptions::Build($story->characters, 'id', ['first_name', 'middle_names', 'last_name'], ' ', 'None')
+            'phone_number' => $phoneNumber,
+            'settings' => $handleSettings->GetSettings($story, 'other', '', '', $phoneNumber),
+            'characters_list' => BuildSelectOptions::Build($story->characters, 'id', ['first_name', 'middle_names', 'last_name'], ' ', 'None'),
+            'story_archs' => BuildSelectOptions::Build($story->storyarchs, 'id', 'name', ' ', 'None')
         ];
 
         return view('stories.phone_numbers.edit')->with('info', $info);
@@ -184,7 +193,7 @@ class PhoneNumbersController extends Controller
         $phoneNumber->character_id = "{$request->input('character_id')}";
         $phoneNumber->number = "{$request->input('number')}";
         $phoneNumber->name = "{$request->input('name')}";
-        $phoneNumber->messagable = "{$request->input('messagable')}";
+        $phoneNumber->settings = json_encode($request->settings);
         $phoneNumber->save();
     }
 }

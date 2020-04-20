@@ -434,7 +434,7 @@ class StoryPointsController extends Controller
 
 
         return '
-        <form name="story_point" data-generated-id="'.$generatedID.'" enctype="multipart/form-data">
+        <form name="story_point" data-generated-id="'.$generatedID.'" enctype="multipart/form-data" autocomplete="off">
             <input type="hidden" name="story_id" value="'.$storyPoint->story->id.'" />
             <input type="hidden" name="story_point_id" value="'.$storyPoint->id.'" />
             <div class="form-group">
@@ -561,6 +561,9 @@ class StoryPointsController extends Controller
                 break;
             case 'redirect' :
                 $return = $this->RenderStoryPointFormTypeRedirect($values, $generatedID, $storyPoint);
+                break;
+            case 'phone_number_change_arch' :
+                $return = $this->RenderStoryPointFormPhoneNumberChangeArch($values, $generatedID, $storyPoint);
                 break;
             case 'text_incomming' :
                 $return = $this->RenderStoryPointFormTextIncomming($values, $generatedID, $storyPoint);
@@ -978,6 +981,68 @@ class StoryPointsController extends Controller
 
             echo json_encode($this->RenderStoryPointFormRedirectDestinationOptions($storyPoint, $data['type']));
         }
+
+    private function RenderStoryPointFormPhoneNumberChangeArch($values, $generatedID, StoryPoint $storyPoint) {
+
+        $phoneNumberID      = intval($this->ExtractValueFromObject(['phone_number_id'], $values));
+        $callLeadsToArchID  = intval($this->ExtractValueFromObject(['call_story_arch'], $values));
+        $textLeadsToArchID  = intval($this->ExtractValueFromObject(['text_story_arch'], $values));
+
+        $story = $storyPoint->story;
+
+        // Find Phone number
+        $phoneNumber = '';
+        if($phoneNumberID > 0) {
+            $phoneNumberObj = $story->phonenumber->find($phoneNumberID);
+
+            $phoneNumber = $phoneNumberObj->number.' '.$phoneNumberObj->name;
+        }
+
+        // callArc
+        $callArchName = ' -- None -- ';
+        if($callLeadsToArchID > 0) {
+            $callArch = $story->storyarchs->find($callLeadsToArchID);
+
+            $callArchName = $callArch->name;
+        }
+
+        // callArc
+        $textArchName = ' -- None -- ';
+        if($textLeadsToArchID > 0) {
+            $textArch = $story->storyarchs->find($textLeadsToArchID);
+
+            $textArchName = $textArch->name;
+        }
+
+        return '
+        <div class="form-group">
+            <input type="hidden" name="json[phone_number_id]" value="'.$phoneNumberID.'" class="form-control story-point-phone-call-number-change-arch-selected-id" />
+            <label for="'.$generatedID.'_choose_call_story_arch">Phone number</label><br />
+            <input list="'.$generatedID.'_choose_phone_number" name="'.$generatedID.'_choose_phone_number" type="text" value="'.$phoneNumber.'" class="form-control choose-new-story-arch-phone-number" placeholder="Search phone number" autocomplete="off" />
+            <datalist id="'.$generatedID.'_choose_phone_number">
+                '.$this->GetAllPhoneNumbers($storyPoint->story).'
+            </datalist>
+        </div>
+        <div class="form-group">
+            <input type="hidden" name="json[call_story_arch]" value="'.$callLeadsToArchID.'" class="form-control story-point-phone-call-number-change-arch-selected-id" />
+            <label for="'.$generatedID.'_choose_call_story_arch">Call story arch</label><br />
+            <input list="'.$generatedID.'_choose_call_destination_arch" name="'.$generatedID.'_choose_call_story_arch" type="text" value="'.$callArchName.'" class="form-control choose-new-story-arch-phone-number" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_call_destination_arch">
+                <option data-id="0" value=" -- None -- " />
+                '.$this->GetAvailableStoryArchs($storyPoint->story).'
+            </datalist>
+        </div>
+        <div class="form-group">
+            <input type="hidden" name="json[text_story_arch]" value="'.$textLeadsToArchID.'" class="form-control story-point-phone-call-number-change-arch-selected-id" />
+            <label for="'.$generatedID.'_choose_call_story_arch">Text story arch</label><br />
+            <input list="'.$generatedID.'_choose_text_destination_arch" name="'.$generatedID.'_choose_text_story_arch" type="text" value="'.$textArchName.'" class="form-control choose-new-story-arch-phone-number" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_text_destination_arch">
+                <option data-id="0" value=" -- None -- " />
+                '.$this->GetAvailableStoryArchs($storyPoint->story).'
+            </datalist>
+        </div>
+        ';
+    }
 
     private function RenderStoryPointFormTextIncomming($values, $generatedID, StoryPoint $storyPoint) {
 
@@ -1507,6 +1572,18 @@ class StoryPointsController extends Controller
         }
 
         return $characterOptions;
+    }
+
+    private function GetAllPhoneNumbers(Story $story) {
+        $phoneNumbers = $story->phonenumber->all();
+
+        // Go through the found variables in order to create options
+        $phoneNumberOptions = '';
+        foreach($phoneNumbers as $phoneNumber) {
+            $phoneNumberOptions .= '<option data-id="'.$phoneNumber->id.'" value="'.$phoneNumber->number.' '.$phoneNumber->name.'" />';
+        }
+
+        return $phoneNumberOptions;
     }
 
     private function GetAllUnpublishedNews(Story $story) {

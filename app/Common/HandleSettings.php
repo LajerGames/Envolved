@@ -2,6 +2,8 @@
 
 namespace App\Common;
  
+use App\PhoneNumber;
+
 class HandleSettings {
 
     /**
@@ -128,7 +130,7 @@ class HandleSettings {
      * @param string $type (editor or story)
      * @return array
      */
-    public function GetSettings(\App\Story $story,  $type, $character = '', $storyPoint = '') {
+    public function GetSettings(\App\Story $story,  $type, $character = '', $storyPoint = '', $otherSettingModel = '') {
         $settings = '';
         switch($type) {
             case 'editor' :
@@ -138,9 +140,42 @@ class HandleSettings {
             case 'story' :
                 $settings = $this->GetStorySettings($story);
                 break;
+            case 'other' :
+
+                // Did we receive a model with settings?
+                if(
+                    is_object($otherSettingModel)
+                    && isset($otherSettingModel->settings)
+                    && !empty($otherSettingModel->settings)
+                ) {
+
+                    $settings = $this->GetOtherSettings($otherSettingModel);
+
+                }
+
+                break;
         }
 
         return $settings;
+    }
+
+    public function GetOtherSettings($otherSettingModel) {
+
+        // What kind of other settings are we looking for?
+        if($otherSettingModel instanceof PhoneNumber) { // Did we receive a phone number?
+
+            $phoneNumberSettings = json_decode($otherSettingModel->settings);
+
+            // This ia phone number.
+            $settings = new \stdClass();
+            $settings->messagable = $this->DecideOnValue($phoneNumberSettings, 'messagable', 0);
+            $settings->text_story_arch = $this->DecideOnValue($phoneNumberSettings, 'text_story_arch', 0);
+            $settings->call_story_arch = $this->DecideOnValue($phoneNumberSettings, 'call_story_arch', 0);
+
+        }
+
+        return $settings;
+
     }
 
     /**

@@ -56,13 +56,6 @@ class CharactersController extends Controller
         // Get default settings
         $handleSettings = new HandleSettings();
 
-        $settings = $handleSettings->GenerateDefaultSettings('character', [
-            'tabs',
-            'phone_time_between_call_logs_pregame',
-            'text_time_between_texts_prestory',
-            'photos_time_between_photos'
-        ]);
-
         $info = [
             'story' => $story,
             'settings' => $handleSettings->GenerateDefaultSettings('character', [

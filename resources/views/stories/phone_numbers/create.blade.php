@@ -25,8 +25,18 @@
                     </div>
 
                     <div class="form-group">
-                        {{Form::label('messagable', 'Can receive messages')}}
-                        {{Form::select('messagable', [0 => 'No', 1 => 'Yes'], 1, ['class' => 'form-control'])}}
+                        {{Form::label('settings[messagable]', 'Can receive messages')}}
+                        {{Form::select('settings[messagable]', [0 => 'No', 1 => 'Yes'], 1, ['class' => 'form-control'])}}
+                    </div>
+
+                    <div class="form-group">
+                        {{Form::label('settings[text_story_arch]', 'Message story arch')}}
+                        {{Form::select('settings[text_story_arch]', $info['story_archs'], null, ['class' => 'form-control'])}}
+                    </div>
+
+                    <div class="form-group">
+                        {{Form::label('settings[call_story_arch]', 'Dial up story arch')}}
+                        {{Form::select('settings[call_story_arch]', $info['story_archs'], null, ['class' => 'form-control'])}}
                     </div>
                     
                     <a href="/stories/{{$info['story']->id}}/phone_numbers" class="btn btn-default">Back</a>

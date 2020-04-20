@@ -27,7 +27,7 @@ return [
         'wait' => ['Wait', 'grey'],
         'condition' => ['Variable Condition', 'purple'],
         'redirect' => ['Redirect', 'brown'],
-        'change_master_data' => ['Change Master Data', 'pink'],
+        'phone_number_change_arch' => ['Phone number change arch', 'pink'],
         'text_incomming' => ['Text, Incomming', 'lightgreen'],
         'text_outgoing' => ['Text, Outgoing Options', 'green'],
         'phone_call_incomming_voice' => ['Phone Call, Incomming Voice', 'lightblue'],
