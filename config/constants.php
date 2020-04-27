@@ -35,6 +35,8 @@ return [
         'phone_call_hang_up' => ['Phone Call, Hang up', 'teal'],
         'insert_news_item'  => ['Insert news item', 'gold'],
         'start_new_thread'  => ['Start new thread', 'lightgrey'],
+        'start_watcher'  => ['Start watcher', 'chocolate'],
+        'end_watcher'  => ['End watcher', 'coral'],
         'end_thread'  => ['End current Thread', 'orangered'],
         'end_game'  => ['End Game', 'red']
     ]

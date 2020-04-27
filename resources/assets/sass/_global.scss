@@ -388,11 +388,47 @@ div.character-expandable {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.story-point-container-top-opacity-icon-container {
+.story-point-oprions-container-delete-story-point {
+    color: #900;
+}
+.story-point-options-menu {
     float: right;
     margin-left: 10px;
     display: none;
     cursor: pointer;
+    color: #FFF;
+}
+.story-point-options-menu:hover {
+    color: #CCC;
+    text-decoration: none;
+}
+.story-point-options-menu-options-container {
+    display: none;
+    position: absolute;
+    background-color: #FFF;
+    border-radius: 5px;
+    width: 115px;
+    right: 46px;
+    z-index: 3;
+    top: 5px;
+    border: #999 1px solid;
+}
+.story-point-options-menu-options-container a {
+    display: block;
+    padding: 5px;
+    border-radius: 0;
+}
+.story-point-options-menu-options-container a:first-child {
+    border-radius: 5px 5px 0 0;
+}
+.story-point-options-menu-options-container a:last-child {
+    border-radius: 0 0 5px 5px;
+}
+.story-point-options-menu-options-container a:not(:last-child) {
+    border-bottom: #999 1px solid;
+}
+.story-point-options-menu-options-container a:hover {
+    background-color: #EEE;
 }
 .story-point-container-middle-and-bottom {
     width: 100%;
@@ -512,7 +548,7 @@ div.character-expandable {
     box-sizing: border-box;
     position: absolute;
     display: none;
-    z-index: 2;
+    z-index: 1100;
 }
 
 #speechbubble.arrowleft:before {

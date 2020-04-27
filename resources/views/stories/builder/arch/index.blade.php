@@ -68,4 +68,25 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="delete-story-point" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalLabel">Delete story point</h4>
+            </div>
+            <div class="modal-body">
+                <input name="confirm" type="text" class="form-control" placeholder="Type CONFIRM to delete" />
+                <div class="delete-story-point-overview"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger hastip" data-moretext="Shortcut: <b>ctrl + shift + k</b>">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

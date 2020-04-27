@@ -83,7 +83,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/update-story-point-variable-condition-choose-operator', 'StoryPointsController@RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperatorAjax');
     Route::post('/update-story-point-redirect', 'StoryPointsController@RenderStoryPointFormRedirectTypeAjax');
     Route::post('/get-character-and-storypoint-settings', 'StoryPointsController@GetStoryPointOrCharacterSettingsAjax');
-    
+    Route::post('/get-story-points-to-delete-via-story-point-id', 'StoryPointsController@GetStoryPointsToDeleteViaStoryPointID');
+    Route::post('/delete-story-points-via-story-point-id', 'StoryPointsController@DeleteStoryPointsViaStoryPointID');
+
     
     
 }); 

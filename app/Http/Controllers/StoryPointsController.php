@@ -12,6 +12,7 @@ use App\Common\Permission;
 use App\Common\HandleSettings;
 use App\Common\HandleFiles;
 use App\Common\GetNewestValues;
+use App\Common\StoryPoints;
 
 class StoryPointsController extends Controller
 {
@@ -380,7 +381,16 @@ class StoryPointsController extends Controller
             <div class="story-point-shadow-container">
                 <span class="id-number-circle id-number-pos-top" style="background-color:'.$color.'">'.$storyPoint->number.'</span>
                 <div class="story-point-container-top" style="background-color:'.$color.'">
-                    <div class="story-point-container-top-opacity-icon-container hastip" data-moretext="Shortcut: <b>ctrl + shift + h</b>"><span class="glyphicon glyphicon-eye-open"></span></div>
+                    <a href="javascript:void(0);" class="story-point-options-menu glyphicon glyphicon-option-vertical hastip" data-moretext="Shortcut: <b>ctrl + shift + e</b>"></a>
+                    <div class="story-point-options-menu-options-container popup-menu">
+                        <a href="javascript:void(0);" class="story-point-container-top-opacity-icon-container hastip" data-moretext="Shortcut: <b>ctrl + shift + l</b>">
+                            <span class="glyphicon glyphicon-eye-open"></span> Transparent
+                        </a>
+                        <a href="javascript:void(0);" class="story-point-oprions-container-delete-story-point hastip" data-moretext="Shortcut: <b>ctrl + shift + k</b>">
+                            <span class="glyphicon glyphicon glyphicon-trash"></span> Delete
+                        </a>
+                    </div>
+                    <!--div class="story-point-container-top-opacity-icon-container hastip" data-moretext="Shortcut: <b>ctrl + shift + h</b>"></div-->
                     '.$startStoryPoint.'<u>'.ucfirst(str_replace('_', ' ', $storyPoint->type)).'</u>: <span class="story-point-container-top-name">'.$storyPoint->name.'</span>
                 </div>
                 <div class="story-point-container-middle-and-bottom">
@@ -460,6 +470,7 @@ class StoryPointsController extends Controller
         switch($storyPoint->type) {
             case 'redirect' : // You can never add storypoints to redirect
             case 'end_thread' : // You can never add storypoints to end_thread
+            case 'end_game' : // You can never add storypoints to end_thread
                 $addStoryPoints = false;
                 break;
             // Now for a list of types that can only have 1 story point, it may also lead to a story arch, but that doesn't count
@@ -488,6 +499,8 @@ class StoryPointsController extends Controller
             case 'phone_call_incomming_voice' : // incomming voice immidiately leads to a new story-point - but it can only lead to one
             case 'insert_news_item' :
             case 'start_new_thread' :
+            case 'start_watcher' :
+            case 'end_watcher' :
 
                 // If we wind up in here, that means that we can only add one story-point-child to this story point.
                 // If that is already done - then block for the addition of more
@@ -582,6 +595,12 @@ class StoryPointsController extends Controller
                 break;
             case 'insert_news_item' :
                 $return = $this->RenderStoryPointFormInsertNewsItem($values, $generatedID, $storyPoint);
+                break;
+            case 'start_watcher' :
+                $return = $this->RenderStoryPointFormStartWatcher($values, $generatedID, $storyPoint);
+                break;
+            case 'end_watcher' :
+                $return = $this->RenderStoryPointFormEndWatcher($values, $generatedID, $storyPoint);
                 break;
             case 'start_new_thread' :
                 $return = $this->RenderStoryPointFormStartNewThread($values, $generatedID, $storyPoint);
@@ -1447,6 +1466,72 @@ class StoryPointsController extends Controller
         ';
     }
 
+    private function RenderStoryPointFormStartWatcher($values, $generatedID, StoryPoint $storyPoint) {
+
+        $identifier = $this->ExtractValueFromObject(['identifier'], $values);
+        $watchFor   = $this->ExtractValueFromObject(['watch_for'], $values);
+        $arch       = intval($this->ExtractValueFromObject(['arch'], $values));
+
+        // callArc
+        $archName = '';
+        if($arch > 0) {
+            $storyArch = $storyPoint->story->storyarchs->find($arch);
+
+            $archName = $storyArch->name;
+        }
+
+        return '
+        <div class="form-group">
+            <label for="'.$generatedID.'_identifier">Identifier</label><br />
+            <input type="text" id="'.$generatedID.'_identifier" name="json[identifier]" value="'.$identifier.'" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label for="'.$generatedID.'_watch_for">Watch for</label><br />
+            <select id="'.$generatedID.'_watch_for" name="json[watch_for]" class="form-control">
+                <option value="send_text" '.($watchFor == 'send_text' ? 'selected' : '').'>Send text</option>
+                <option value="receive_text" '.($watchFor == 'receive_text' ? 'selected' : '').'>Receive text</option>
+                <option value="start_call" '.($watchFor == 'start_call' ? 'selected' : '').'>Start call</option>
+                <option value="end_call" '.($watchFor == 'end_call' ? 'selected' : '').'>End call</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="hidden" name="json[arch]" value="'.$arch.'" class="form-control story-point-start-watcher-selected-arch-id" />
+            <label for="'.$generatedID.'_choose_destination_story_arch">Start arch</label><br />
+            <input list="'.$generatedID.'_choose_destination_story_arch" name="'.$generatedID.'_choose_destination_story_arch" type="text" value="'.$archName.'" class="form-control choose-story-point-start-watcher-selected-arch-options" placeholder="Search destination" />
+            <datalist id="'.$generatedID.'_choose_destination_story_arch">
+                '.$this->GetAvailableStoryArchs($storyPoint->story).'
+            </datalist>
+        </div>
+        ';
+    }
+
+    private function RenderStoryPointFormEndWatcher($values, $generatedID, StoryPoint $storyPoint) {
+
+        // Find all story points that are start watchers!
+        $allStartWatchers = $storyPoint->story->storypoints->where('type', 'start_watcher')->all();
+
+        $chosenIdentifier = $this->ExtractValueFromObject(['watcher'], $values);
+
+        $options = '';
+        foreach($allStartWatchers as $startWatcher) {
+
+            $identifier = $this->ExtractValueFromObject(['identifier'], json_decode($startWatcher->instructions_json));
+
+            $options .= '<option value="'.rawurlencode($identifier).'" '.($chosenIdentifier == rawurlencode($identifier) ? 'selected' : '').'>'.$identifier.'</option>';
+        }
+
+
+
+        return '
+        <div class="form-group">
+            <label for="'.$generatedID.'_watcher">Watcher</label><br />
+            <select id="'.$generatedID.'_watcher" name="json[watcher]" class="form-control">
+                '.$options.'
+            </select>
+        </div>
+        ';
+    }
+
     private function RenderStoryPointFormStartNewThread($values, $generatedID, StoryPoint $storyPoint) {
 
         $redirectID     = intval($this->ExtractValueFromObject(['spawn_new_thread_arch'], $values));
@@ -1652,6 +1737,49 @@ class StoryPointsController extends Controller
         }
 
         return $value;
+    }
+
+    public function GetStoryPointsToDeleteViaStoryPointID() {
+
+        $storyPoint     = StoryPoint::find(intval($_POST['data']['story_point_id']));
+        $storyPoints    = new StoryPoints($storyPoint->storyArch);
+
+        $storyPointCollection = $storyPoints->GetStoryPointsToDeleteFromStartingPoint($storyPoint);
+
+        // So, now we know which story points to delete.
+        $deleteHTML = '';
+        if(is_countable($storyPointCollection) && count($storyPointCollection) > 0) {
+
+            foreach($storyPointCollection as $storyPointID) {
+
+                // Get the story point
+                $storyPoint = StoryPoint::find(intval($storyPointID));
+
+                $deleteHTML .= '<li>'.$storyPoint->number.' '.$storyPoint->name.'</li>';
+
+            }
+
+        }
+
+        $deleteHTML = !empty($deleteHTML)
+            ? '<ul>'.$deleteHTML.'</ul>'
+            : '';
+
+        echo json_encode($deleteHTML);
+
+        return;
+
+    }
+
+    public function DeleteStoryPointsViaStoryPointID() {
+
+        $storyPoint     = StoryPoint::find(intval($_POST['data']['story_point_id']));
+        $storyPoints    = new StoryPoints($storyPoint->storyArch);
+
+        $storyPointCollection = $storyPoints->DeleteStoryPointsViaStoryPointsID($storyPoints->GetStoryPointsToDeleteFromStartingPoint($storyPoint));
+
+        echo json_encode($storyPointCollection);
+
     }
 
 

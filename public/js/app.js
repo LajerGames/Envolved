@@ -918,7 +918,7 @@ $(document).ready(function () {
 
         showSpeech = setTimeout(function () {
             $speech.show();
-        }, 1000);
+        }, 750);
     }
 
     function hideTip() {

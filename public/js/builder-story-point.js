@@ -84,7 +84,11 @@ $(document).ready(function () {
         // Press ctrl + shift + x for new
         if (e.which === 24 && e.shiftKey && e.ctrlKey) {
 
-            $('.more-button').click();
+            // Use x to add story point only if button is not disabled
+            var moreButton = $('.more-button');
+            if (!moreButton.hasClass('disabled')) {
+                moreButton.click();
+            }
         }
 
         // Press ctrl + shift + a to add a new story-point to story-point
@@ -99,10 +103,26 @@ $(document).ready(function () {
             $('div.story-point-shadow-container.active').find('a.update-story-point').click();
         }
 
-        // Press ctrl + shift + h for new
-        if (e.which === 25 && e.shiftKey && e.ctrlKey) {
+        // Press ctrl + shift + l to make open story point transparent
+        if (e.which === 12 && e.shiftKey && e.ctrlKey) {
 
-            $('div.story-point-shadow-container.active').find('div.story-point-container-top-opacity-icon-container').click();
+            $('div.story-point-shadow-container.active').find('a.story-point-container-top-opacity-icon-container').click();
+        }
+
+        // Press ctrl + shift + k to delete open story point
+        if (e.which === 11 && e.shiftKey && e.ctrlKey) {
+
+            if ($('#delete-story-point').is(':visible')) {
+                $('#delete-story-point').find('button.btn-danger').click();
+            } else {
+                $('div.story-point-shadow-container.active').find('a.story-point-oprions-container-delete-story-point').click();
+            }
+        }
+
+        // Press ctrl + shift + e to open options for active story point
+        if (e.which === 5 && e.shiftKey && e.ctrlKey) {
+
+            $('div.story-point-shadow-container.active').find('a.story-point-options-menu').click();
         }
 
         // Press shift + f to search
@@ -361,7 +381,8 @@ $(document).ready(function () {
                 story_point_id: storyPointID
             }
         }, function (data) {
-            var parsedData = JSON.parse(data);
+
+            var parsedData = data.length > 0 ? JSON.parse(data) : '';
             // Find the right story point and append
             var storyPoint = $('div[data-story-point-id="' + storyPointID + '"]');
 
@@ -413,6 +434,20 @@ $(document).ready(function () {
         return;
     }
 
+    // Story point "burger menu"....thingy
+    $('div.panel-body').on('click', 'a.story-point-options-menu', function (e) {
+
+        var menuOptionsContainer = $(this).siblings('.story-point-options-menu-options-container');
+
+        if (menuOptionsContainer.css('display') == 'block') {
+            menuOptionsContainer.hide();
+        } else {
+            menuOptionsContainer.show();
+        }
+
+        e.stopPropagation();
+    });
+
     // 
     $('div.panel-body').on('click', 'div.story-point-container-top', function () {
 
@@ -436,7 +471,7 @@ $(document).ready(function () {
         adjustZIndex(storyPointContainer.find('div.story-point-container-middle-and-bottom'), 2);
 
         // Show
-        toggleStoryPointOpacityIcon(storyPointContainer.find('div.story-point-container-top-opacity-icon-container'), 'show', animationTime);
+        toggleIconOpacity(storyPointContainer.find('a.story-point-options-menu'), 'show', animationTime);
 
         // Make sure the active class is added
         storyPointShadowContainer.addClass('active');
@@ -478,8 +513,8 @@ $(document).ready(function () {
             var formContainer = $(this).find('div.story-point-form-container');
             formContainer.hide(animationTime);
 
-            // Hide the toggleStoryPointOpacityIcon
-            toggleStoryPointOpacityIcon($(this).find('div.story-point-container-top-opacity-icon-container'), 'hide', animationTime);
+            // Hide the toggleIconOpacity
+            toggleIconOpacity($(this).find('a.story-point-options-menu'), 'hide', animationTime);
 
             toggleStoryPointOpacity($(this), false, animationTime);
 
@@ -496,12 +531,143 @@ $(document).ready(function () {
         }, animationTime);
     }
 
-    $('div.panel-body').on('click', 'div.story-point-container-top-opacity-icon-container', function () {
+    $('div.panel-body').on('click', 'a.story-point-container-top-opacity-icon-container', function () {
 
         var iconContainer = $(this),
             makeStoryPointTransparent = iconContainer.css('opacity') == 1;
 
         toggleStoryPointOpacity($(this).closest('div.story-point-container'), makeStoryPointTransparent, 500);
+    });
+
+    $('div.panel-body').on('click', 'a.story-point-oprions-container-delete-story-point', function () {
+
+        // Story point container and data
+        var storyPointContainer = $(this).closest('div.story-point-container'),
+            storyPointLeadsTo = storyPointContainer.find('.story-pointleads-to-container'),
+            storyPointID = storyPointContainer.data('story-point-id');
+
+        var isDeleteStoryPointWindowSmall = storyPointLeadsTo.find('a').length == 0,
+            deleteStoryPointWindow = $('#delete-story-point'),
+            deleteStoryPointWindowModal = deleteStoryPointWindow.find('.modal-dialog'),
+            deleteStoryPointWindowConfirmInput = deleteStoryPointWindow.find('input[name=confirm]'),
+            deleteStoryPointWindowOverviewContainer = deleteStoryPointWindow.find('.delete-story-point-overview');
+
+        // If this story point leads nowhere, we will make it easier to delete by not forcing the user to type confirm first.
+        // Also we will make the confirmation window much smaller
+        if (isDeleteStoryPointWindowSmall) {
+
+            // Story point leads nowhere
+
+            // Make it small
+            deleteStoryPointWindowModal.removeClass('modal-lg').addClass('modal-sm');
+
+            // Disable and hide the confirm input
+            deleteStoryPointWindowConfirmInput.prop('disabled', true).hide().val('');
+
+            // Remove all text in the overview container
+            deleteStoryPointWindowOverviewContainer.html("");
+        } else {
+
+            // story point leads somewhere
+
+            // Make it big
+            deleteStoryPointWindowModal.removeClass('modal-sm').addClass('modal-lg');
+
+            // Disable and hide the confirm input
+            deleteStoryPointWindowConfirmInput.prop('disabled', false).show().val('');
+
+            // Remove all text in the overview container
+            deleteStoryPointWindowOverviewContainer.html("<h2>Please hold, we're calculating...</h2>");
+        }
+
+        if (deleteStoryPointWindow.length) {
+            deleteStoryPointWindow.modal();
+            setTimeout(function () {
+                deleteStoryPointWindow.find('input.form-control').attr('autofocus', true).focus();
+            }, 500);
+        }
+
+        $.post('/get-story-points-to-delete-via-story-point-id', {
+            _token: $('meta[name=csrf-token]').attr('content'),
+            _method: 'POST',
+            data: {
+                story_id: $('#story_id').val(),
+                story_point_id: storyPointID
+            }
+        }, function (markup) {
+
+            var decodedMarkup = JSON.parse(markup);
+
+            var headline = isDeleteStoryPointWindowSmall ? "<h4>Delete</h4>" : "<h2>This action will delete</h2>";
+
+            deleteStoryPointWindowOverviewContainer.html(headline + decodedMarkup);
+
+            // What happens when we click the delete button? Depends on the story point
+            deleteStoryPointWindow.find('button.btn-danger').off().on('click', function () {
+
+                // Can we click the button?
+                var canDelete = true;
+                if (!isDeleteStoryPointWindowSmall) {
+
+                    if (deleteStoryPointWindowConfirmInput.val() != "CONFIRM") {
+
+                        deleteStoryPointWindowConfirmInput.focus();
+
+                        canDelete = false;
+
+                        alert("Please type CONFIRM in the input field, to confirm this action");
+                    }
+                }
+
+                if (canDelete) {
+
+                    // Remove all text in the overview container
+                    deleteStoryPointWindowOverviewContainer.html("<h4>Deletion in progress...</h4>");
+
+                    $.post('/delete-story-points-via-story-point-id', {
+                        _token: $('meta[name=csrf-token]').attr('content'),
+                        _method: 'POST',
+                        data: {
+                            story_id: $('#story_id').val(),
+                            story_point_id: storyPointID
+                        }
+                    }, function (data) {
+
+                        var decodedData = JSON.parse(data);
+
+                        // Now go through the deleted story points and remove them from the board
+                        if (Object.keys(decodedData.deleted).length > 0) {
+
+                            for (var property in decodedData.deleted) {
+
+                                // Find the storypoint containers and remove them
+                                $('div.panel-body').find('div[data-story-point-id="' + decodedData.deleted[property] + '"]').remove();
+                            }
+                        }
+
+                        // Loop through the affected rows and ensure that their leads to is updated
+                        if (Object.keys(decodedData.affected).length > 0) {
+
+                            for (var property in decodedData.affected) {
+
+                                // Find the storypoint containers and remove them
+                                updateStoryPointLeadsTo(decodedData.affected[property]);
+                            }
+                        }
+
+                        // Did we delete the story point starting arch
+                        if (decodedData.deleted_arch_starting_point) {
+                            $('div.panel-body').find('.add-story-point').removeClass('disabled');
+                            $('#story_arch_start_story_point_id').val(0);
+                        }
+
+                        deleteStoryPointWindowOverviewContainer.html("<h4>Done</h4>");
+
+                        deleteStoryPointWindow.modal('hide');
+                    });
+                }
+            });
+        });
     });
 
     function toggleStoryPointOpacity(storyPointContainer, makeTransparent, animationTime) {
@@ -513,10 +679,10 @@ $(document).ready(function () {
         storyPointContainer.find('div.story-point-container-middle-and-bottom').fadeTo(animationTime, storyPointOpacity);
 
         // Update icon container opacity
-        storyPointContainer.find('div.story-point-container-top-opacity-icon-container').fadeTo(animationTime, iconOpacity);
+        storyPointContainer.find('a.story-point-container-top-opacity-icon-container').fadeTo(animationTime, iconOpacity);
     }
 
-    function toggleStoryPointOpacityIcon(iconContainer, newStatus, animationTime) {
+    function toggleIconOpacity(iconContainer, newStatus, animationTime) {
 
         if (newStatus == 'hide') {
             iconContainer.hide(animationTime);
@@ -924,6 +1090,26 @@ $(document).ready(function () {
             thisFormGroupContainer = $(this).closest('.form-group'),
             destinationDatalist = thisFormGroupContainer.find('datalist'),
             selectedIDInput = thisFormGroupContainer.find('.story-point-phone-call-number-change-arch-selected-id');
+
+        destinationDatalist.find('option').each(function () {
+
+            if ($(this).val() == selectedDestination.val()) {
+
+                // Set the appropriate value in the hidden ID field
+                selectedIDInput.val($(this).data('id'));
+
+                return false; // Stop loop
+            }
+        });
+    });
+
+    // Phone number choose new story arch for text and call
+    $('div.panel-body').on('change', '.choose-story-point-start-watcher-selected-arch-options', function () {
+
+        var selectedDestination = $(this),
+            thisFormGroupContainer = $(this).closest('.form-group'),
+            destinationDatalist = thisFormGroupContainer.find('datalist'),
+            selectedIDInput = thisFormGroupContainer.find('.story-point-starstory-point-options-ment-watcher-selected-arch-id');
 
         destinationDatalist.find('option').each(function () {
 
