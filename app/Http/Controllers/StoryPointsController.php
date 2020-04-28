@@ -231,7 +231,7 @@ class StoryPointsController extends Controller
                         // Get the color
                         $color = config('constants.story_points')[$storyPoint->type][1];
     
-                        $return .= '<a class="id-number-circle story-point-leads-to-reference" href data-story-point-no="'.$storyPoint->number.'" style="background-color:'.$color.'">'.$storyPoint->number.'</a>';
+                        $return .= '<a class="id-number-circle story-point-leads-to-reference" href="javascript:void(0);" data-story-point-no="'.$storyPoint->number.'" style="background-color:'.$color.'">'.$storyPoint->number.'</a>';
                     }
                     else {
                         // This leads to a storyarch
@@ -433,7 +433,7 @@ class StoryPointsController extends Controller
         {
             // Did we get an array in return? If we did, then make sure that we only enable addition of the ones that we allow
             /*if(is_array($addableStoryPoints)) {
-                // Todo: enforce list
+                // Todo: enforce list (UPDATE: Currently I don't the restriction list should be enforced!)
             }*/
             $addStoryPointButton = '<a href="javascript:void(0);" class="btn btn-default hastip add-story-point-to-this" data-moretext="Shortcut: <b>ctrl + shift + a</b>">Add story-point</a>';
         }
@@ -687,14 +687,20 @@ class StoryPointsController extends Controller
 
     private function RenderStoryPointFormTypeInputsChangeVariable($values, $generatedID, StoryPoint $storyPoint) {
         
-        $chosenVariableID   = isset($values->variable_id) && intval($values->variable_id) > 0 ? intval($values->variable_id) : 0;
-        $chosenNewValue     = isset($values->new_value) && !empty($values->new_value) ? $values->new_value : '';
+        $chosenVariableID   = intval($this->ExtractValueFromObject(['variable_id'], $values));
+        //$chosenVariableID   = isset($values->variable_id) && intval($values->variable_id) > 0 ? intval($values->variable_id) : 0;
+        //$chosenNewValue     = isset($values->new_value) && !empty($values->new_value) ? $values->new_value : '';
+        $chosenValue     = $this->ExtractValueFromObject(['value'], $values);
+        $chosenOperator     = $this->ExtractValueFromObject(['operator'], $values);
+
 
         $story = $storyPoint->story;
         // Go through the registered variables and list them
         $variables = $storyPoint->story->variables;
 
         $chosenVariable = $this->GetSpecificVariable($variables, $chosenVariableID);
+
+        //print_r($chosenVariable);
 
         // Go through the found variables in order to create options
         $variableOptions = $this->GetAvailableVariables($story);
@@ -710,11 +716,38 @@ class StoryPointsController extends Controller
                 </datalist>
             </div>
             <div class="form-group">
-                <label for="'.$generatedID.'_new_value">Set new variable</label><br />
-                <span class="story-point-variable-value-input">'.$this->RenderStoryPointFormTypeInputsType($chosenVariable['chosenVariableType'], $chosenNewValue, $generatedID, 'json[new_value]', 'new_value').'</span>
+                <label for="'.$generatedID.'_operator">Choose operator</label><br />
+                <select name="json[operator]" class="form-control story-point-variable-choose-variable-operator">
+                    '.$this->RenderStoryPointFormTypeInputsChangeVariableOperatorOptions($chosenVariable['chosenVariableType'], $chosenOperator).'
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="'.$generatedID.'_new_value">Alter value</label><br />
+                <span class="story-point-variable-value-input">'.$this->RenderStoryPointFormTypeInputsType($chosenVariable['chosenVariableType'], $chosenValue, $generatedID, 'json[new_value]', 'new_value').'</span>
             </div>
         </div>
         ';
+    }
+
+    private function RenderStoryPointFormTypeInputsChangeVariableOperatorOptions($variableType, $value = '') {
+
+        $options = '<option value="equals" '.($value == 'equals' ? 'selected' : '').'>=</option>';
+        if($variableType != 'text') {
+            $options .= '
+                <option value="add" '.($value == 'add' ? 'selected' : '').'>+=</option>
+                <option value="subtract" '.($value == 'subtract' ? 'selected' : '').'>-=</option>
+                <option value="multiply" '.($value == 'multiply' ? 'selected' : '').'>*=</option>
+                <option value="divide" '.($value == 'divide' ? 'selected' : '').'>/=</option>
+            ';
+        }
+
+        return $options;
+    }
+
+    public function RenderStoryPointFormTypeInputsChangeVariableOperatorOptionsAjax() {
+
+        echo json_encode($this->RenderStoryPointFormTypeInputsChangeVariableOperatorOptions($_POST['data']['variable_type']));
+
     }
 
     private function RenderStoryPointFormTypeVariableConditions($values, $generatedID, StoryPoint $storyPoint) {
@@ -984,7 +1017,7 @@ class StoryPointsController extends Controller
                     break;
                 default :
 
-                    $options = $this->GetAvailableStoryPoints($storyPoint->storyarch, [$storyPoint->id]);
+                    $options = $this->GetAvailableStoryPoints($storyPoint->storyarch, [$storyPoint->id], ['phone_call_outgoing_voice']);
 
                     break;
             }
@@ -1235,7 +1268,7 @@ class StoryPointsController extends Controller
             // Get character from previous story_point of text_incomming or text_outgoing
             $prevStoryPointFromOrToCharacterID    = intval($this->ExtractValueFromObject(
                 ['to_character_id', 'from_character_id'],
-                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'])
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'], ['phone_call_hang_up'])
             ));
 
             // Check if we set a from character in the previous StoryPoint
@@ -1301,7 +1334,7 @@ class StoryPointsController extends Controller
             // Get character from previous story_point of text_incomming or text_outgoing
             $prevStoryPointFromOrToCharacterID    = intval($this->ExtractValueFromObject(
                 ['to_character_id', 'from_character_id'],
-                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'])
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'], ['phone_call_hang_up'])
             ));
 
             // Check if we set a from character in the previous StoryPoint
@@ -1363,58 +1396,69 @@ class StoryPointsController extends Controller
     private function GeneratePhoneCallsIfUserHangUpFallbacks($values, $generatedID, StoryPoint $storyPoint)
     {
         $redirectToArchIfHangUp = $this->ExtractValueFromObject(['if_user_hang_up_start_arch'], $values);
-        $redirectToStoryPointAfterArchID = intval($this->ExtractValueFromObject(['if_user_hang_up_start_story_point'], $values));
+        $redirectToStoryPointAfterArchID = $this->ExtractValueFromObject(['if_user_hang_up_start_story_point'], $values);
 
         // If we didn't find a receiverID, look at the latest story point that leads to this story point that is of the type of incomming or outgoing voice.
         // If we can find such a story point, and if it has a $redirectToArchIfHangUp, then insert that as a suggestion to $redirectToArchIfHangUp
-        if(empty($redirectToArchIfHangUp)) {
+        if(empty($redirectToArchIfHangUp) && !is_numeric($redirectToArchIfHangUp)) { // 0 is empty, but you can choose 0 on purpose
 
             // Get character from previous story_point of text_incomming or text_outgoing
-            $redirectToArchIfHangUp    = intval($this->ExtractValueFromObject(
+            $redirectToArchIfHangUp    = $this->ExtractValueFromObject(
                 ['if_user_hang_up_start_arch'],
-                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'])
-            ));
+                $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'], ['phone_call_hang_up'])
+            );
         }
 
         $redirectToArchValue  = '';
         // Do we have a redirectID? If so, then please write find the correct value
-        if($redirectToArchIfHangUp > 0) {
-
-            // Get the correct story arch
-            $leadsToStoryArch = $storyPoint->story->storyarchs->find($redirectToArchIfHangUp);
-
-            $redirectToArchValue = $leadsToStoryArch->name;
-
-        }
-        else
+        if(is_numeric($redirectToArchIfHangUp))
         {
-            $redirectToArchValue = ' -- Do nothing -- ';
+            if($redirectToArchIfHangUp > 0) {
+
+                // Get the correct story arch
+                $leadsToStoryArch = $storyPoint->story->storyarchs->find($redirectToArchIfHangUp);
+
+                $redirectToArchValue = $leadsToStoryArch->name;
+
+            }
+            else
+            {
+                $redirectToArchValue = ' -- Do nothing -- ';
+            }
+        }
+        else {
+            $redirectToArchIfHangUp = 0;
+            $redirectToArchValue = '';
         }
 
         // If we didn't find a receiverID, look at the latest story point that leads to this story point that is of the type of incomming or outgoing voice.
         // If we can find such a story point, and if it has a $redirectToArchIfHangUp, then insert that as a suggestion to $redirectToArchIfHangUp
-        if(empty($redirectToStoryPointAfterArchID)) {
+        if(empty($redirectToStoryPointAfterArchID) && !is_numeric($redirectToStoryPointAfterArchID)) { // 0 is empty, but you can choose 0 on purpose
 
             // Get character from previous story_point of text_incomming or text_outgoing
-            $redirectToStoryPointAfterArchID    = intval($this->ExtractValueFromObject(
+            $redirectToStoryPointAfterArchID    = $this->ExtractValueFromObject(
                 ['if_user_hang_up_start_story_point'],
                 $this->GetInstructionJSONFromClosestRefererOfTypes($storyPoint, ['phone_call_incomming_voice', 'phone_call_outgoing_voice'], ['phone_call_hang_up'])
-            ));
+            );
         }
 
         $redirectToStoryPointAfterArch  = '';
         // Do we have a redirectID? If so, then please write find the correct value
-        if($redirectToStoryPointAfterArchID > 0) {
+        if(is_numeric($redirectToStoryPointAfterArchID)) {
+            if ($redirectToStoryPointAfterArchID > 0) {
 
-            // Get the correct storypoint
-            $leadsToStoryPoint = $storyPoint->story->storypoints->find($redirectToStoryPointAfterArchID);
+                // Get the correct storypoint
+                $leadsToStoryPoint = $storyPoint->story->storypoints->find($redirectToStoryPointAfterArchID);
 
-            $redirectToStoryPointAfterArch = $leadsToStoryPoint->name;
+                $redirectToStoryPointAfterArch = $leadsToStoryPoint->name;
 
+            } else {
+                $redirectToStoryPointAfterArch = ' -- Do nothing -- ';
+            }
         }
-        else
-        {
-            $redirectToStoryPointAfterArch = ' -- Do nothing -- ';
+        else {
+            $redirectToStoryPointAfterArchID = 0;
+            $redirectToStoryPointAfterArch = '';
         }
 
         return '
@@ -1434,7 +1478,7 @@ class StoryPointsController extends Controller
             <input list="'.$generatedID.'_choose_destination_story_point" name="'.$generatedID.'_choose_arch_if_user_hangs_up" type="text" value="'.$redirectToStoryPointAfterArch.'" class="form-control choose-story-point-phone-call-hang-up-options" placeholder="Search destination" />
             <datalist id="'.$generatedID.'_choose_destination_story_point">
                 <option data-id="0" value=" -- Do nothing -- " />
-                '.$this->GetAvailableStoryPoints($storyPoint->storyArch, [$storyPoint->id]).'
+                '.$this->GetAvailableStoryPoints($storyPoint->storyArch, [$storyPoint->id], ['phone_call_outgoing_voice']).'
             </datalist>
         </div>
         ';
@@ -1634,14 +1678,19 @@ class StoryPointsController extends Controller
         return $archOptions;
     }
 
-    private function GetAvailableStoryPoints(StoryArch $storyArch, $excludes = []) {
+    private function GetAvailableStoryPoints(StoryArch $storyArch, $excludeIDs = [], $excludeTypes = []) {
         $storyPoints = $storyArch->storypoints->all();
 
         // Go through the found variables in order to create options
+
         $storyPointOptions = '';
         foreach($storyPoints as $storyPoint) {
-            if(!in_array($storyPoint->id, $excludes))
+            if(
+                !in_array($storyPoint->id, $excludeIDs) // Check that this story point is not excluded by ID
+                && !in_array($storyPoint->type, $excludeTypes) // Check that this story point is not excluded by type
+            ) {
                 $storyPointOptions .= '<option data-id="'.$storyPoint->id.'" value="'.$storyPoint->name.'" />';
+            }
         }
 
         return $storyPointOptions;
@@ -1707,13 +1756,12 @@ class StoryPointsController extends Controller
                 return '';
 
             } elseif(in_array($referer->type, $types)) { // Is the referer we found of the desired type?
-
                 // Yes! We found a referer of the desired type!
                 $prevStoryPointInstructions = json_decode($referer->instructions_json);
 
             } else {
 
-                $prevStoryPointInstructions = self::GetInstructionJSONFromClosestRefererOfTypes($referer, $types);
+                $prevStoryPointInstructions = self::GetInstructionJSONFromClosestRefererOfTypes($referer, $types, $stopIfArriveAt);
 
             }
         }
@@ -1727,7 +1775,8 @@ class StoryPointsController extends Controller
 
             foreach ($acceptableValues as $acceptableValue) {
 
-                if (property_exists($object, $acceptableValue) && !empty($object->{$acceptableValue})) {
+                if (property_exists($object, $acceptableValue) && (!empty($object->{$acceptableValue}) || $object->{$acceptableValue} == 0 )) {
+
                     $value = $object->{$acceptableValue};
 
                     break; // No need to look any further

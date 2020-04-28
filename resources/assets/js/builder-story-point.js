@@ -258,13 +258,14 @@ $(document).ready(function() {
                     switch(storyPointType) {
                         case "condition" :
                         case "text_outgoing" :
+                        case "phone_call_outgoing_voice" :
 
                             // Find the appropriate container
                             var storyPointSpecializedInputContainer = storyPointContainer.find('div.story-point-form-specialized-input'),
                                 generatedID                         = storyPointContainer.find('form').data('generated-id');
                             
                             // This one needs to - let's make sure that happens.
-                            updateStoryPointSpecializedInput(parentStoryPointID, storyPointSpecializedInputContainer, generatedID)
+                            updateStoryPointSpecializedInput(parentStoryPointID, storyPointSpecializedInputContainer, generatedID);
 
                             break;
                         default :
@@ -848,6 +849,25 @@ $(document).ready(function() {
                         // In the form - remove the current value-input and add the new one
                         valueInputContainer.html(html);
         
+                    }
+                );
+
+                // change operator options value
+                $.post(
+                    '/update-story-point-variable-refresh-operators',
+                    {
+                        _token: $('meta[name=csrf-token]').attr('content'),
+                        _method : 'POST',
+                        data : {
+                            variable_type: $(this).data('type')
+                        }
+                    },
+                    function (data) {
+
+                        var optionsHtml = JSON.parse(data);
+
+                        formGroupContainer.find('select.story-point-variable-choose-variable-operator').html(optionsHtml);
+
                     }
                 );
 

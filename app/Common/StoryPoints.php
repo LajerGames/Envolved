@@ -90,11 +90,12 @@ class StoryPoints
                         }
 
                     }
+
+                    $leadsTo = array_values($leadsTo);
                 }
 
                 // Save the new leads to into the story point model
                 $affectedStoryPoint->leads_to_json = is_countable($leadsTo) && count($leadsTo) > 0 ? json_encode($leadsTo) : '';
-
 
                 // Update the story point model
                 $this->UpdateStoryPoint($affectedStoryPoint);

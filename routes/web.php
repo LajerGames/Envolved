@@ -80,6 +80,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/render-story-point-type-form', 'StoryPointsController@RenderStoryPointTypeForm');
     Route::post('/render-story-point-container', 'StoryPointsController@GetStoryPointAndRenderContainer');
     Route::post('/update-story-point-variable-input', 'StoryPointsController@RenderStoryPointFormTypeInputsTypeAjax');
+    Route::post('/update-story-point-variable-refresh-operators', 'StoryPointsController@RenderStoryPointFormTypeInputsChangeVariableOperatorOptionsAjax');
     Route::post('/update-story-point-variable-condition-choose-operator', 'StoryPointsController@RenderStoryPointFormTypeVariableConditionRenderRecordRenderOperatorAjax');
     Route::post('/update-story-point-redirect', 'StoryPointsController@RenderStoryPointFormRedirectTypeAjax');
     Route::post('/get-character-and-storypoint-settings', 'StoryPointsController@GetStoryPointOrCharacterSettingsAjax');
