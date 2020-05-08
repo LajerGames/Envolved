@@ -16,6 +16,7 @@ use App\Common\StoryPoints;
 
 class StoryPointsController extends Controller
 {
+    private $i = 0;
     /**
      * Insert new Story point
      *
@@ -1478,7 +1479,7 @@ class StoryPointsController extends Controller
             <input list="'.$generatedID.'_choose_destination_story_point" name="'.$generatedID.'_choose_arch_if_user_hangs_up" type="text" value="'.$redirectToStoryPointAfterArch.'" class="form-control choose-story-point-phone-call-hang-up-options" placeholder="Search destination" />
             <datalist id="'.$generatedID.'_choose_destination_story_point">
                 <option data-id="0" value=" -- Do nothing -- " />
-                '.$this->GetAvailableStoryPoints($storyPoint->storyArch, [$storyPoint->id], ['phone_call_outgoing_voice']).'
+                '.$this->GetAvailableStoryPoints($storyPoint->storyArch, [], ['phone_call_outgoing_voice', 'phone_call_hang_up']).'
             </datalist>
         </div>
         ';
@@ -1741,19 +1742,20 @@ class StoryPointsController extends Controller
     private function GetInstructionJSONFromClosestRefererOfTypes(StoryPoint $storyPoint, array $types, array $stopIfArriveAt = []) {
         $referer = StoryPoint::where(
             'story_id', $storyPoint->story_id
-        )->whereRaw(
+        )->whereRaw( // Make sure we find a record that leads to this story point
             'JSON_CONTAINS(leads_to_json, \'{"point": '.$storyPoint->id.'}\')'
-        )->orderBy(
+        )->whereRaw( // Make sure we only look at older records
+            'id < '.$storyPoint->id
+        )->orderBy( // Take the oldest one
             'id', 'ASC'
-        )->first();
-
+        )->first(); // Only take one
 
         $prevStoryPointInstructions = null;
         if(isset($referer->id) && $referer->id > 0) {
 
             if(is_countable($stopIfArriveAt) && count($stopIfArriveAt) > 0 && in_array($referer->type, $stopIfArriveAt)) {
 
-                return '';
+                return null;
 
             } elseif(in_array($referer->type, $types)) { // Is the referer we found of the desired type?
                 // Yes! We found a referer of the desired type!

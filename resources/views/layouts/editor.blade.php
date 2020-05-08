@@ -61,8 +61,9 @@
                 <p>Settings</p>
                 <li><a href="/stories/{{request()->segment(2)}}/story_settings/edit">Story</a></li>
                 <li><a href="/stories/{{request()->segment(2)}}/editor_settings/edit">Editor</a></li>
-                <p>Export</p>
-                <li><a href="javascript:void(0);" class="hastip" id="export-to-sqlite-link" data-moretext="Shortcut: Press <b>ctrl</b> + <b>shift</b> + <b>s</b>">Export to SQLite</a></li>
+                <p>Save</p>
+                <li><a href="/stories/{{request()->segment(2)}}/backup" id="backup-story">Backup</a></li>
+                <li><a href="javascript:void(0);" class="hastip" id="export-to-sqlite-link" data-moretext="Shortcut: Press <b>ctrl</b> + <b>shift</b> + <b>s</b>">Export Story</a></li>
             </ul>
 
         </nav>
@@ -81,21 +82,27 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="export-to-sqlite" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal fade" id="save_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
-                    <h4 class="modal-title" id="modalLabel">Export to SQLite</h4>
+                    <h4 class="modal-title" id="modalLabel">Save</h4>
                 </div>
                 <div class="modal-body">
+                    <label for="save_type">Action</label><br />
+                    <select name="save_type" id="save_type" class="form-control">
+                        <option value="backup">Backup</option>
+                        <option value="export">Export</option>
+                    </select><br />
+                    <label for="save_as">Save as</label><br />
                     <input type="text" name="save_as" id="save_as" value="" class="form-control" placeholder="Save As" data-story-id="{{request()->segment(2)}}" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" data-story-id="{{request()->segment(2)}}" data-dismiss="modal">Export</button>
+                    <button type="button" class="btn btn-primary" data-story-id="{{request()->segment(2)}}" data-dismiss="modal">Go!</button>
                 </div>
             </div>
         </div>

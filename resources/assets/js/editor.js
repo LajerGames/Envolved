@@ -5,54 +5,86 @@ $(document).ready(function() {
 
         // Press ctrl + shift + s to save to SQLite
         if(e.which === 19 && e.shiftKey && e.ctrlKey) {
-            
-            openExportToSQLiteModal();
+
+            openSaveModal('export');
 
         }
 
     });
 
     $('#export-to-sqlite-link').on('click', function() {
-        openExportToSQLiteModal();
+        openSaveModal('export');
     });
 
-    function openExportToSQLiteModal() {
+    $("#backup").on("click", function() {
+        openSaveModal('backup');
+    });
 
-        var saveAsInput = $('#export-to-sqlite input#save_as'),
-            storyID = saveAsInput.data('story-id');
+    function openSaveModal(type) {
+
+        var saveAsInput = $('#save_modal input#save_as'),
+            storyID = saveAsInput.data('story-id'),
+            type = type === undefined ? 'backup' : type;
         $.post(
-            '/get-story-info',
-            { 
+            '/prepare-story-modal',
+            {
                 _token: $('meta[name=csrf-token]').attr('content'),
                 _method : 'POST',
                 data : {
-                    story_id: storyID
+                    story_id: storyID,
+                    type: type
                 }
             },
             function (data) {
+
                 var decodedData = JSON.parse(data);
 
                 // Create save as name
                 saveAsInput.val(decodedData.title);
-                $('#export-to-sqlite').modal();
+                $('#save_modal').modal();
             }
         );
+
     }
 
-    $('#export-to-sqlite button.btn-primary').on('click', function() {
+    $('#save_modal button.btn-primary').on('click', function() {
+
+        if($('#save_type').val() == 'export') {
+            exportStory($(this));
+        } else {
+            backupStory($(this));
+        }
+
+
+    });
+
+    function backupStory(button) {
         $.post(
-            '/stories/'+$(this).data('story-id')+'/export',
-            { 
+            '/stories/'+$(this).data('story-id')+'/backup',
+            {
                 _token: $('meta[name=csrf-token]').attr('content'),
                 _method : 'POST',
                 data : {
-                    action: 'save',
-                    name: $('#export-to-sqlite input#save_as').val()
+                    story_id: button.data('story-id'),
+                    name: $('#save_modal input#save_as').val()
                 }
             }
-            )
+        )
+    }
 
-    });
+    function exportStory() {
+        $.post(
+            '/stories/'+$(this).data('story-id')+'/export',
+            {
+                _token: $('meta[name=csrf-token]').attr('content'),
+                _method : 'POST',
+                data : {
+                    story_id: button.data('story-id'),
+                    name: $('#save_modal input#save_as').val()
+                }
+            }
+        )
+    }
 
     // Region: Builder
 

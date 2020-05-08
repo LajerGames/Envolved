@@ -37,7 +37,8 @@ class HandleSettings {
         if(!in_array('tabs', $exclude)) {
             $return['tabs'] = $this->GenerateTabsArray([
                 ['name' => 'Main', 'description' => 'Main'],
-                ['name' => 'Idle', 'description' => 'Idle']
+                ['name' => 'Idle', 'description' => 'You could place side quests in here, or unneccesary filler conversations'],
+                ['name' => 'Easter eggs', 'description' => 'Place funny easter eggs in here e.g. crank calls or whatever fits your story']
             ]);
         }
 

@@ -22,9 +22,6 @@ Route::group(['middleware' => 'auth'], function () {
     # Story
     Route::resource('stories', 'StoriesController');
 
-    # Export
-    Route::post('stories/{story}/export', 'ExportController@exportSQLite');
-
     # Builder
     Route::get('stories/{story}/builder/{tabID}', 'BuilderController@index');
     Route::get('stories/{story}/builder/arch/{archID}', 'BuilderController@show');
@@ -63,13 +60,20 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('stories/{story}/editor_settings/edit', 'SettingsEditorsController@edit');
     Route::put('stories/{story}/editor_settings/edit', 'SettingsEditorsController@update');
 
+    # Backups
+    Route::resource('stories/{story}/backup', 'BackupController');
+    # Export
+    Route::post('stories/{story}/export', 'ExportController@exportSQLite');
+    # Backup
+    Route::post('stories/{story}/backup', 'BackupController@store');
+
     Route::get('/home', 'StoriesController@index');
 
     // AJAX
     Route::post('/toggle-sidebar', 'GeneralAjaxController@ToggleSidebarSession');
     Route::post('/add-news-section', 'GeneralAjaxController@AddNewsSection');
     Route::post('/add-tab', 'GeneralAjaxController@AddTab');
-    Route::post('/get-story-info', 'GeneralAjaxController@GetStoryInfo');
+    Route::post('/prepare-story-modal', 'GeneralAjaxController@PrepareSaveModal');
 
     // Story points (still AJAX)
     Route::post('/handle-story-point-reference', 'StoryPointsController@HandleReferenceAjax');

@@ -50,9 +50,22 @@ class GeneralAjaxController extends Controller
         $storyID = intval($_POST['data']['story_id']);
 
         $story = Story::find($storyID);
-        
+
         echo json_encode([
             'title' => $story->title
+        ]);
+    }
+
+    public function PrepareSaveModal() {
+
+        $storyID = intval($_POST['data']['story_id']);
+        $prechosenType = $_POST['data']['type'] == 'export' ? 'export' : 'backup';
+
+        $story = Story::find($storyID);
+
+        echo json_encode([
+            'title' => $story->title,
+            'type'  => $prechosenType
         ]);
     }
 }
