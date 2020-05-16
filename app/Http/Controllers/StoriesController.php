@@ -8,7 +8,8 @@ use App\Story;
 use App\Settings;
 use App\Common\Permission;
 use App\Common\HandleSettings;
-// use DB; <- for using ordinary queries
+use App\Common\HandleFiles;
+use DB;
 
 class StoriesController extends Controller
 {
@@ -31,6 +32,7 @@ class StoriesController extends Controller
     {
         $user_id = auth()->user()->id;
         $stories = Story::where('user_id', $user_id)
+            ->where('backup_of_story', 0)
             ->orderBy('id', 'desc')
             ->paginate(10);
         return view('stories.index')->with('stories', $stories);
@@ -125,9 +127,74 @@ class StoriesController extends Controller
         if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
             return redirect('/stories')->with('error', 'Access denied');
 
+        # Characters
+        $this->LoopAndDestroy($story->characters);
+
+        # News
+        $this->LoopAndDestroy($story->news);
+
+        # Phone Logs
+        $this->LoopAndDestroy($story->phonelogs);
+
+        # Phone Numbers
+        $this->LoopAndDestroy($story->phonenumber);
+
+        # Phone Number Texts
+        $this->LoopAndDestroy($story->texts);
+
+        # Phone Photos
+        $this->LoopAndDestroy($story->photos);
+
+        # Phone Settings
+        $this->LoopAndDestroy($story->settings);
+
+        # Phone Variables
+        $this->LoopAndDestroy($story->variables);
+
+        # Story Archs
+        $this->LoopAndDestroy($story->storyarchs);
+
+        # Story Points
+        $this->LoopAndDestroy($story->storypoints);
+
+        # Files
+        $handleFiles = new HandleFiles();
+        $handleFiles->deleteDir(public_path().'/storage/stories/'.$story->id);
+
+        # Story
         $story->delete();
 
-        return redirect('/stories')->with('success', $story->title .' deleted');
+        return;
+
+        //return redirect('/stories')->with('success', $story->title .' deleted');
+    }
+
+    private function LoopAndDestroy($object) {
+
+        if($object instanceof \Illuminate\Database\Eloquent\Model) {
+
+            // This is a model
+            $this->DestroyModel($object);
+
+        } else {
+
+            // This is a collection - loop through it and destroy
+            if(!empty($object)) {
+                foreach($object as $model) {
+                    $this->DestroyModel($model);
+                }
+            }
+
+        }
+
+    }
+
+    private function DestroyModel($model) {
+
+        $model->delete();
+
+        return;
+
     }
 
     /**

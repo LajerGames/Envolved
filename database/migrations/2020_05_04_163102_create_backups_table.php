@@ -17,6 +17,7 @@ class CreateBackupsTable extends Migration
         {
             $table->integer('backup_of_story')->after('id');
             $table->string('backup_name')->after('backup_of_story');
+            $table->tinyInteger('backup_confirmed')->after('backup_name')->default('0');
         });
     }
 
@@ -30,7 +31,8 @@ class CreateBackupsTable extends Migration
         Schema::table('stories', function($table)
         {
             $table->dropColumn('backup_of_story');
-            $table->dropColumn('backup_of_story');
+            $table->dropColumn('backup_name');
+            $table->dropColumn('backup_confirmed');
         });
     }
 }

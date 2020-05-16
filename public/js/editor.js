@@ -98,8 +98,9 @@ $(document).ready(function () {
 
     function openSaveModal(type) {
 
-        var saveAsInput = $('#save_modal input#save_as'),
-            storyID = saveAsInput.data('story-id'),
+        var modal = $('#save_modal'),
+            storyID = modal.data('story-id'),
+            saveAsInput = modal.find('input#save_as'),
             type = type === undefined ? 'backup' : type;
         $.post('/prepare-story-modal', {
             _token: $('meta[name=csrf-token]').attr('content'),
@@ -114,28 +115,84 @@ $(document).ready(function () {
 
             // Create save as name
             saveAsInput.val(decodedData.title);
-            $('#save_modal').modal();
+            modal.modal();
         });
     }
 
-    $('#save_modal button.btn-primary').on('click', function () {
+    $('#save_modal').on('click', 'button.btn-primary', function () {
 
-        if ($('#save_type').val() == 'export') {
-            exportStory($(this));
+        if ($('#save_type').length == 0) {
+
+            // We're looking at the confirm button, that confirms that the backup went okay.
+            confirmBackupStory($(this));
         } else {
-            backupStory($(this));
+
+            // These are the buttons we show before
+            if ($('#save_type').val() == 'export') {
+                exportStory();
+            } else {
+                backupStory();
+            }
         }
     });
 
-    function backupStory(button) {
-        $.post('/stories/' + $(this).data('story-id') + '/backup', {
+    function confirmBackupStory() {
+
+        var modal = $('#save_modal');
+
+        $.post('/stories/' + modal.data('story-id') + '/confirm-backup', {
             _token: $('meta[name=csrf-token]').attr('content'),
             _method: 'POST',
             data: {
-                story_id: button.data('story-id'),
-                name: $('#save_modal input#save_as').val()
+                story_id: modal.data('story-id')
             }
+        }, function (data) {
+
+            location.reload();
         });
+    }
+
+    function backupStory() {
+
+        var modal = $('#save_modal'),
+            backupName = modal.find('input#save_as').val(),
+            modalBody = modal.find('div.modal-body'),
+            storyID = modal.data('story-id');
+
+        // Write in the modal that we're currently updating
+        modalBody.html('<h2>Preparing, please hold.</h2><br />Please don\'t close this window');
+
+        // Disable all posibilities of closing the modal
+        toggleModalClosability(modal, false);
+        //modal.modal({backdrop: 'static', keyboard: false});
+
+
+        $.post('/stories/' + storyID + '/initiate-backup', {
+            _token: $('meta[name=csrf-token]').attr('content'),
+            _method: 'POST',
+            data: {
+                story_id: storyID,
+                name: backupName
+            }
+        }, function (data) {
+
+            modalBody.html('<h4>Backup ready, click below to save</h4> <button type="button" class="btn btn-primary">Save backup</button>');
+        });
+    }
+
+    function toggleModalClosability(modal, closable) {
+
+        if (closable === true) {
+            modal.data('bs.modal').options.keyboard = true;
+            modal.data('bs.modal').options.backdrop = true;
+            modal.find('.btn').css('visibility', 'visible');
+            modal.find('button.close').css('visibility', 'visible');
+        } else {
+            modal.data('bs.modal').options.keyboard = false;
+            modal.data('bs.modal').options.backdrop = 'static';
+            modal.find('.btn').css('visibility', 'hidden');
+            modal.find('button.close').css('visibility', 'hidden');
+        }
     }
 
     function exportStory() {
@@ -145,6 +202,14 @@ $(document).ready(function () {
             data: {
                 story_id: button.data('story-id'),
                 name: $('#save_modal input#save_as').val()
+            },
+            function: function _function(data) {
+
+                var decodedData = JSON.parse(data);
+
+                // Create save as name
+                saveAsInput.val(decodedData.title);
+                $('#save_modal').modal();
             }
         });
     }

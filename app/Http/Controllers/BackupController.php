@@ -3,36 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Backup;
+use App\Http\Controllers\StoriesController;
 use App\Common\Permission;
 use App\StoryArch;
 use Illuminate\Http\Request;
 use App\Common\HandleFiles;
 use App\Story;
-use App\Character;
-use App\NewsItem;
-use App\PhoneLog;
-use App\PhoneNumber;
-use App\Text;
-use App\Photo;
 
 class BackupController extends Controller
 {
-    private $storyID = 0;
-
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($story_id)
     {
+        $story = Story::find($story_id);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        // Find all stories that are backups of this story
+        $backups = Story::where('backup_of_story', $story_id)->where('backup_confirmed', 1)->get();
+
         // Make array to send along to the view
         $info = [
-            'story' => 'sad',
-            'phone_logs' => 'sad',
-            'phone_numbers_select' => 'sad',
-            'time' => 'sad',
-            'days_ago' => 'sad'
+            'story'     => $story,
+            'backups'   => $backups
         ];
 
         return view('stories.Backups.index')->with('info', $info);
@@ -47,7 +45,7 @@ class BackupController extends Controller
     public function store(Request $request)
     {
         $name = $_POST['data']['name'];
-        $storyID = $_POST['data']['story_id'];
+        $storyID = intval($_POST['data']['story_id']);
 
         $story = Story::find($storyID);
 
@@ -57,7 +55,7 @@ class BackupController extends Controller
         /**
          * SO!
          * We're about to copy an entire story.
-         * We will store the old ID's in arrays and use them to ensure that everything fits together as it did in the old version
+         * We will store the old ID's in arrays (maps) and use them to ensure that everything fits together as it did in the old version
          */
 
         // SECTION: Do all of the copying
@@ -106,6 +104,11 @@ class BackupController extends Controller
             $settingsMap = [];
             $settingCollection = $this->LoopAndCloneCollection($story->settings, $settingsMap);
 
+        # Variables
+
+            $variablesMap = [];
+            $variablesCollection = $this->LoopAndCloneCollection($story->variables, $variablesMap);
+
         # Story Archs
 
             $storyArchsMap = [];
@@ -116,20 +119,17 @@ class BackupController extends Controller
             $storyPointsMap = [];
             $storyPointCollection = $this->LoopAndCloneCollection($story->storypoints, $storyPointsMap);
 
-        # Variables
-
-            // TODO
-
          # Copy files to new folder
 
-            //$handleFiles = new HandleFiles();
-            //$handleFiles->xcopy(public_path().'/storage/stories/'.$story->id, public_path().'/storage/stories/'.$newStory->id, '0777');
+            $handleFiles = new HandleFiles();
+            $handleFiles->xcopy(public_path().'/storage/stories/'.$story->id, public_path().'/storage/stories/'.$newStory->id, '0777');
 
         // END SECTION
 
         // SECTION CHANGE RELEVANT VALUES
 
-        $fieldsStory = ['story_id' => [$storyID => $newStory->id]];
+        // Second array key is 0 because everything has story ID -1
+        $fieldsStory = ['story_id' => [-1 => $newStory->id]];
 
         # Characters
 
@@ -167,6 +167,10 @@ class BackupController extends Controller
 
             $this->LoopCollectionAndUpdateValues($settingCollection, $fieldsStory);
 
+        # Variables
+
+            $this->LoopCollectionAndUpdateValues($variablesCollection, $fieldsStory);
+
         # Story Archs
 
             $fieldsStoryArchs = $fieldsStory;
@@ -177,10 +181,15 @@ class BackupController extends Controller
 
             $fieldsStoryPoints = $fieldsStory;
             $fieldsStoryPoints['story_arch_id'] = $storyArchsMap;
-            $fieldsStoryPoints['custom.story_points'] = [
-                'story_archs_map'   => $storyArchsMap,
-                'story_points_map'  => $storyPointsMap,
-                'characters_map'    => $charactersMap
+            $fieldsStoryPoints['custom'] = [
+                'story_points' => [
+                    'story_archs_map'   => $storyArchsMap,
+                    'story_points_map'  => $storyPointsMap,
+                    'characters_map'    => $charactersMap,
+                    'variables_map'     => $variablesMap,
+                    'phone_numbers_map' => $phoneNumbersMap,
+                    'news_items_map'    => $newsMap
+                ]
             ];
             $this->LoopCollectionAndUpdateValues($storyPointCollection, $fieldsStoryPoints);
 
@@ -189,22 +198,221 @@ class BackupController extends Controller
 
     private function LoopCollectionAndUpdateValues($collection, $fields) {
 
-        // Loop through the collection to find all the models that needs data altered
-        foreach($collection as $model) {
+        if(!empty($collection) && is_countable($collection)) {
 
-            // Loop through the changes that needs to be made and make them
-            foreach($fields as $field => $values) {
+            // Loop through the collection to find all the models that needs data altered
+            foreach($collection as $model) {
 
-                if(!empty($model->{$field})) {
-                    $model->{$field} = $values[$model->{$field}];
+                // Loop through the changes that needs to be made and make them
+                foreach($fields as $field => $values) {
+
+                    if(!empty($model->{$field})) {
+                        $model->{$field} = $values[$model->{$field}];
+                    }
+
+                }
+
+                // Do we have anything custom tweak for this model?
+                if(isset($fields['custom']) && is_array($fields['custom'])) {
+
+                    // Custom handle this
+                    $model = $this->CustomUpdateModel($model, $fields['custom']);
+
+                }
+
+                $model->save();
+
+            }
+
+        }
+
+
+    }
+
+    private function CustomUpdateModel($model, $custom) {
+
+        if(!empty($custom) || is_countable($custom)) {
+            foreach($custom as $type => $maps) {
+
+                // Prepare the fact that there may be other types
+                switch($type) {
+                    case 'story_points' :
+
+                        $model = $this->CustomUpdateModelStoryPoints($model, $maps);
+
+                        break;
+                }
+
+            }
+        }
+
+        return $model;
+
+    }
+
+    private function CustomUpdateModelStoryPoints($model, $custom) {
+
+        $model = $this->CustomUpdateModelStoryPointsInstructions($model, $custom);
+        $model = $this->CustomUpdateModelStoryPointsLeadsTo($model, $custom);
+
+        return $model;
+    }
+
+    private function CustomUpdateModelStoryPointsLeadsTo($model, $custom)
+    {
+        $leadsTo = json_decode($model->leads_to_json);
+
+        if(is_array($leadsTo)) {
+
+            foreach($leadsTo as $entry => $leads) {
+
+                // Is this a point or an arch
+                if(property_exists($leads, 'point')) {
+                    $leadsTo[$entry] = $this->GetNewValueFromMap($leadsTo[$entry], 'point', $custom['story_points_map']);
+                }
+                else {
+                    $leadsTo[$entry] = $this->GetNewValueFromMap($leadsTo[$entry], 'arch', $custom['story_archs_map']);
+                }
+
+            }
+        }
+
+        $model->leads_to_json = json_encode($leadsTo);
+
+        return $model;
+    }
+
+    private function CustomUpdateModelStoryPointsInstructions($model, $custom) {
+
+        $instructions   = json_decode($model->instructions_json);
+
+        // What kind of story point is this? (we only have the types we need to change)
+        switch($model->type) {
+            case 'condition' :
+
+                if(is_object($instructions)) {
+
+                    foreach($instructions as $entry => $obj) {
+
+                        $instructions->{$entry} = $this->GetNewValueFromMap($obj, 'variable', $custom['variables_map']);
+                        $instructions->{$entry} = $this->GetNewValueFromMap($obj, 'leads_to', $custom['story_points_map']);
+
+                    }
+
+                }
+
+                break;
+            case 'change_variable' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'variable_id', $custom['variables_map']);
+
+                break;
+            case 'redirect' :
+
+                if(isset($instructions->type)) {
+
+                    if($instructions->type == 'story_point') // This is a story point
+                        $instructions = $this->GetNewValueFromMap($instructions, 'redirect_id', $custom['story_points_map']);
+                    else // This is a story arch
+                        $instructions = $this->GetNewValueFromMap($instructions, 'redirect_id', $custom['story_archs_map']);
+
+                }
+
+                break;
+            case 'phone_number_change_arch' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'phone_number_id', $custom['phone_numbers_map']);
+                $instructions = $this->GetNewValueFromMap($instructions, 'call_story_arch', $custom['story_archs_map']);
+                $instructions = $this->GetNewValueFromMap($instructions, 'text_story_arch', $custom['story_archs_map']);
+
+                break;
+            case 'text_incomming' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'from_character_id', $custom['characters_map']);
+
+                break;
+            case 'text_outgoing' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'to_character_id', $custom['characters_map']);
+                $instructions = $this->SwitchPropertyAccordingToStoryPointMap($instructions, $custom['story_points_map']);
+
+                break;
+            case 'phone_call_incomming_voice' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'from_character_id', $custom['characters_map']);
+                $instructions = $this->GetNewValueFromMap($instructions, 'if_user_hang_up_start_arch', $custom['story_archs_map']);
+                $instructions = $this->GetNewValueFromMap($instructions, 'if_user_hang_up_start_story_point', $custom['story_points_map']);
+
+                break;
+            case 'phone_call_outgoing_voice' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'to_character_id', $custom['characters_map']);
+                $instructions = $this->GetNewValueFromMap($instructions, 'if_user_hang_up_start_arch', $custom['story_archs_map']);
+                $instructions = $this->GetNewValueFromMap($instructions, 'if_user_hang_up_start_story_point', $custom['story_points_map']);
+                $instructions = $this->SwitchPropertyAccordingToStoryPointMap($instructions, $custom['story_points_map']);
+
+
+                break;
+            case 'insert_news_item' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'news_item', $custom['news_items_map']);
+
+                break;
+            case 'start_new_thread' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'spawn_new_thread_arch', $custom['story_archs_map']);
+
+                break;
+            case 'start_watcher' :
+
+                $instructions = $this->GetNewValueFromMap($instructions, 'arch', $custom['story_archs_map']);
+
+                break;
+        }
+
+        $model->instructions_json = json_encode($instructions);
+
+        return $model;
+
+    }
+
+    private function SwitchPropertyAccordingToStoryPointMap($instruction, $storyPointMap) {
+
+        // Loop through to find all leads to (which in this case is object properties)
+        if(is_object($instruction)) {
+
+            foreach($instruction as $entry => $obj) {
+
+                if(is_numeric($entry) && is_object($obj)) {
+
+                    $instruction = (array)$instruction;
+
+                    $instruction[$storyPointMap[$entry]] = $obj;
+                    unset($instruction[$entry]);
+
+                    $instruction = (object)$instruction;
+
                 }
 
             }
 
-            $model->save();
-
         }
 
+        return $instruction;
+
+    }
+
+    private function GetNewValueFromMap($obj, $property, $map) {
+
+        // Does the property exist
+        if(is_object($obj) && property_exists($obj, $property) && is_numeric($obj->{$property})) {
+
+            if(isset($map[$obj->{$property}]) && is_numeric($map[$obj->{$property}]) && $map[$obj->{$property}] > 0) {
+                $obj->{$property} = $map[$obj->{$property}];
+            }
+
+        }
+        return  $obj;
     }
 
     /**
@@ -269,6 +477,9 @@ class BackupController extends Controller
 
         $attributes = $modelClone->getAttributes();
         unset($attributes['id']);
+        if(isset($attributes['story_id'])) {
+            $attributes['story_id'] = -1;
+        }
         $modelClone->setRawAttributes($attributes, true);
 
         // Set exists to 0 to ensure that a new record is created
@@ -278,14 +489,42 @@ class BackupController extends Controller
 
     }
 
+    public function confirm() {
+
+        $storyID = intval($_POST['data']['story_id']);
+
+        $story = Story::find($storyID);
+
+        if(!Permission::CheckOwnership(auth()->user()->id, $story->user_id))
+            return redirect('/stories')->with('error', 'Access denied');
+
+        // Confirm the latest backup
+
+        // Find the story
+        $story = Story::where('user_id', auth()->user()->id)
+            ->where('backup_of_story', $storyID)
+            ->orderBy('id', 'DESC')
+            ->first();
+
+        $story->backup_confirmed = 1;
+        $story->save();
+
+    }
+
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Backup  $Backup
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Backup $Backup)
+    public function destroy($story_id, $id)
     {
-        //
+        $storiesController = new StoriesController();
+
+        $story = Story::find($id);
+
+        $storiesController->destroy($id);
+
+        return redirect('/stories/'.$story_id.'/backup/')->with('success', $story->title .' deleted');
     }
 }

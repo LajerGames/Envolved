@@ -4,7 +4,7 @@
 <div class="row">
     <div class="col-md-12">
         <div class="panel panel-default">
-            <div class="panel-heading">Backups for:</div>
+            <div class="panel-heading">Backups for: {{$info['story']->title}}</div>
             <div class="panel-body">
 
                 <table class="table">
@@ -14,6 +14,28 @@
                         <th scope="col">Created at</th>
                         <th scope="col" class="icon text-center"><a href="javascript:void(0);" id="backup" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></a></th>
                     </tr>
+                    @if(count($info['backups']) > 0)
+                        @foreach($info['backups'] as $backup)
+                            <tr>
+                                <td scope="col">
+                                    {!!Form::open([
+                                        'action' => ['BackupController@destroy', $info['story']->id, $backup->id],
+                                        'method' => 'post'
+                                    ])!!}
+                                    {{Form::hidden('_method', 'DELETE')}}
+                                    {{Form::submit('Delete', ['class' => 'btn btn-danger btn-delete'])}}
+                                    {!!Form::close()!!}
+                                </td>
+                                <td scope="col">{{$backup->backup_name}}</td>
+                                <td scope="col">{{$backup->created_at}}</td>
+                                <td scope="col"><a href="javascript:void(0);" class="btn btn-primary">Implement</a></td>
+                            </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="4" class="text-center">No backups found</td>
+                        </tr>
+                    @endif
                 </table>
 
             </div>

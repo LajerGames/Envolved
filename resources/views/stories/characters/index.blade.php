@@ -60,7 +60,7 @@
                         @endforeach
                     @else
                         <tr>
-                            <td colspan="5" class="text-center">No characters added</td>
+                            <td colspan="6" class="text-center">No characters added</td>
                         </tr>
                     @endif
                 </table>

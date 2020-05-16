@@ -82,7 +82,7 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="save_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal fade" id="save_modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" data-story-id="{{request()->segment(2)}}">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -98,11 +98,11 @@
                         <option value="export">Export</option>
                     </select><br />
                     <label for="save_as">Save as</label><br />
-                    <input type="text" name="save_as" id="save_as" value="" class="form-control" placeholder="Save As" data-story-id="{{request()->segment(2)}}" />
+                    <input type="text" name="save_as" id="save_as" value="" class="form-control" placeholder="Save As" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" data-story-id="{{request()->segment(2)}}" data-dismiss="modal">Go!</button>
+                    <button type="button" class="btn btn-primary" data-story-id="{{request()->segment(2)}}">Go!</button>
                 </div>
             </div>
         </div>

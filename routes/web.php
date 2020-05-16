@@ -65,7 +65,8 @@ Route::group(['middleware' => 'auth'], function () {
     # Export
     Route::post('stories/{story}/export', 'ExportController@exportSQLite');
     # Backup
-    Route::post('stories/{story}/backup', 'BackupController@store');
+    Route::post('stories/{story}/initiate-backup', 'BackupController@store');
+    Route::post('stories/{story}/confirm-backup', 'BackupController@confirm');
 
     Route::get('/home', 'StoriesController@index');
 
