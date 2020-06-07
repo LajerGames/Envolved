@@ -27,8 +27,15 @@
                                     {!!Form::close()!!}
                                 </td>
                                 <td scope="col">{{$backup->backup_name}}</td>
-                                <td scope="col">{{$backup->created_at}}</td>
-                                <td scope="col"><a href="javascript:void(0);" class="btn btn-primary">Implement</a></td>
+                                <td scope="col">{{$backup->updated_at}}</td>
+                                <td scope="col">
+                                    {!!Form::open([
+                                        'action' => ['BackupController@implement', $info['story']->id, $backup->id],
+                                        'method' => 'post'
+                                    ])!!}
+                                    {{Form::hidden('_method', 'post')}}
+                                    {{Form::submit('Implement', ['class' => 'btn btn-primary btn-implement-backup'])}}
+                                    {!!Form::close()!!}
                             </tr>
                         @endforeach
                     @else

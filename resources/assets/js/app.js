@@ -96,6 +96,20 @@ $(document).ready(function() {
         }
     });
 
+    let canImplement = false;
+    $('.btn-implement-backup').closest('form').on('submit', function(e) {
+        if(!canImplement) {
+            e.preventDefault();
+            if(confirm('Overwrite current game with this backup?')) {
+                canImplement = true;
+                $(this).submit();
+            }
+            return false;
+        } else {
+            canImplement = false;
+        }
+    });
+
     // Ability to overwrite a field onchange in a specific selectbox (req. data-field-to-overwrite on select)
     $('select.overwrite-field-onchange').on('change', function() {
         var chosenName = $(this).val() == 0 ? '' : $(this).find(':selected').text();

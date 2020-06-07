@@ -116,75 +116,33 @@ class HandleFiles {
         return;
     }
 
-    /**
-     * Copy a file, or recursively copy a folder and its contents
-     * @author      Aidan Lister <aidan@php.net>
-     * @version     1.0.1
-     * @link        http://aidanlister.com/2004/04/recursively-copying-directories-in-php/
-     * @param       string   $source    Source path
-     * @param       string   $dest      Destination path
-     * @param       int      $permissions New folder creation permissions
-     * @return      bool     Returns true on success, false on failure
-     */
-    public function xcopy($source, $dest, $permissions = 0755)
-    {
-        if(!is_dir($source)) {
-            return;
-        }
+    public function copyFilesAndFolders($src, $dst) {
 
-        $sourceHash = $this->hashDirectory($source);
-        // Check for symlinks
-        if (is_link($source)) {
-            return symlink(readlink($source), $dest);
-        }
+        // open the source directory
+        $dir = opendir($src);
 
-        // Simple copy for a file
-        if (is_file($source)) {
-            return copy($source, $dest);
-        }
+        // Make the destination directory if not exist
+        @mkdir($dst);
 
-        // Make destination directory
-        if (!is_dir($dest)) {
-            mkdir($dest, $permissions);
-        }
+        // Loop through the files in source directory
+        while( $file = readdir($dir) ) {
 
-        // Loop through the folder
-        $dir = dir($source);
-        while (false !== $entry = $dir->read()) {
-            // Skip pointers
-            if ($entry == '.' || $entry == '..') {
-                continue;
-            }
+            if (( $file != '.' ) && ( $file != '..' )) {
+                if ( is_dir($src . '/' . $file) )
+                {
 
-            // Deep copy directories
-            if($sourceHash != $this->hashDirectory($source."/".$entry)){
-                $this->xcopy("$source/$entry", "$dest/$entry", $permissions);
+                    // Recursively calling custom copy function
+                    // for sub directory
+                    $this->copyFilesAndFolders($src . '/' . $file, $dst . '/' . $file);
+
+                }
+                else {
+                    copy($src . '/' . $file, $dst . '/' . $file);
+                }
             }
         }
 
-        // Clean up
-        $dir->close();
-        return true;
-    }
-
-// In case of coping a directory inside itself, there is a need to hash check the directory otherwise and infinite loop of coping is generated
-
-    private function hashDirectory($directory){
-        if (! is_dir($directory)){ return false; }
-
-        $files = array();
-        $dir = dir($directory);
-
-        while (false !== ($file = $dir->read())){
-            if ($file != '.' and $file != '..') {
-                if (is_dir($directory . '/' . $file)) { $files[] = $this->hashDirectory($directory . '/' . $file); }
-                else { $files[] = md5_file($directory . '/' . $file); }
-            }
-        }
-
-        $dir->close();
-
-        return md5(implode('', $files));
+        closedir($dir);
     }
 
     public function deleteDir($dirPath) {

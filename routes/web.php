@@ -62,6 +62,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     # Backups
     Route::resource('stories/{story}/backup', 'BackupController');
+    Route::post('stories/{story}/backup/{backup_id}', 'BackupController@implement');
     # Export
     Route::post('stories/{story}/export', 'ExportController@exportSQLite');
     # Backup

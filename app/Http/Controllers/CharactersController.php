@@ -163,13 +163,15 @@ class CharactersController extends Controller
         $character = $story->characters->find($id);
 
         // Delete old and upload new image
-        $imageName = HandleFiles::DeleteThenUpload(
+        $image = HandleFiles::DeleteThenUpload(
             $request,
             $character,
             'avatar_url',
             'avatar',
             'public/stories/'.$story_id.'/characters/'
-        )['filename'];
+        );
+
+        $imageName = isset($image['filename']) ? $image['filename'] : '';
 
         $this->SaveRequest($character, $story_id, $imageName, $request);
 

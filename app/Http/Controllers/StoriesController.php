@@ -214,6 +214,9 @@ class StoriesController extends Controller
     {
         $story->user_id = auth()->user()->id;
         $story->title = $request->input('title');
+        $story->backup_of_story = 0;
+        $story->backup_name = '';
+        $story->backup_confirmed = 0;
         $story->short_description = $request->input('short_description');
         $story->description = $request->input('description');
         $story->save();
